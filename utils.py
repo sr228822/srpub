@@ -29,7 +29,7 @@ def noisy_sleep(duration, tag=''):
         mins = int((left / 60) % 60)
         secs = left % 60
         flushprint(tag + ' ' + '%02d' % hrs + ':' + '%02d' % mins + ':' + '%02d' % secs)
-        if secs % 10 == 0:
+        if int(secs) % 10 == 0:
             try:
                 import alice
                 if alice.alice_enabled():
