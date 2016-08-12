@@ -146,6 +146,22 @@ def print_warning(s):
     print yellow_str('\n[WARNING] ' + s + '\n')
 
 #################################################################
+# HTML
+#################################################################
+def html_table(table):
+    resp = "<table border=1>\n"
+    for row in table:
+        resp += "  <tr>\n"
+        for col in row:
+            resp += "    <td>{}</td>\n".format(col)
+        resp += "  </tr>\n"
+    resp += "</table>\n"
+    return resp
+
+def html_link(txt, link):
+    return '<a href="{}">{}</a>'.format(link, txt)
+
+#################################################################
 # Math
 #################################################################
 
