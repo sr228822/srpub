@@ -167,7 +167,7 @@ table_style = """
         font-size:12px;
         text-shadow: 1px 1px 0px #fff;
         background:#eaebec;
-        margin:20px;
+        margin:auto;
         border:#ccc 1px solid;
 
         -moz-border-radius:3px;
