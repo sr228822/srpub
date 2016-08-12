@@ -32,6 +32,9 @@ alice_debug = False
 def get_now():
     return datetime.datetime.now()
 
+def seconds_between(da, db):
+    return (db - da).total_seconds()
+
 def _alice_post_status(s, perc_done=None, message=None):
     from utils import cmd
     c = "curl -s -X POST -d uuid='" + alice_uuid + "' -d name='" + alice_name + "' -d host='" + alice_host + "' -d status='" + s + "'"
