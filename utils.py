@@ -39,11 +39,13 @@ def adb_available():
     res = cmd('adb get-state')
     return 'device' in res.lower()
 
+def utc_seconds():
+    import calendar
+    return calendar.timegm(time.gmtime())
+
 def noisy_sleep(duration, tag=''):
     start = datetime.datetime.now()
     while True:
-        if alice_enabled():
-            alice_check_status()
         time.sleep(1)
         left = duration - seconds_between(start, datetime.datetime.now())
         if left <= 0:
@@ -52,6 +54,13 @@ def noisy_sleep(duration, tag=''):
         mins = int((left / 60) % 60)
         secs = left % 60
         flushprint(tag + ' ' + '%02d' % hrs + ':' + '%02d' % mins + ':' + '%02d' % secs)
+        if secs % 10 == 0:
+            try:
+                import alice
+                if alice.alice_enabled():
+                    alice.alice_check_status()
+            except:
+                pass
     flushprint('                                                ')
     print ''
 
@@ -95,6 +104,21 @@ def is_uuid(s):
 
 def is_email(s):
     return '@' in s
+
+def html_read_timeout(url, to):
+    try:
+        import urllib2
+        req = urllib2.Request(url)
+        #print '{url',
+        resp = urllib2.urlopen(req, timeout=to)
+        #print ' success}'
+        return resp.read()
+    except:
+        print '{url fail}'
+        return ''
+
+def html_read(url):
+    return html_read_timeout(url, 20)
 
 #################################################################
 # Time
@@ -204,6 +228,53 @@ def getTerminalSize():
         #except:
         #    cr = (25, 80)
     return int(cr[1]), int(cr[0])
+
+def interp(ca, cb, perc):
+    lat = (ca[0] * perc) + (cb[0] * (1-perc))
+    lng = (ca[1] * perc) + (cb[1] * (1-perc))
+
+    # find the heading
+    dy = cb[0] - ca[0]
+    dx = math.cos(math.pi/180*ca[0])*(cb[1] - ca[1])
+    angle = math.degrees(math.atan2(dy, dx))
+    angle = (((360-angle)+90)%360)
+    return (round(lat,5), round(lng,5), round(angle,1))
+
+def distance_between(lat1, long1, lat2, long2):
+
+    # Convert latitude and longitude to 
+    # spherical coordinates in radians.
+    degrees_to_radians = math.pi/180.0
+        
+    # phi = 90 - latitude
+    phi1 = (90.0 - lat1)*degrees_to_radians
+    phi2 = (90.0 - lat2)*degrees_to_radians
+        
+    # theta = longitude
+    theta1 = long1*degrees_to_radians
+    theta2 = long2*degrees_to_radians
+        
+    # Compute spherical distance from spherical coordinates.
+        
+    # For two locations in spherical coordinates 
+    # (1, theta, phi) and (1, theta, phi)
+    # cosine( arc length ) = 
+    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
+    # distance = rho * arc length
+    
+    cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
+           math.cos(phi1)*math.cos(phi2))
+
+    try:
+        arc = math.acos( cos )
+    except:
+        # a bad acos means we are at 0 dist i think
+        return 0.0
+
+    # Remember to multiply arc by the radius of the earth 
+    # in your favorite set of units to get length.
+    # 6371 is the radius in KM
+    return (arc * 6371)
 
 def median(lst):
     import numpy
