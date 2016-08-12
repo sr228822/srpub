@@ -151,8 +151,61 @@ def print_warning(s):
 #################################################################
 # HTML
 #################################################################
+table_style = """
+<style>
+    table.simple_table a:link {
+        color: #666;
+        font-weight: bold;
+        text-decoration:none;
+    }
+
+    table.simple_table {
+        font-family:Arial, Helvetica, sans-serif;
+        color:#666;
+        font-size:12px;
+        text-shadow: 1px 1px 0px #fff;
+        background:#eaebec;
+        margin:20px;
+        border:#ccc 1px solid;
+
+        -moz-border-radius:3px;
+        -webkit-border-radius:3px;
+        border-radius:3px;
+
+        -moz-box-shadow: 0 1px 2px #d1d1d1;
+        -webkit-box-shadow: 0 1px 2px #d1d1d1;
+        box-shadow: 0 1px 2px #d1d1d1;
+    }
+    table.simple_table th {
+        padding:21px 25px 22px 25px;
+        border-top:1px solid #fafafa;
+        border-bottom:1px solid #e0e0e0;
+
+        background: #ededed;
+        background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
+        background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
+    }
+    table.simple_table tr {
+        text-align: center;
+        padding-left:20px;
+    }
+    table.simple_table td {
+        padding:18px;
+        border-top: 1px solid #ffffff;
+        border-bottom:1px solid #e0e0e0;
+        border-left: 1px solid #e0e0e0;
+
+        background: #fafafa;
+        background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb), to(#fafafa));
+        background: -moz-linear-gradient(top,  #fbfbfb,  #fafafa);
+    }
+</style>
+"""
+
 def html_table(table):
-    resp = "<table border=1>\n"
+    resp = ''
+    resp += table_style
+    resp += '<table class="simple_table">\n'
     for row in table:
         resp += "  <tr>\n"
         for col in row:
