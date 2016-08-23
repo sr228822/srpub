@@ -74,6 +74,16 @@ def fetch_commits_for_branch(branch, n):
         res.append(c)
     return res
 
+def fb_alternate():
+    print 'trying alernate'
+    branches = cmd('git branch -vv 2>/dev/null').rstrip().split('\n')
+    for branch in branches:
+        if branch.startswith('*'):
+            m = re.search(r'\[(.*?)\]', branch)
+            if m:
+                return m.group(1)
+    return None
+
 ###########################################################
 #     Fetch info about the branch and remote branch
 ###########################################################
@@ -92,8 +102,10 @@ if m:
     branchline = branchline.replace('...', ' ')
     current_branch = branchline.split()[1]
 else:
-    fb = 'origin'
     current_branch = branchline.split()[1]
+    fb = fb_alternate()
+    if fb is None:
+        fb = 'origin'
 
 ###########################################################
 #     Fetch the log info about local HEAD and remote branch
