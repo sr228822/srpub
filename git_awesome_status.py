@@ -26,12 +26,14 @@ def clean_up_decorate(lines):
 def show_sha(sha):
     res = clean_up_decorate(cmd('git --no-pager log --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + sha))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
+    res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
     #cmd('git --no-pager show --pretty=format:"%Cgreen%H%Creset   %an%n   %s%n" ' + sha + ' | head -n 3', noisy=True)
 
 def show_shas(sha_first, sha_last):
     res = clean_up_decorate(cmd('git --no-pager log --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" ' + sha_first + '...' + sha_last))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
+    res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
     return res
 
@@ -39,6 +41,7 @@ def show_my_most_recent(fb):
     print '               ....\n'
     res = clean_up_decorate(cmd('git --no-pager log --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
+    res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
 
 def show_sha_grey(sha):
@@ -53,6 +56,7 @@ def show_sha_grey(sha):
 def show_sha_magenta(sha):
     res = cmd('git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
+    res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
     print ''
 
@@ -250,5 +254,5 @@ originz = show_shas(common[0].sha, common[left].sha)
 ###########################################################
 #     print my last merged commit if not in the above
 ###########################################################
-if 'Samuel Russell' not in originz:
+if 'Samuel Russell' not in originz and 'Sam Russell' not in originz:
     show_my_most_recent(fb)
