@@ -2,6 +2,7 @@
 
 from utils import *
 import sys, re
+from operator import itemgetter
 
 class Commit:
     def __init__(self, sha, title):
@@ -162,7 +163,7 @@ print
 print '******************************************************************'
 print blue_str(bold_str('%25s' % current_branch))
 other_branches = cmd('git branch').replace('*', '').strip().split('\n')
-branch_data = dict()
+branch_data = []
 for branch in other_branches:
     branch = branch.strip()
     if branch == current_branch:
@@ -174,10 +175,10 @@ for branch in other_branches:
     except:
         dt = datetime.datetime.now()
         age = ''
-    branch_data[dt] = (branch, age)
+    branch_data.append((branch, dt, age))
 
-for idx, dt in enumerate(sorted(branch_data.keys(), reverse=True)):
-    branch, age = branch_data[dt]
+for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
+    branch, dt, age = dat
     if 'minutes' in age or 'hours' in age:
         age = ''
     print '%25s ' % branch + grey_str('%-10s' % age),
