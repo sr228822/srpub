@@ -40,13 +40,13 @@ def show_shas(sha_first, sha_last):
 
 def show_my_most_recent(fb):
     print '               ....\n'
-    res = clean_up_decorate(cmd('git --no-pager log --color=always --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
+    res = clean_up_decorate(cmd('git --no-pager log --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
 
 def show_sha_grey(sha):
-    res = cmd('git --no-pager log --color=always --pretty=format:"%H   %an%n   %s%n%Creset" -1 ' + sha)
+    res = cmd('git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 ' + sha)
     if "Samuel Russell" in res:
         ts = res.split("Samuel Russell")
         print grey_str(ts[0]) + blue_str("Samuel Russell") + grey_str(ts[1])
@@ -55,14 +55,14 @@ def show_sha_grey(sha):
     print ''
 
 def show_sha_magenta(sha):
-    res = cmd('git --no-pager log --color=always --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
+    res = cmd('git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
     print ''
 
 def fetch_commits_for_branch(branch, n):
-    raw = cmd('git log --color=always ' + branch + ' --format=oneline -n ' + str(n))
+    raw = cmd('git log ' + branch + ' --format=oneline -n ' + str(n))
     if 'Not a git repository' in raw:
         print red_str('Not a git repository')
         sys.exit(0)
