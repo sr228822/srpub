@@ -10,7 +10,7 @@ t0 = get_now()
 
 n = 10
 if len(sys.argv) > 1:
-    n = int(sys.argv[1])
+    n = 10000000 if sys.argv[1] == 'all' else int(sys.argv[1])
 
 def _print_hist(with_rate=True):
     global seen, lprint, t0
@@ -18,8 +18,10 @@ def _print_hist(with_rate=True):
     print '------------------------------------------ {} unique total'.format(len(sortseen))
     if with_rate:
         print '  cnt  rate  thing'
+        print '  ---  ----  -----'
     else:
         print '  cnt thing'
+        print '  --- -----'
     tdelt = seconds_between(t0, get_now())
     for x in sortseen[0:n]:
         tot = int(x[1])
