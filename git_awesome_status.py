@@ -40,7 +40,7 @@ def show_shas(sha_first, sha_last):
 
 def show_my_most_recent(fb):
     print '               ....\n'
-    res = clean_up_decorate(cmd('git --no-pager log --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
+    res = clean_up_decorate(cmd('git --no-pager log --color=always --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
@@ -195,7 +195,7 @@ for l in status[1:]:
     if '??' in l:
         untracked.append(l)
     else:
-        print l
+        print magenta_str(l)
 
 if len(untracked) > 3:
     print red_str(str(len(untracked)) + ' Untracked files ??')

@@ -135,6 +135,8 @@ def yellow_str(txt):
     return termcode(93) + txt + termcode(0)
 def blue_str(txt):
     return termcode(34) + txt + termcode(0)
+def magenta_str(txt):
+    return termcode(35) + txt + termcode(0)
 def grey_str(txt):
     return termcode(90) + txt + termcode(0)
 def bold_str(txt):
