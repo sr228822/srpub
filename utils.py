@@ -100,6 +100,20 @@ def html_read(url):
     return html_read_timeout(url, 20)
 
 #################################################################
+# Pickling to/from files
+#################################################################
+def load_pickle(fname):
+    import pickle
+    with open(fname, 'rb') as f:
+        result = pickle.load(f)
+    return result
+
+def save_pickle(obj, fname):
+    import pickle
+    with open(fname, 'wb') as f:
+        pickle.dump(obj, f)
+
+#################################################################
 # Time
 #################################################################
 
@@ -164,7 +178,7 @@ table_style = """
     table.simple_table {
         font-family:Arial, Helvetica, sans-serif;
         color:#666;
-        font-size:12px;
+        font-size:14px;
         text-shadow: 1px 1px 0px #fff;
         background:#eaebec;
         margin:auto;
