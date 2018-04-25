@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-
-import subprocess, math, time, sys, datetime, commands
+import subprocess, math, time, sys, datetime, commands, re
 
 def ash(c, wait=True, noisy=False):
     fullcmd = 'adb shell "' + c + '"'
@@ -131,6 +130,22 @@ def seconds_between(da, db):
 
 def hours_between(da, db):
     return seconds_between(da, db) / 3600
+
+def parse_duration(txt):
+    duration = txt
+    if 'm' in duration:
+        duration = re.sub('m', '', duration)
+        duration = 60 * float(duration)
+    elif 'h' in duration:
+        duration = re.sub('h', '', duration)
+        duration = 60 * 60 * float(duration)
+    elif 'd' in duration:
+        duration = re.sub('d', '', duration)
+        duration = 24 * 60 * 60 * float(duration)
+    else:
+        duration = re.sub('s', '', duration)
+        duration = int(duration)
+    return duration
 
 #################################################################
 # Coloring
