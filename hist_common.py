@@ -14,7 +14,7 @@ n = 10
 if len(sys.argv) > 1:
     n = 10000000 if sys.argv[1] == 'all' else int(sys.argv[1])
 
-def _print_hist(with_rate=True, alphabetical=False):
+def _print_hist(with_rate=True, alphabetical=False, dups_only=False):
     global seen, lprint, t0
     if alphabetical:
         sortseen = sorted(seen.items(), key=operator.itemgetter(0), reverse=False)
@@ -30,6 +30,8 @@ def _print_hist(with_rate=True, alphabetical=False):
     tdelt = seconds_between(t0, get_now())
     for x in sortseen[0:n]:
         tot = int(x[1])
+        if dups_ony and tot == 1:
+            continue
         rate = tot / tdelt
         if with_rate:
             print ('%5d , ' % tot) + ('%5.1f ' % rate) + str(x[0])
@@ -37,12 +39,13 @@ def _print_hist(with_rate=True, alphabetical=False):
             print ('%5d , ' % tot) + str(x[0])
 
 alphabetical = 'alphabetical' in sys.argv
+duplicated = 'dups' in sys.argv or 'duplicated' in sys.argv
 for line in quick_ingest_line():
     line = line.rstrip().lstrip()
     seen[line] = seen.get(line, 0) + 1
     if  seconds_between(lprint, get_now()) > 3:
         lprint = get_now()
-        _print_hist(alphabetical=alphabetical)
+        _print_hist(alphabetical=alphabetical, dups_only=duplicated)
 
 print '\nSTDOUT terminated\n\n\n'
 if seconds_between(t0, get_now()) < 3:
