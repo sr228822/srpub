@@ -90,11 +90,14 @@ def fb_alternate():
     return None
 
 ###########################################################
+#     Init and argv stuff
+###########################################################
+showall = argpop(sys.argv, "--all")
+rows, cols = get_term_size()
+
+###########################################################
 #     Fetch info about the branch and remote branch
 ###########################################################
-showall = False
-if len(sys.argv) > 1 and sys.argv[1] == '--all':
-    showall = True
 
 status = cmd('git status -bs 2>/dev/null').rstrip().split('\n')
 if not status or len(status) == 0 or not status[0]:
@@ -158,14 +161,17 @@ while True:
 ###########################################################
 #     Print branch info
 ###########################################################
+other_branches = cmd('git branch').replace('*', '').strip().split('\n')
+other_branches = [x.strip() for x in other_branches]
+#max_len = max([len(x) for x in other_branches]) + 10
+max_len = 50
+branch_cols = cols / max_len
 
 print
-print '******************************************************************'
-print blue_str(bold_str('%25s' % current_branch))
-other_branches = cmd('git branch').replace('*', '').strip().split('\n')
+print '*' * (cols - 10)
+print blue_str(bold_str('%30s' % current_branch))
 branch_data = []
 for branch in other_branches:
-    branch = branch.strip()
     if branch == current_branch:
         continue
     try:
@@ -181,11 +187,11 @@ for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
     branch, dt, age = dat
     if 'minutes' in age or 'hours' in age:
         age = ''
-    print '%25s ' % branch + grey_str('%-10s' % age),
-    if idx % 2 == 1:
+    print '%30s ' % branch + grey_str('%-10s' % age),
+    if idx % branch_cols == 0:
         print ''
 print ''
-print '******************************************************************'
+print '*' * (cols - 10)
 
 ###########################################################
 #     Print local status diffs
