@@ -16,7 +16,7 @@ from six.moves import cPickle as pickle
 
 url = 'https://commondatastorage.googleapis.com/books1000/'
 last_percent_reported = None
-data_root = '/Users/sam/learning/data/' # Change me to store data elsewhere
+data_root = '/Users/sam/srpub/examples/tensorflow/data/' # Change me to store data elsewhere
 
 pickle_file = os.path.join(data_root, 'notMNIST.pickle')
 

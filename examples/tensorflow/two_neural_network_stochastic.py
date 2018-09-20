@@ -17,8 +17,8 @@ import tensorflow as tf
 from six.moves import cPickle as pickle
 from six.moves import range
 
-data_root = '/Users/sam/learning/data/' # Change me to store data elsewhere
 last_percent_reported = None
+data_root = '/Users/sam/srpub/examples/tensorflow/data/' # Change me to store data elsewhere
 
 pickle_file = os.path.join(data_root, 'notMNIST.pickle')
 
