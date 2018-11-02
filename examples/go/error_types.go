@@ -13,11 +13,15 @@ func NewAlphaError(err error) AlphaError {
 }
 
 type BetaError struct {
-	error
+	magic int
+}
+
+func (e BetaError) Error() string {
+	return fmt.Sprintf("beta %d", e.magic)
 }
 
 func NewBetaError(err error) BetaError {
-	return BetaError{err}
+	return BetaError{77}
 }
 
 
