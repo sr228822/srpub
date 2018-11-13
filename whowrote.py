@@ -48,7 +48,20 @@ sorted_cnts.reverse()
 for sha, cnt in sorted_cnts:
     print sha + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + ('%20s' % auths[sha]) + '\t' + title_from_sha(sha)
 
-print '-------------------------\n'
+# Print the original author, by file
+print '\n---- Original File Creator -----\n'
+for a in sys.argv[1:]:
+    auth = None
+    for l in cmd('git log --format=short ' + a).split('\n'):
+        m = re.search(r'Author\:(.*?)$', l)
+        if m:
+            auth = m.group(1)
+        else:
+            continue
+    print '%50s' % auth, a
+
+# Print the aggregated git-blame coverage
+print '\n---- Current Git-Blame Modifier -----\n'
 print ('%20s' % "author") + '\t' + "lines" + '\t' + "perc" + '\t' + "commits"
 sorted_auth_lines = sorted(auth_lines.iteritems(), key=operator.itemgetter(1))
 sorted_auth_lines.reverse()
