@@ -18,8 +18,11 @@ export HISTSIZE=1000000
 
 # Use prompt command to log all bash to files in .logs
 mkdir -p ~/.logs/
-export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history 1)" >> ~/.logs/bash-history-$(date "+%Y-%m-%d").log; fi'
-alias full_history="cat ~/.logs/*"
+export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
+alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
+histsearch() {
+    fullhistory | grep_and $@ | tail -n 30
+}
 
 # Avoid duplicates
 #export HISTCONTROL=ignoredups:erasedups  
@@ -44,21 +47,26 @@ alias ...........="cd ../../../../../../../../../.."
 alias ............="cd ../../../../../../../../../../.."
 
 alias less='less -R'
-alias grep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
+alias grep='grep --line-buffered --exclude=\*svn\* --color=auto'
+alias igrep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
 alias jq='jq --unbuffered'
 alias antigrep='grep --color=never -v'
 alias rebash='source ~/.bashrc'
 alias addheretopath='export PATH=$PATH:`pwd`'
 alias sparse="sed -n '0~10p'"
+alias lsr="ls -lth | head -n 10"
 
 search() {
-    grep --color=always -iIr  . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 sc() {
-    grep --color=always -iIr --include=*.{py,js,yaml,go,thrift} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql,cc,hh} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 scw() {
-    grep --color=always -iIr --include=*.{py,js,yaml,go,thrift} . 2>/dev/null -e "\<$1\>" | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql,cc,hh} . 2>/dev/null -e "\<$1\>" | tee /tmp/last_relevant_files
+}
+scnear() {
+    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 vimlast() {
     f=`cat /tmp/last_relevant_files | head -n 1 | first_word | sed 's/://g' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"`
@@ -81,14 +89,29 @@ alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
 search_and() {
     grep -E -iIr * -e "$1.*$2|$2.*$1"
 }
-grep_or2() {
-    grep -E -e "$1|$2"
+grep_or() {
+    local IFS="|"; grep -i -E -e "$*";
 }
-grep_or3() {
-    grep -E -e "$1|$2|$3"
-}
-grep_or4() {
-    grep -E -e "$1|$2|$3|$4"
+#join () {
+#    local IFS="$1"; shift; echo "$*";
+#}
+grep_and() {
+    #local IFS="$1"; echo "$*";
+    c="awk '/$1/"
+    args=("$@") 
+    for ((i=1; i<${#args[@]}; i++))
+    do
+        c="$c && /${args[i]}/"
+    done
+    c="$c'"
+    #for var in "$@"
+    #do
+    #    #c="$c /$var/"
+    #    c="$c | grep -i $var"
+    #done
+    #echo $c
+    eval $c
+    #awk '/word1/ && /word2/'
 }
 
 search_or() {
@@ -99,11 +122,15 @@ search_or() {
 function duf {
 du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
 }
-alias locate='find . | grep -i'
-alias loc='find . 2>/dev/null | grep -i'
-alias loc2='find -maxdepth 2 | grep -i'
-alias loc3='find -maxdepth 3 | grep -i'
-alias loc4='find -maxdepth 4 | grep -i'
+loc() {
+    find . -iname "*$1*" 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+}
+shallowloc() {
+    find . -iname "*$1*" -maxdepth 3 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+}
+deeploc() {
+    find . -iname "*$1*" -maxdepth 6 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+}
 alias adblocate='adb shell ls / && adb shell ls /* && adb shell ls /*/*'
 
 watch () {
@@ -119,9 +146,9 @@ repeat () {
     fi
 }
 
-alias notify='~/scripts/notify.py'
-alias makew='pwd > ~/scripts/wdir'
-alias gow='cd `cat ~/scripts/wdir`'
+alias notify='~/customize/notify.py'
+alias makew='pwd > ~/customize/wdir'
+alias gow='cd `cat ~/customize/wdir`'
 alias mw='makew'
 alias gw='gow'
 
@@ -146,18 +173,30 @@ locvim () {
 alias lvim='locvim'
 alias kvim='vim -S ~/.kernelvimrc'
 highlight () {
-    GREP_COLOR=34 grep -i --color=always -E "${1}|$"
+    GREP_COLOR=34 grep -i --line-buffered --color=always -E "${1}|$"
+}
+highlightline () {
+    GREP_COLOR=34 grep -i --line-buffered --color -E ".*${1}.*|$"
+}
+highlightred () {
+    grep -i --line-buffered --color=always -E "${1}|$"
+}
+highlightlinered () {
+    grep -i --line-buffered --color=always -E ".*${1}.*|$"
 }
 highlightyellow () {
-    GREP_COLOR=93 grep -i --color=always -E "${1}|$"
+    GREP_COLOR=93 grep -i --line-buffered --color=always -E "${1}|$"
 }
-alias color='~/customize/colorstrings.py'
-alias green='~/customize/colorstrings.py green'
-alias blue='~/customize/colorstrings.py blue'
-alias red='~/customize/colorstrings.py red'
-alias yellow='~/customize/colorstrings.py yellow'
-alias rainbow='~/customize/colorstrings.py rainbow'
-alias blink='~/customize/colorstrings.py blink'
+highlightgreen () {
+    GREP_COLOR='1;32' grep -i --line-buffered --color=always -E "${1}|$"
+}
+alias color='~/srpub/colorstrings.py'
+alias green='~/srpub/colorstrings.py green'
+alias blue='~/srpub/colorstrings.py blue'
+alias red='~/srpub/colorstrings.py red'
+alias yellow='~/srpub/colorstrings.py yellow'
+alias rainbow='~/srpub/colorstrings.py rainbow'
+alias blink='~/srpub/colorstrings.py blink'
 
 alias asdf='fortune'
 alias frak='fortune'
@@ -182,16 +221,13 @@ extract () {
        echo "'$1' is not a valid file!"
    fi
 }
+alias make_tar='tar -cvzf'
 
 dofrom() {
     orig=`pwd`
     cd $1
     $2
     cd $orig
-}
-
-touch() {
-    (cat $1 || ls $1)
 }
 
 # parsing helper
@@ -215,6 +251,16 @@ gco() {
         fi
     fi
 }
+gbd() {
+    git branch -D $@
+    if [ $? -eq 1 ]; then
+        substr=`git branch | grep $1 | grep -v "*"`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            git branch -D $substr
+        fi
+    fi
+}
 cdd() {
     cd $1
     if [ $? -eq 1 ]; then
@@ -225,11 +271,27 @@ cdd() {
         fi
     fi
 }
+vim() {
+    if [ -e "$1" ]; then
+        /usr/bin/vim $1
+    else
+        substr=`ls | grep $1`
+        if [[ ( -n "$substr" ) && ( $(grep -c . <<<"$substr") == 1 ) ]]; then
+            echo "auto-matching file $substr" | yellow
+            /usr/bin/vim $substr
+        else
+            /usr/bin/vim $1
+        fi
+    fi
+}
+
 alias gb='git branch'
 alias gl='git log'
 alias gd='git diff'
 alias grh='git reset --hard'
 alias gitlastdiff='git diff HEAD^ HEAD'
+alias githeaddiff='git diff origin/master...HEAD'
+alias gitbranchdiff='git diff origin/master HEAD'
 alias amend='git commit --amend -a'
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
@@ -243,9 +305,22 @@ diffit() {
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
 alias utcnow='python -c "from datetime import datetime; import pytz; print datetime.now(pytz.utc)"'
+alias epochnow='python -c "import time; print int(time.time())"'
+alias epochnowmillis='python -c "import time; print 1000 * int(time.time())"'
+alias epoch1h='python -c "import time; print int(time.time())-3600"'
+alias epoch1hmillis='python -c "import time; print 1000 * (int(time.time())-3600)"'
+alias epoch3h='python -c "import time; print int(time.time())-3*3600"'
+alias epoch3hmillis='python -c "import time; print 1000 * (int(time.time())-3*3600)"'
+alias epoch1d='python -c "import time; print int(time.time())-86400"'
+alias epoch1dmillis='python -c "import time; print 1000 * (int(time.time())-86400)"'
+alias epoch7d='python -c "import time; print int(time.time())-604800"'
+alias epoch7dmillis='python -c "import time; print 1000 * (int(time.time())-604800)"'
 alias tmx='tmux attach || tmux new'
 
 who_is_on_port() {
+    echo "if this is a mac"
+    lsof -n -i4TCP:$1
+
     echo "netstat -tulpn"
     netstat -tulpn | grep $1
 
@@ -257,6 +332,19 @@ percent_free_swap() {
     free | grep 'Swap' | awk '{t = $2; f = $4; print (f/t)}'
 }
 
+alias author_of_past_500='git log HEAD~500...HEAD | grep AUthor | hist_common.py'
+alias author_of_all_time='git log | grep Author | hist_common.py'
+
+alias deac='deactivate'
+alias notests='antigrep "/tests/" | antigrep "/script/" | antigrep "build/lib.linux" | antigrep "_test.go" | antigrep "/mocks/" | antigrep ".gen" | antigrep "env_docs" | antigrep "./go-build/" | antigrep /_build/ | antigrep /.tmp/ '
+nolonglines() {
+    awk 'length($0)<5000 {print $0}'
+}
+alias uuid='python -c "import uuid; print uuid.uuid4()"'
+uuids() {
+    for i in `seq 20`; do uuid; done
+}
+
 fixgitbranch() {
     b=`git rev-parse --abbrev-ref HEAD`
     dir=`git rev-parse --show-toplevel`
@@ -266,7 +354,12 @@ fixgitbranch() {
     echo "     merge = refs/heads/master" >> $dir/.git/config
 }
 
-jq_maybe() {
+jqm() {
+    raw=`cat`
+    echo $raw | jq -e $1 || printf "failed to parse\n\n$raw\n"
+}
+
+jq_some() {
     while read line; do
         if [[ -n "$line" ]]; then
             (echo $line | jq . 2>/dev/null||echo $line)
@@ -275,6 +368,34 @@ jq_maybe() {
         fi
     done
 }
+
+gtv() {
+    go test -v 2>&1 | highlightlinered "\<FAIL\>" | highlightlinered "panic" | highlightgreen "\<PASS\>" | highlightline "Unexpected Call" | highlightline "missing call"
+}
+
 alias gs="~/customize/git_awesome_status.py"
 alias mine="git log --format=short --author=srussell@uber.com"
 alias author_of_all_time='git log | grep Author | hist_common.py'
+
+############################################################
+#     setup terminal coloring
+############################################################
+
+if [[ $box_id_str == *mgmt* ]]; then
+    PS1="\w \[\033[1;41m\]\h $\[\033[0m\] "
+    alias ls="ls -G --color=auto --hide='*.pyc'"
+elif [[ $box_id_str == *prod.uber* ]]; then
+    # production is red (and named)
+    PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
+    alias ls="ls -G --color=auto --hide='*.pyc'"
+elif [[ $box_id_str == *dev.uber.com* || $box_id_str == *us-west* || $box_id_str == *ip-* ]]; then
+    # Vagrants are blue
+    PS1="\w \[\033[1;34m\]$\[\033[0m\] "
+    alias ls="ls -G --color=auto --hide='*.pyc'"
+else
+    # Macbooks are yellow
+    # everything else is too
+    #PS1="\w \[\033[1;93m\]$\[\033[0m\] "
+    PS1="\[\033[1;93m\]\w $\[\033[0m\] "
+    alias ls="ls -G"
+fi
