@@ -329,14 +329,7 @@ alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
 alias utcnow='python -c "from datetime import datetime; import pytz; print datetime.now(pytz.utc)"'
 alias epochnow='python -c "import time; print int(time.time())"'
 alias epochnowmillis='python -c "import time; print 1000 * int(time.time())"'
-alias epoch1h='python -c "import time; print int(time.time())-3600"'
-alias epoch1hmillis='python -c "import time; print 1000 * (int(time.time())-3600)"'
-alias epoch3h='python -c "import time; print int(time.time())-3*3600"'
-alias epoch3hmillis='python -c "import time; print 1000 * (int(time.time())-3*3600)"'
-alias epoch1d='python -c "import time; print int(time.time())-86400"'
-alias epoch1dmillis='python -c "import time; print 1000 * (int(time.time())-86400)"'
-alias epoch7d='python -c "import time; print int(time.time())-604800"'
-alias epoch7dmillis='python -c "import time; print 1000 * (int(time.time())-604800)"'
+alias epoch="epoch.py"
 alias tmx='tmux attach || tmux new'
 
 who_is_on_port() {
