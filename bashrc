@@ -7,10 +7,12 @@ hotdev="srussell6.dev"
 export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
 export PATH=${PATH}:$HOME/customize
+export PATH=${PATH}:$HOME/srpub
 export PYTHONPATH=${PYTHONPATH}:$HOME/customize
+export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
 
 ############################################################
-#     Experiments
+#     History
 ############################################################
 # This is to provide improved history... shared between ssh sessions
 # Expand history size
@@ -24,12 +26,15 @@ histsearch() {
     fullhistory | grep_and $@ | tail -n 30
 }
 
-# Avoid duplicates
-#export HISTCONTROL=ignoredups:erasedups  
 # When the shell exits, append to the history file instead of overwriting it
 #shopt -s histappend
 # After each command, append to the history file and reread it
 #export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
+
+# big normal history
+export HISTSIZE=9000
+export HISTFILESIZE=$HISTSIZE
+export HISTCONTROL=ignorespace:ignoredups
 
 ############################################################
 #     Generic/Personal
@@ -237,6 +242,23 @@ last_word() {
 first_word() {
     cut -d' ' -f1
 }
+nthword() {
+    if [ $1 -lt "0" ]; then
+        index="$(expr `wc -w` + $1)"
+        echo $index
+    else
+        index=$1
+    fi
+    fcut="-f$index"
+    echo $fcut
+    cut -d" " $fcut
+}
+allbutfirstword() {
+    cut -d" " -f1 --complement
+}
+allbutlastword() {
+    sed s/'\S*$'//
+}
 
 # git
 alias gcp='git cherry-pick'
@@ -373,7 +395,7 @@ gtv() {
     go test -v 2>&1 | highlightlinered "\<FAIL\>" | highlightlinered "panic" | highlightgreen "\<PASS\>" | highlightline "Unexpected Call" | highlightline "missing call"
 }
 
-alias gs="~/customize/git_awesome_status.py"
+alias gs="git_awesome_status.py"
 alias mine="git log --format=short --author=srussell@uber.com"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
@@ -384,11 +406,11 @@ alias author_of_all_time='git log | grep Author | hist_common.py'
 if [[ $box_id_str == *mgmt* ]]; then
     PS1="\w \[\033[1;41m\]\h $\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *prod.uber* ]]; then
+elif [[ $box_id_str == *prod* ]]; then
     # production is red (and named)
     PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *dev.uber.com* || $box_id_str == *us-west* || $box_id_str == *ip-* ]]; then
+elif [[ $box_id_str == *dev* || $box_id_str == *us-west* || $box_id_str == *ip-* ]]; then
     # Vagrants are blue
     PS1="\w \[\033[1;34m\]$\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
