@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from utils import *
+from srutils import *
 import sys, re, operator
 
 def title_from_sha(sha):

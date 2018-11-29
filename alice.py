@@ -36,7 +36,7 @@ def seconds_between(da, db):
     return (db - da).total_seconds()
 
 def _alice_post_status(s, perc_done=None, message=None):
-    from utils import cmd
+    from srutils import cmd
     c = "curl -s -X POST -d uuid='" + alice_uuid + "' -d name='" + alice_name + "' -d host='" + alice_host + "' -d status='" + s + "'"
     if perc_done is not None:
         c += " -d perc_done='" + str(perc_done) + "'"
@@ -97,7 +97,7 @@ def _alice_status_once(perc_done=None,message=None):
 
 # Interface functions
 def alice_init(name=None, custom_actions=None, debug=False):
-    from utils import cmd
+    from srutils import cmd
     global alice_name, alice_uuid, alice_host, alice_status, alice_lastcheck, alice_interval, alice_fast_until, alice_custom_actions, alice_debug
     alice_uuid = str(uuid.uuid4())
 

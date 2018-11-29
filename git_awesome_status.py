@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from utils import *
+from srutils import *
 import sys, re
 from operator import itemgetter
 

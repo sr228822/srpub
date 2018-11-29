@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys, time
-from utils import *
+from srutils import *
 
 millis = argpop(sys.argv, "--millis") or argpop(sys.argv, "millis")
 
