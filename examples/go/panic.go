@@ -6,6 +6,8 @@ import (
 
 func main() {
     fmt.Println("Hello world!")
-	x := 4/0
-	fmt.Println(x)
+	x := 4
+    y := 0
+    z := x / y
+	fmt.Println(z)
 }
