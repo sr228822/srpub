@@ -65,13 +65,13 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 sc() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql,cc,hh,hpp} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*:' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
 }
 scw() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql,cc,hh,hpp} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*:' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
 }
 scnear() {
-    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules} --include=*.{py,js,yaml,go,thrift,cql} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*:' | tee /tmp/last_relevant_files
+    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
 }
 vimlast() {
     f=`cat /tmp/last_relevant_files | head -n 1 | first_word | sed 's/://g' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"`
@@ -329,9 +329,9 @@ diffit() {
 
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
-alias utcnow='python -c "from datetime import datetime; import pytz; print datetime.now(pytz.utc)"'
-alias epochnow='python -c "import time; print int(time.time())"'
-alias epochnowmillis='python -c "import time; print 1000 * int(time.time())"'
+alias utcnow='python2.7 -c "from datetime import datetime; import pytz; print datetime.now(pytz.utc)"'
+alias epochnow='python2.7 -c "import time; print int(time.time())"'
+alias epochnowmillis='python2.7 -c "import time; print 1000 * int(time.time())"'
 alias epoch="epoch.py"
 alias tmx='tmux attach || tmux new'
 
@@ -357,7 +357,7 @@ alias notests='antigrep "/tests/" | antigrep "/script/" | antigrep "build/lib.li
 nolonglines() {
     awk 'length($0)<5000 {print $0}'
 }
-alias uuid='python -c "import uuid; print uuid.uuid4()"'
+alias uuid='python2.7 -c "import uuid; print uuid.uuid4()"'
 uuids() {
     for i in `seq 20`; do uuid; done
 }
