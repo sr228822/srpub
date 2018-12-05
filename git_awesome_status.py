@@ -66,6 +66,8 @@ def fetch_commits_for_branch(branch, n):
     if 'Not a git repository' in raw:
         print red_str('Not a git repository')
         sys.exit(0)
+    if 'unknown revision or path not in the working tree' in raw:
+        return []
     res = []
     for l in raw.rstrip().split('\n'):
         if l.startswith('warning'):
@@ -80,14 +82,17 @@ def fetch_commits_for_branch(branch, n):
     return res
 
 def fb_alternate():
-    print 'trying alernate'
-    branches = cmd('git branch -vv 2>/dev/null').rstrip().split('\n')
+    #print 'trying alernate'
+    branches_raw = cmd('git branch -vv 2>/dev/null').rstrip()
+    branches = branches_raw.split('\n')
     for branch in branches:
         if branch.startswith('*'):
             m = re.search(r'\[(.*?)\]', branch)
             if m:
                 return m.group(1)
-    return None
+    if 'origin' in branches_raw:
+        return 'origin'
+    return 'master'
 
 ###########################################################
 #     Init and argv stuff
@@ -104,6 +109,7 @@ if not status or len(status) == 0 or not status[0]:
     print red_str("Not a git repo")
     sys.exit(1)
 branchline = status[0] + ' '
+no_remote = False
 m = re.search(r'\.\.\.(.*?) ', branchline)
 if m:
     fb = m.group(1)
@@ -112,8 +118,8 @@ if m:
 else:
     current_branch = branchline.split()[1]
     fb = fb_alternate()
-    if fb is None:
-        fb = 'origin'
+if fb is None:
+    raise Exception("never get here")
 
 ###########################################################
 #     Fetch the log info about local HEAD and remote branch
@@ -218,10 +224,14 @@ cp_but_merged = 0
 
 if len(made) + len(made_merged) > 15:
     # something is wierd
-    print red_str("\nUnable to determine alignment with remote\n")
+    if len(origin) == 0:
+        # we don't generally get here, since we fallback to master
+        print grey_str("    ********** (no origin) ************")
+    else:
+        print red_str("\nUnable to determine alignment with remote\n")
     show_shas(totsha[0], totsha[8])
     sys.exit(1)
-    
+
 for c in tot[0:50]:
     if c in made:
         done += 1
@@ -236,7 +246,10 @@ for c in tot[0:50]:
 if len(common) == 0:
     sys.exit(1)
 
-print blue_str("    ********** " + fb + " ************")
+if fb == "master":
+    print grey_str("    ********** " + fb + " ************")
+else:
+    print blue_str("    ********** " + fb + " ************")
 
 ###########################################################
 #     print commits in origin missing from HEAD'
