@@ -90,6 +90,11 @@ def fb_alternate():
             m = re.search(r'\[(.*?)\]', branch)
             if m:
                 return m.group(1)
+            m = re.search(r'HEAD detached at (.+?)\)', branch)
+            if m:
+                #print "found deatched head", m.group(1)
+                return m.group(1)
+    # as a fallback, look if any of our local branches track an origin
     if 'origin' in branches_raw:
         return 'origin'
     return 'master'
@@ -109,7 +114,6 @@ if not status or len(status) == 0 or not status[0]:
     print red_str("Not a git repo")
     sys.exit(1)
 branchline = status[0] + ' '
-no_remote = False
 m = re.search(r'\.\.\.(.*?) ', branchline)
 if m:
     fb = m.group(1)
@@ -120,6 +124,8 @@ else:
     fb = fb_alternate()
 if fb is None:
     raise Exception("never get here")
+#print "current_branch", current_branch
+#print "fb", fb
 
 ###########################################################
 #     Fetch the log info about local HEAD and remote branch
@@ -167,19 +173,20 @@ while True:
 ###########################################################
 #     Print branch info
 ###########################################################
-other_branches = cmd('git branch').replace('*', '').strip().split('\n')
-other_branches = [x.strip() for x in other_branches]
+other_branches = cmd('git branch').strip().split('\n')
+other_branches = [x.strip() for x in other_branches if not x.startswith('*')]
 #max_len = max([len(x) for x in other_branches]) + 10
 max_len = 50
 branch_cols = cols / max_len
 
 print
 print '*' * (cols - 10)
-print blue_str(bold_str('%30s' % current_branch))
+if current_branch == "HEAD":
+    print magenta_str(bold_str('%30s' % "~~ HEAD detached ~~"))
+else:
+    print blue_str(bold_str('%30s' % current_branch))
 branch_data = []
 for branch in other_branches:
-    if branch == current_branch:
-        continue
     try:
         stats = cmd('git show --pretty=format:"%ci %cr" ' + branch + ' -- | head -n 1').split(' ')
         dt = datetime.datetime.strptime(stats[0] + ' ' + stats[1], "%Y-%m-%d %H:%M:%S")
