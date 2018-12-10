@@ -65,13 +65,13 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 sc() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp,vue,ts} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp|vue|ts):' | tee /tmp/last_relevant_files
 }
 scw() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,hh,hpp,vue,ts} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp|vue|ts):' | tee /tmp/last_relevant_files
 }
 scnear() {
-    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,vue,ts} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|hh|hpp|vue|ts):' | tee /tmp/last_relevant_files
 }
 vimlast() {
     f=`cat /tmp/last_relevant_files | head -n 1 | first_word | sed 's/://g' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"`
@@ -235,7 +235,9 @@ dofrom() {
     orig=`pwd`
     cd $1
     $2
+    code=$?
     cd $orig
+    return $code
 }
 
 # parsing helper

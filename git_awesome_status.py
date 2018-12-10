@@ -31,8 +31,8 @@ def show_sha(sha):
     print res
     #cmd('git --no-pager show --pretty=format:"%Cgreen%H%Creset   %an%n   %s%n" ' + sha + ' | head -n 3', noisy=True)
 
-def show_shas(sha_first, sha_last):
-    res = clean_up_decorate(cmd('git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" ' + sha_first + '...' + sha_last))
+def show_shas(sha_first, sha_last, nmax=100):
+    res = clean_up_decorate(cmd('git --no-pager log -n {} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {}...{}'.format(nmax, sha_first, sha_last)))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print res
@@ -276,7 +276,7 @@ elif len(missing) > 0:
 ###########################################################
 
 left = min(max(1, 10-done), len(common)-1)
-originz = show_shas(common[0].sha, common[left].sha)
+originz = show_shas(common[0].sha, common[left].sha, nmax=left)
 
 ###########################################################
 #     print my last merged commit if not in the above
