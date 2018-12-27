@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 from srutils import *
 import sys, re
 from operator import itemgetter
@@ -28,43 +30,43 @@ def show_sha(sha):
     res = clean_up_decorate(cmd('git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + sha))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
-    print res
+    print(res)
     #cmd('git --no-pager show --pretty=format:"%Cgreen%H%Creset   %an%n   %s%n" ' + sha + ' | head -n 3', noisy=True)
 
 def show_shas(sha_first, sha_last, nmax=100):
     res = clean_up_decorate(cmd('git --no-pager log -n {} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {}...{}'.format(nmax, sha_first, sha_last)))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
-    print res
+    print(res)
     return res
 
 def show_my_most_recent(fb):
-    print '               ....\n'
+    print('               ....\n')
     res = clean_up_decorate(cmd('git --no-pager log --color=always --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
-    print res
+    print(res)
 
 def show_sha_grey(sha):
     res = cmd('git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 ' + sha)
     if "Samuel Russell" in res:
         ts = res.split("Samuel Russell")
-        print grey_str(ts[0]) + blue_str("Samuel Russell") + grey_str(ts[1])
+        print(grey_str(ts[0]) + blue_str("Samuel Russell") + grey_str(ts[1]))
     else:
-        print grey_str(res)
-    print ''
+        print(grey_str(res))
+    print('')
 
 def show_sha_magenta(sha):
     res = cmd('git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
-    print res
-    print ''
+    print(res)
+    print('')
 
 def fetch_commits_for_branch(branch, n):
     raw = cmd('git log ' + branch + ' --format=oneline -n ' + str(n))
     if 'Not a git repository' in raw:
-        print red_str('Not a git repository')
+        print(red_str('Not a git repository'))
         sys.exit(0)
     if 'unknown revision or path not in the working tree' in raw:
         return []
@@ -82,7 +84,7 @@ def fetch_commits_for_branch(branch, n):
     return res
 
 def fb_alternate():
-    #print 'trying alernate'
+    #print('trying alernate')
     branches_raw = cmd('git branch -vv 2>/dev/null').rstrip()
     branches = branches_raw.split('\n')
     for branch in branches:
@@ -92,7 +94,7 @@ def fb_alternate():
                 return m.group(1)
             m = re.search(r'HEAD detached at (.+?)\)', branch)
             if m:
-                #print "found deatched head", m.group(1)
+                #print("found deatched head", m.group(1))
                 return m.group(1)
     # as a fallback, look if any of our local branches track an origin
     if 'origin' in branches_raw:
@@ -111,7 +113,7 @@ rows, cols = get_term_size()
 
 status = cmd('git status -bs 2>/dev/null').rstrip().split('\n')
 if not status or len(status) == 0 or not status[0]:
-    print red_str("Not a git repo")
+    print(red_str("Not a git repo"))
     sys.exit(1)
 branchline = status[0] + ' '
 m = re.search(r'\.\.\.(.*?) ', branchline)
@@ -124,8 +126,8 @@ else:
     fb = fb_alternate()
 if fb is None:
     raise Exception("never get here")
-#print "current_branch", current_branch
-#print "fb", fb
+#print("current_branch", current_branch)
+#print("fb", fb)
 
 ###########################################################
 #     Fetch the log info about local HEAD and remote branch
@@ -171,7 +173,7 @@ while True:
 #cmd('git fetch')
 
 ###########################################################
-#     Print branch info
+#     print branch info
 ###########################################################
 other_branches = cmd('git branch').strip().split('\n')
 other_branches = [x.strip() for x in other_branches if not x.startswith('*')]
@@ -180,11 +182,11 @@ max_len = 50
 branch_cols = cols / max_len
 
 print
-print '*' * (cols - 10)
+print('*' * (cols - 10))
 if current_branch == "HEAD":
-    print magenta_str(bold_str('%30s' % "~~ HEAD detached ~~"))
+    print(magenta_str(bold_str('%30s' % "~~ HEAD detached ~~")))
 else:
-    print blue_str(bold_str('%30s' % current_branch))
+    print(blue_str(bold_str('%30s' % current_branch)))
 branch_data = []
 for branch in other_branches:
     try:
@@ -200,28 +202,28 @@ for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
     branch, dt, age = dat
     if 'minutes' in age or 'hours' in age:
         age = ''
-    print '%30s ' % branch + grey_str('%-10s' % age),
+    print('%30s ' % branch + grey_str('%-10s' % age), end='')
     if idx % branch_cols == 0:
-        print ''
-print ''
-print '*' * (cols - 10)
+        print('')
+print('')
+print('*' * (cols - 10))
 
 ###########################################################
-#     Print local status diffs
+#     print(local status diffs
 ###########################################################
 untracked = []
 for l in status[1:]:
     if '??' in l:
         untracked.append(l)
     else:
-        print magenta_str(l)
+        print(magenta_str(l))
 
 if len(untracked) > 3:
-    print red_str(str(len(untracked)) + ' Untracked files ??')
+    print(red_str(str(len(untracked)) + ' Untracked files ??'))
 else:
     for u in untracked:
-        print red_str(u)
-print ''
+        print(red_str(u))
+print('')
 
 ###########################################################
 #     print commits cherry picked on top
@@ -233,9 +235,9 @@ if len(made) + len(made_merged) > 15:
     # something is wierd
     if len(origin) == 0:
         # we don't generally get here, since we fallback to master
-        print grey_str("    ********** (no origin) ************")
+        print(grey_str("    ********** (no origin) ************"))
     else:
-        print red_str("\nUnable to determine alignment with remote\n")
+        print(red_str("\nUnable to determine alignment with remote\n"))
     show_shas(totsha[0], totsha[8])
     sys.exit(1)
 
@@ -254,17 +256,17 @@ if len(common) == 0:
     sys.exit(1)
 
 if fb == "master":
-    print grey_str("    ********** " + fb + " ************")
+    print(grey_str("    ********** " + fb + " ************"))
 else:
-    print blue_str("    ********** " + fb + " ************")
+    print(blue_str("    ********** " + fb + " ************"))
 
 ###########################################################
 #     print commits in origin missing from HEAD'
 ###########################################################
 if len(missing) > 5 and not showall:
-    print grey_str('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print grey_str('   ' + str(len(missing)) + ' missing commits')
-    print grey_str('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    print(grey_str('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'))
+    print(grey_str('   ' + str(len(missing)) + ' missing commits'))
+    print(grey_str('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'))
     done += 2
 elif len(missing) > 0:
     for c in missing:

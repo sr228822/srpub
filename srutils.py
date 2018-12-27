@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 import os
-import subprocess, math, time, sys, datetime, commands, re
+import subprocess, math, time, sys, datetime, re
 
 def ash(c, wait=True, noisy=False):
     fullcmd = 'adb shell "' + c + '"'
@@ -37,7 +39,7 @@ def noisy_sleep(duration, tag=''):
             except:
                 pass
     flushprint('                                                ')
-    print ''
+    print('')
 
 def flushprint(l):
     sys.stdout.write("\r" + str(l) + "                   ")
@@ -94,12 +96,10 @@ def html_read_timeout(url, to):
     try:
         import urllib2
         req = urllib2.Request(url)
-        #print '{url',
         resp = urllib2.urlopen(req, timeout=to)
-        #print ' success}'
         return resp.read()
     except:
-        print '{url fail}'
+        print('{url fail}')
         return ''
 
 def html_read(url):
@@ -179,12 +179,12 @@ def bold_str(txt):
     return termcode(1) + txt + termcode(0)
 
 def print_error(s, fatal=False):
-    print red_str('\n[ERROR] ' + s + '\n')
+    print(red_str('\n[ERROR] ' + s + '\n'))
     if fatal:
         sys.exit(1)
 
 def print_warning(s):
-    print yellow_str('\n[WARNING] ' + s + '\n')
+    print(yellow_str('\n[WARNING] ' + s + '\n'))
 
 #################################################################
 # HTML
@@ -261,8 +261,8 @@ def html_link(txt, link):
 
 def cmd(c, wait=True, noisy=False):
     # this seems to be much faster for the simple case
-    if wait and not noisy:
-        return commands.getoutput(c)
+    #if wait and not noisy:
+    #    return commands.getoutput(c)
 
     if not wait:
         process = subprocess.Popen(c, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
