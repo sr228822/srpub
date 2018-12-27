@@ -162,8 +162,8 @@ def parse_duration(txt):
 
 def termcode(num):
     # womp windows
-    if os_name == 'nt':
-        return ''
+    #if os_name == 'nt':
+    #    return ''
     return '\033[%sm'%num
 
 def brilliant_str(txt):
@@ -175,8 +175,12 @@ def green_str(txt):
 def yellow_str(txt):
     return termcode(93) + txt + termcode(0)
 def blue_str(txt):
+    if os_name == 'nt':
+        return termcode(95) + txt + termcode(0)
     return termcode(34) + txt + termcode(0)
 def magenta_str(txt):
+    if os_name == 'nt':
+        return termcode(95) + txt + termcode(0)
     return termcode(35) + txt + termcode(0)
 def grey_str(txt):
     return termcode(90) + txt + termcode(0)

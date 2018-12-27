@@ -209,7 +209,7 @@ print('')
 print('*' * (cols - 10))
 
 ###########################################################
-#     print(local status diffs
+#     print local status diffs
 ###########################################################
 untracked = []
 for l in status[1:]:
