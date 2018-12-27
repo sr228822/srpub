@@ -5,6 +5,8 @@ from __future__ import print_function
 import os
 import subprocess, math, time, sys, datetime, re
 
+os_name = os.name
+
 def ash(c, wait=True, noisy=False):
     fullcmd = 'adb shell "' + c + '"'
     return cmd(fullcmd, wait=wait, noisy=noisy)
@@ -159,6 +161,9 @@ def parse_duration(txt):
 #################################################################
 
 def termcode(num):
+    # womp windows
+    if os_name == 'nt':
+        return ''
     return '\033[%sm'%num
 
 def brilliant_str(txt):
