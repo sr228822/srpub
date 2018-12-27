@@ -285,8 +285,11 @@ def cmd(c, wait=True, noisy=False):
         return output.rstrip()
 
 def get_term_size():
-    rows, cols = os.popen('stty size', 'r').read().split()
-    return int(rows), int(cols)
+    try:
+        rows, cols = os.popen('stty size', 'r').read().split()
+        return int(rows), int(cols)
+    except ValueError:
+        return 80, 160
 
 #################################################################
 # math
