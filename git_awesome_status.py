@@ -85,7 +85,7 @@ def fetch_commits_for_branch(branch, n):
 
 def fb_alternate():
     #print('trying alernate')
-    branches_raw = cmd('git branch -vv 2>/dev/null').rstrip()
+    branches_raw = cmd('git branch -vv').rstrip()
     branches = branches_raw.split('\n')
     for branch in branches:
         if branch.startswith('*'):
@@ -111,7 +111,7 @@ rows, cols = get_term_size()
 #     Fetch info about the branch and remote branch
 ###########################################################
 
-status = cmd('git status -bs 2>/dev/null').rstrip().split('\n')
+status = cmd('git status -bs').rstrip().split('\n')
 if not status or len(status) == 0 or not status[0]:
     print(red_str("Not a git repo"))
     sys.exit(1)
