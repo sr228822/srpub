@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import re, sys, random
 
 CODE={
@@ -45,7 +47,7 @@ def print_color(color,txt):
         for word in words:
             txt = txt.replace(word, color_str(word, colors[i]))
             i = (i + 1) % len(colors)
-        print txt
+        print(txt)
     else:
         print(color_str(txt, color))
 
@@ -94,7 +96,7 @@ if __name__ == "__main__":
             text = sys.stdin.readline().rstrip()
             if text:
                 for i in range(deadlines):
-                    print ''
+                    print('')
                 deadlines = 0
                 print_color(color,text)
             else:
