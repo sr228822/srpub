@@ -396,6 +396,8 @@ alias gs="git_awesome_status.py"
 alias mine="git log --format=short --author='Samuel Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
+alias unfuck_touchbar="sudo pkill TouchBarServer"
+
 ############################################################
 #     setup terminal coloring
 ############################################################

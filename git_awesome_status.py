@@ -65,7 +65,7 @@ def show_sha_magenta(sha):
 
 def fetch_commits_for_branch(branch, n):
     raw = cmd('git log ' + branch + ' --format=oneline -n ' + str(n))
-    if 'Not a git repository' in raw:
+    if 'not a git repository' in raw.lower():
         print(red_str('Not a git repository'))
         sys.exit(0)
     if 'unknown revision or path not in the working tree' in raw:

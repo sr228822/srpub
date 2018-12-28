@@ -9,14 +9,21 @@ proc_name = sys.argv[1]
 pid = cmd("pidof {}".format(proc_name))
 
 if not pid:
-    print("could not find pid for {}".format(proc_name))
-    sys.exit(1)
+    print("waiting for process to start...")
+    while not pid:
+        time.sleep(1)
+        pid = cmd("pidof {}".format(proc_name))
 
-ema = 0.95
+ema = 0.85
 avg = None
 
 print(" cur     avg")
 while True:
+    pid = cmd("pidof {}".format(proc_name))
+    if not pid:
+        time.sleep(1)
+        continue
+
     r = cmd("ps -p {} -o %cpu".format(pid))
     cpu = float(r.split("\n")[1])
     if avg is None:
