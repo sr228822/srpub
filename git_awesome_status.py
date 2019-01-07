@@ -107,6 +107,9 @@ def fb_alternate():
 showall = argpop(sys.argv, "--all")
 rows, cols = get_term_size()
 
+# Print a new line..... seems to help windows reset its coloring
+print("")
+
 ###########################################################
 #     Fetch info about the branch and remote branch
 ###########################################################
