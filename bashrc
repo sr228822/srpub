@@ -11,6 +11,10 @@ export PATH=${PATH}:$HOME/srpub
 export PYTHONPATH=${PYTHONPATH}:$HOME/customize
 export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
 
+git config --global core.editor "vim"
+git config --global user.name "Samuel Russell"
+git config --global user.email "sr228822@gmail.com"
+
 ############################################################
 #     History
 ############################################################
@@ -393,7 +397,7 @@ gtv() {
 }
 
 alias gs="git_awesome_status.py"
-alias mine="git log --format=short --author='Samuel Russell'"
+alias mine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
 alias unfuck_touchbar="sudo pkill TouchBarServer"
