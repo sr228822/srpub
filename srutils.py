@@ -156,6 +156,35 @@ def parse_duration(txt):
         duration = int(duration)
     return duration
 
+def dur_to_human(secs):
+    res = []
+    years = int(secs / 31536000)
+    if years > 0:
+        secs -= (years * 31536000)
+        res.append(str(years) + "-years")
+        if years >= 2 or len(res) >= 2:
+            return ":".join(res)
+    days = int(secs / 86400)
+    if days > 0:
+        secs -= (days * 86400)
+        res.append(str(days) + "-days")
+        if days >= 2 or len(res) >= 2:
+            return ":".join(res)
+    hrs = int(secs / 3600)
+    if hrs:
+        secs -= (hrs * 3600)
+        res.append(str(hrs) + "-hrs")
+        if hrs >= 2 or len(res) >= 2:
+            return ":".join(res)
+    mins = int(secs / 60)
+    if mins > 0:
+        res.append(str(mins) + "-min")
+        if mins >= 2 or len(res) >= 2:
+            return ":".join(res)
+    secs = secs % 60
+    res.append(str(secs) + "-secs")
+    return ":".join(res)
+
 #################################################################
 # Coloring
 #################################################################
