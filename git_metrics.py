@@ -26,6 +26,8 @@ l100_cnt = {}
 l100_tim = TimeRange(9999999999, 0)
 
 MY_NAME = "sam russell"
+if len(sys.argv) > 1:
+    MY_NAME = sys.argv[1]
 STRIP_PREFX = "ctrl"
 
 def looks_similar(a, b):
@@ -83,9 +85,8 @@ def put_in_known(name, email):
 def print_cnt_dict(title, cnts, tim):
     sorted_x = sorted(cnts.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    print("\n\n=== {} ===".format(title))
     total_time = (tim.end - tim.start)
-    print("total time: ", dur_to_human(total_time))
+    print("\n\n=== {} === \t ({})".format(title, dur_to_human(total_time)))
     print("%3s" % "" + "  " + "%5s" % "cnt " + " " + "/week" + " " + "name")
     print("%3s" % "" + "  " + "%5s" % "--- " + " " + "-----" + " " + "----")
     for i, x in enumerate(sorted_x):
@@ -101,10 +102,10 @@ def print_cnt_dict(title, cnts, tim):
             if did_me:
                 break
             else:
-                print("           ...")
+                print("                  ...")
         if i >= 10 and not is_me:
             continue
-        print("%3d" % (i+1) + ". " + "%5d  " % cnt + "  %.1f " % rate + name)
+        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + name)
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at'")
 
@@ -153,5 +154,5 @@ for i, c in enumerate(reversed(commits)):
 #    print("%50s" % k, "   ", "%50s" % v)
 
 print_cnt_dict("Overall", all_cnt, all_tim)
-print_cnt_dict("Since-Me", sme_cnt, sme_tim)
+print_cnt_dict("Since-First", sme_cnt, sme_tim)
 print_cnt_dict("Last 100", l100_cnt, l100_tim)
