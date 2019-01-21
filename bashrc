@@ -238,7 +238,7 @@ alias make_tar='tar -cvzf'
 dofrom() {
     orig=`pwd`
     cd $1
-    $2
+    ${@:2}
     code=$?
     cd $orig
     return $code
