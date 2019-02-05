@@ -16,8 +16,9 @@ if not pid:
 
 ema = 0.85
 avg = None
+t0 = time.time()
 
-print(" cur     avg")
+print("time\tcur\tavg")
 while True:
     pid = cmd("pidof {}".format(proc_name))
     if not pid:
@@ -30,5 +31,5 @@ while True:
         avg = cpu
     else:
         avg = (ema * avg) + ((1-ema) * cpu)
-    print("%.1f\t%.1f" % (cpu, avg))
+    print("%.1f\t%.1f\t%.1f" % ((time.time() - t0), cpu, avg))
     time.sleep(0.25)
