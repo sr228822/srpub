@@ -25,9 +25,14 @@ sme_tim = TimeRange(9999999999, 0)
 l100_cnt = {}
 l100_tim = TimeRange(9999999999, 0)
 
+overall = False
 MY_NAME = "sam russell"
 if len(sys.argv) > 1:
-    MY_NAME = sys.argv[1]
+    if sys.argv[1] == "overall":
+        overall = True
+        MY_NAME = "zzzzzzzzzzz"
+    else:
+        MY_NAME = sys.argv[1]
 STRIP_PREFX = "ctrl"
 
 def looks_similar(a, b):
@@ -82,7 +87,16 @@ def put_in_known(name, email):
     kauths[name] = fname
     kauths[email] = fname
 
-def print_cnt_dict(title, cnts, tim):
+def get_aliases(name, emails=True):
+    global kauths
+    res = {}
+    for k, v in kauths.items():
+        if v == name:
+            if "@" in k or not emails:
+                res[k] = True
+    return res.keys()
+
+def print_cnt_dict(title, cnts, tim, limit=10):
     sorted_x = sorted(cnts.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
     total_time = (tim.end - tim.start)
@@ -98,14 +112,14 @@ def print_cnt_dict(title, cnts, tim):
             name = blue_str(name)
         cnt = x[1]
         rate = (float(cnt) / (total_time / 604800))
-        if i == 10:
+        if i == limit:
             if did_me:
                 break
             else:
                 print("                  ...")
-        if i >= 10 and not is_me:
+        if i >= limit and not is_me:
             continue
-        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + name)
+        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + " {0: <20}".format(name))
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at'")
 
@@ -153,6 +167,10 @@ for i, c in enumerate(reversed(commits)):
 #for k,v in all_cnt.items():
 #    print("%50s" % k, "   ", "%50s" % v)
 
-print_cnt_dict("Overall", all_cnt, all_tim)
-print_cnt_dict("Since-First", sme_cnt, sme_tim)
-print_cnt_dict("Last 100", l100_cnt, l100_tim)
+if overall:
+    print_cnt_dict("Overall", all_cnt, all_tim, limit=100)
+else:
+    # print personalized
+    print_cnt_dict("Overall", all_cnt, all_tim)
+    print_cnt_dict("Since-First", sme_cnt, sme_tim)
+    print_cnt_dict("Last 100", l100_cnt, l100_tim)

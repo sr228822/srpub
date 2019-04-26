@@ -26,7 +26,7 @@ export HISTSIZE=1000000
 mkdir -p ~/.logs/
 export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
 alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
-histsearch() {
+hist() {
     fullhistory | grep_and $@ | tail -n 30
 }
 
