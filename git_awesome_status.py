@@ -129,6 +129,10 @@ else:
     fb = fb_alternate()
 if fb is None:
     raise Exception("never get here")
+
+master = argpop(sys.argv, "--master")
+if master:
+    fb = "origin/master"
 #print("current_branch", current_branch)
 #print("fb", fb)
 
@@ -234,7 +238,7 @@ print('')
 done = 0
 cp_but_merged = 0
 
-if len(made) + len(made_merged) > 15:
+if len(made) + len(made_merged) > 20:
     # something is wierd
     if len(origin) == 0:
         # we don't generally get here, since we fallback to master

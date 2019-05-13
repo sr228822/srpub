@@ -4,15 +4,29 @@ from srutils import *
 import time
 import sys
 
-proc_name = sys.argv[1]
+def is_int(x):
+    try:
+        i = int(x)
+        return True
+    except:
+        return False
 
-pid = cmd("pidof {}".format(proc_name))
+def get_pid():
+    a1 = sys.argv[1]
+    if is_int(a1):
+        return int(a1)
+    proc_name = sys.argv[1]
 
-if not pid:
+    pid = cmd("pidof {}".format(proc_name))
+    if pid:
+        return pid
+
     print("waiting for process to start...")
     while not pid:
         time.sleep(1)
         pid = cmd("pidof {}".format(proc_name))
+
+    return pid
 
 ema = 0.85
 avg = None
@@ -21,10 +35,7 @@ t0 = time.time()
 #print("time\tcur\tavg")
 print("CPU %")
 while True:
-    pid = cmd("pidof {}".format(proc_name))
-    if not pid:
-        time.sleep(1)
-        continue
+    pid = get_pid()
 
     r = cmd("ps -p {} -o %cpu".format(pid))
     cpu = float(r.split("\n")[1])
