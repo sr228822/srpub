@@ -2,7 +2,7 @@
 
 def my_decorator(func):
     def inner(*args, **kwargs):
-        print('one')
+        print('one, the func is ', func.__name__)
         resp = func(*args, **kwargs)
         print('three')
         return resp
