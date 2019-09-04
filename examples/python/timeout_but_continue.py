@@ -12,9 +12,14 @@ def foo(x):
         print("still working", i)
         time.sleep(1)
     print('done ' + str(x))
+    return "neat"
 
 if __name__ == '__main__':
-    p = multiprocessing.Process(target=foo, args=('bob',))
-    p.start()
-    p.join(5)
-    print("it has been 5 seconds, p is ", p.is_alive())
+    p = multiprocessing.Pool(processes=1)
+    a = p.apply_async(foo, args=('bob',))
+    try:
+        resp = a.get(timeout=5)
+        print("made it, result is ", resp)
+    except multiprocessing.TimeoutError:
+        print("didnt make it in time")
+    time.sleep(5)

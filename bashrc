@@ -379,7 +379,7 @@ fixgitbranch() {
 
 jqm() {
     raw=`cat`
-    echo $raw | jq -e $1 || printf "failed to parse\n\n$raw\n"
+    echo $raw | jq -e $1 || printf "~~invalid json~~\n\n$raw\n"
 }
 
 jq_some() {
