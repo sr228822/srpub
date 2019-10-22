@@ -90,6 +90,17 @@ def argpop(argv, item):
         return True
     return False
 
+def str_hash(obj):
+    import hashlib
+    print("Hashing", obj)
+    if type(obj) == list:
+        strv = "-".join([str(x) for x in sorted(obj)])
+    else:
+        strv = str(obj)
+    print("strv is ", strv, type(strv))
+
+    return hashlib.sha1(bytes(strv, 'utf-8')).hexdigest()[-10:]
+
 #################################################################
 # Internet Reading
 #################################################################
@@ -110,10 +121,15 @@ def html_read(url):
 #################################################################
 # Pickling to/from files
 #################################################################
-def load_pickle(fname):
+def load_pickle(fname, default=None):
     import pickle
-    with open(fname, 'rb') as f:
-        result = pickle.load(f)
+    try:
+        with open(fname, 'rb') as f:
+            result = pickle.load(f)
+    except IOError:
+        if default is not None:
+            return default
+        raise
     return result
 
 def save_pickle(obj, fname):
