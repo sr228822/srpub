@@ -49,6 +49,7 @@ def _print_hist(with_rate=True, alphabetical=False, dups_only=False, with_perc=F
 
 alphabetical = argpop(sys.argv, "--alphabetical")
 with_perc = argpop(sys.argv, "--percent")
+no_rate = argpop(sys.argv, "--no-rate")
 for line in quick_ingest_line():
     line = line.rstrip().lstrip()
     seen[line] = seen.get(line, 0) + 1
@@ -61,4 +62,4 @@ print '\nSTDOUT terminated\n\n\n'
 if seconds_between(t0, get_now()) < 3:
     _print_hist(with_rate=False, alphabetical=alphabetical, dups_only=duplicated, with_perc=with_perc)
 else:
-    _print_hist(alphabetical=alphabetical, dups_only=duplicated, with_perc=with_perc)
+    _print_hist(with_rate=(not no_rate), alphabetical=alphabetical, dups_only=duplicated, with_perc=with_perc)
