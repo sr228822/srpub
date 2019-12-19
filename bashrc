@@ -1,8 +1,6 @@
 myhostname=`hostname -f`
-#datacenter=`cat /etc/uber/datacenter`
 datacenter=""
-box_id_str="$myhostname $datacenter"
-hotdev="srussell6.dev"
+box_id_str="$myhostname"
 
 export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
@@ -13,15 +11,11 @@ export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
 
 git config --global core.editor "vim"
 git config --global user.name "Samuel Russell"
-git config --global user.email "sr228822@gmail.com"
+#git config --global user.email "sr228822@gmail.com"
 
 ############################################################
 #     History
 ############################################################
-# This is to provide improved history... shared between ssh sessions
-# Expand history size
-export HISTSIZE=1000000
-
 # Use prompt command to log all bash to files in .logs
 mkdir -p ~/.logs/
 export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
@@ -29,11 +23,6 @@ alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
 hist() {
     fullhistory | grep_and $@ | tail -n 30
 }
-
-# When the shell exits, append to the history file instead of overwriting it
-#shopt -s histappend
-# After each command, append to the history file and reread it
-#export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
 # big normal history
 export HISTSIZE=9000
@@ -140,7 +129,6 @@ shallowloc() {
 deeploc() {
     find . -iname "*$1*" -maxdepth 6 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
 }
-alias adblocate='adb shell ls / && adb shell ls /* && adb shell ls /*/*'
 
 watch () {
     for i in `seq 99999`; do $1 $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.5; done 
@@ -154,12 +142,6 @@ repeat () {
         for i in `seq $1`; do $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.1; done 
     fi
 }
-
-alias notify='~/customize/notify.py'
-alias makew='pwd > ~/customize/wdir'
-alias gow='cd `cat ~/customize/wdir`'
-alias mw='makew'
-alias gw='gow'
 
 goto () {
     find | grep -i $1
@@ -406,15 +388,12 @@ alias unfuck_touchbar="sudo pkill TouchBarServer"
 #     setup terminal coloring
 ############################################################
 
-if [[ $box_id_str == *mgmt* ]]; then
-    PS1="\w \[\033[1;41m\]\h $\[\033[0m\] "
-    alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *prod* ]]; then
+if [[ $box_id_str == *prod* ]]; then
     # production is red (and named)
     PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *dev* || $box_id_str == *us-west* || $box_id_str == *ip-* ]]; then
-    # Vagrants are blue
+elif [[ $box_id_str == *dev* ]]; then
+    # Dev boxes are blue
     PS1="\w \[\033[1;34m\]$\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
 else
