@@ -351,12 +351,7 @@ uuids() {
 }
 
 fixgitbranch() {
-    b=`git rev-parse --abbrev-ref HEAD`
-    dir=`git rev-parse --show-toplevel`
-    echo $b
-    echo [branch '"'$b'"'] >> $dir/.git/config
-    echo "     remote = origin" >> $dir/.git/config
-    echo "     merge = refs/heads/master" >> $dir/.git/config
+    git branch --set-upstream-to origin/master
 }
 
 jqm() {
