@@ -36,8 +36,13 @@ t0 = time.time()
 print("CPU %")
 while True:
     pid = get_pid()
+    if not pid:
+        print("No Pid")
+        time.sleep(0.25)
+        continue
 
     r = cmd("ps -p {} -o %cpu".format(pid))
+    #print(r.split("\n"))
     cpu = float(r.split("\n")[1])
     if avg is None:
         avg = cpu
