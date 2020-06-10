@@ -6,6 +6,7 @@ from srutils import *
 import sys, re
 import operator
 from collections import namedtuple
+import datetime
 
 # A map of known aliases -> name
 kauths = {}
@@ -13,10 +14,30 @@ kauths = {}
 # A map of kname to longest-name
 longname = {}
 
+def epoch_to_date(e):
+    return datetime.datetime.utcfromtimestamp(e).strftime('%Y-%m-%d')
+
+def fmt_float(f, decimals=1, width=4):
+    f_fmt = "%." + str(decimals) + "f"
+    s_fmt = "%" + str(width) + "s"
+    return s_fmt % (f_fmt % f) 
+
 class TimeRange:
     def __init__(self, start, end):
         self.start = start
         self.end = end
+
+    def __str__(self):
+        return "[{} - {}]".format(epoch_to_date(self.start), epoch_to_date(self.end))
+
+    def seconds(self):
+        return (self.end - self.start)
+
+    def weeks(self):
+        return max(1, (self.seconds() / 604800))
+
+    def human_dur(self):
+        return dur_to_human(self.seconds())
 
 all_cnt = {}
 all_tim = TimeRange(9999999999, 0)
@@ -24,6 +45,8 @@ sme_cnt = {}
 sme_tim = TimeRange(9999999999, 0)
 l100_cnt = {}
 l100_tim = TimeRange(9999999999, 0)
+
+user_active_tim = {}
 
 overall = False
 MY_NAME = "sam russell"
@@ -99,8 +122,8 @@ def get_aliases(name, emails=True):
 def print_cnt_dict(title, cnts, tim, limit=10):
     sorted_x = sorted(cnts.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    total_time = (tim.end - tim.start)
-    print("\n\n=== {} === \t ({})".format(title, dur_to_human(total_time)))
+    total_time = tim.seconds()
+    print("\n\n=== {} === \t ({})".format(title, tim.human_dur()))
     print("%3s" % "" + "  " + "%5s" % "cnt " + " " + "/week" + " " + "name")
     print("%3s" % "" + "  " + "%5s" % "--- " + " " + "-----" + " " + "----")
     for i, x in enumerate(sorted_x):
@@ -111,7 +134,7 @@ def print_cnt_dict(title, cnts, tim, limit=10):
             did_me = True
             name = blue_str(name)
         cnt = x[1]
-        rate = (float(cnt) / (total_time / 604800))
+        rate = (float(cnt) / tim.weeks())  # convert to weekly rate
         if i == limit:
             if did_me:
                 break
@@ -119,7 +142,7 @@ def print_cnt_dict(title, cnts, tim, limit=10):
                 print("                  ...")
         if i >= limit and not is_me:
             continue
-        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + " {0: <20}".format(name))
+        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + " {0: <25}".format(name))
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at'")
 
@@ -159,6 +182,45 @@ for i, c in enumerate(reversed(commits)):
         l100_tim.start = min(l100_tim.start, dt)
         l100_tim.end = max(l100_tim.end, dt)
 
+    # Track each users "active contribution range"
+    if kname not in user_active_tim:
+        user_active_tim[kname] = TimeRange(dt, dt)
+    user_active_tim[kname].start = min(user_active_tim[kname].start, dt)
+    user_active_tim[kname].end = max(user_active_tim[kname].end, dt)
+
+# calculate each users rate-while-active
+rate_while_active = {}
+for key in user_active_tim:
+    cnt = all_cnt[key]
+    rate = (float(cnt) / user_active_tim[key].weeks())  # convert to weekly rate
+    rate_while_active[key] = rate
+
+sorted_x = sorted(rate_while_active.items(), key=operator.itemgetter(1), reverse=True)
+print("\n\n=== {} === \t".format("Rate while active"))
+print("%3s" % "" + "  " + "%5s" % "cnt " + " weeks " + "rate " + " " + "name")
+print("%3s" % "" + "  " + "%5s" % "--- " + " ----- " + "---- " + " " + "----")
+limit = 10
+did_me = False
+for i, x in enumerate(sorted_x):
+    kname = x[0]
+    cnt = all_cnt[kname]
+    weeks = user_active_tim[kname].weeks()
+    is_me = looks_similar(kname, MY_NAME)
+    name = longname[kname].title()
+    name = " {0: <25}".format(name)
+    if is_me:
+        did_me = True
+        name = blue_str(name)
+    val = x[1]
+    if i == limit:
+        if did_me:
+            break
+        else:
+            print("                  ...")
+    if i >= limit and not is_me:
+        continue
+    print("%3d" % (i+1) + ". " + "%5d" % cnt + " %5d " % weeks + fmt_float(val, width=4)  + "  " + name + str(user_active_tim[kname]))
+
 #print("\n\n== kauth map ==")
 #for k,v in kauths.items():
 #    print("%50s" % k, "   ", "%50s" % v)
@@ -174,3 +236,4 @@ else:
     print_cnt_dict("Overall", all_cnt, all_tim)
     print_cnt_dict("Since-First", sme_cnt, sme_tim)
     print_cnt_dict("Last 100", l100_cnt, l100_tim)
+
