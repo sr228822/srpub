@@ -144,18 +144,33 @@ def print_cnt_dict(title, cnts, tim, limit=10):
             continue
         print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + " {0: <25}".format(name))
 
-git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at'")
+git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
 
 seen_me = False
 commits = git_log_raw.split('\n')
 for i, c in enumerate(reversed(commits)):
     cs = c.strip().split(',')
-    if len(cs) != 4:
+    if len(cs) < 5:
         continue
     sha = cs[0].strip()
     name = cs[1].strip().lower()
+
+    # ewww, some names have commas in them
+    if "@" not in cs[2] and "@" in cs[3]:
+        name = (name + " " + cs[2].strip().lower())
+        cs.pop(2)
+
     email = cs[2].strip().lower()
     dt = int(cs[3].strip())
+    subj = ",".join(cs[4:])
+
+    # Skip merge commits
+    if subj.startswith("Merge "):
+        continue
+
+    # Skip revert commits
+    if subj.startswith("Revert"):
+        continue
 
     is_mine = looks_similar(name, MY_NAME)
     if is_mine:
