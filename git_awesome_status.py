@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 from srutils import *
-import sys, re
+import sys, re, os
 from operator import itemgetter
 
 class Commit:
@@ -107,6 +107,18 @@ def fb_alternate():
 showall = argpop(sys.argv, "--all")
 rows, cols = get_term_size()
 
+# Read cache file
+home = os.path.expanduser("~")
+# TODO templatize by project
+cachef = os.path.join(home, ".git_awesome_status")
+cache = {}
+if os.path.isfile(cachef):
+    with open(cachef, 'r') as f:
+        dat = f.read()
+        js = json.loads(dat)
+
+archived_branches = cache.get("archived_branches", [])
+
 # Print a new line..... seems to help windows reset its coloring
 print("")
 
@@ -184,6 +196,10 @@ while True:
 ###########################################################
 other_branches = cmd('git branch').strip().split('\n')
 other_branches = [x.strip() for x in other_branches if not x.startswith('*')]
+branches_n = len(other_branches)
+other_branches = [x for x in other_branches if x not in archived_branches]
+archived_n = len(other_branches) - branches_n
+
 #max_len = max([len(x) for x in other_branches]) + 10
 max_len = 50
 branch_cols = cols / max_len
