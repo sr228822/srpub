@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from srutils import *
+import argparse
 import sys, re
 import operator
 from collections import namedtuple
@@ -13,6 +14,29 @@ kauths = {}
 
 # A map of kname to longest-name
 longname = {}
+
+overall = False
+MY_NAME = "sam russell"
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--user',
+    type=str,
+    required=False,
+    help='The user to highlight.')
+parser.add_argument(
+    '--period',
+    type=str,
+    required=False,
+    help='The time-period to run-over.')
+parser.add_argument(
+    '--overall', action='store_true', help='Show overall')
+args = parser.parse_args()
+if args.user:
+    MY_NAME = args.user
+if args.overall:
+    overall = True
+
 
 def epoch_to_date(e):
     return datetime.datetime.utcfromtimestamp(e).strftime('%Y-%m-%d')
@@ -48,14 +72,6 @@ l100_tim = TimeRange(9999999999, 0)
 
 user_active_tim = {}
 
-overall = False
-MY_NAME = "sam russell"
-if len(sys.argv) > 1:
-    if sys.argv[1] == "overall":
-        overall = True
-        MY_NAME = "zzzzzzzzzzz"
-    else:
-        MY_NAME = sys.argv[1]
 STRIP_PREFX = "ctrl"
 
 def looks_similar(a, b):
@@ -123,9 +139,10 @@ def print_cnt_dict(title, cnts, tim, limit=10):
     sorted_x = sorted(cnts.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
     total_time = tim.seconds()
-    print("\n\n=== {} === \t ({})".format(title, tim.human_dur()))
-    print("%3s" % "" + "  " + "%5s" % "cnt " + " " + "/week" + " " + "name")
-    print("%3s" % "" + "  " + "%5s" % "--- " + " " + "-----" + " " + "----")
+    total_cnt = sum(cnts.values())
+    print("\n\n=== {} === \t ({}) ({} total)".format(title, tim.human_dur(), total_cnt))
+    print("%3s" % "" + "   " + "%5s" % "cnt " + " " + "  %  " + " " + "/week" + " " + "name")
+    print("%3s" % "" + "   " + "%5s" % "--- " + " " + "-----" + " " + "-----" + " " + "----")
     for i, x in enumerate(sorted_x):
         kname = x[0]
         is_me = looks_similar(kname, MY_NAME)
@@ -142,7 +159,8 @@ def print_cnt_dict(title, cnts, tim, limit=10):
                 print("                  ...")
         if i >= limit and not is_me:
             continue
-        print("%3d" % (i+1) + ". " + "%5d  " % cnt + " %.1f " % rate + " {0: <25}".format(name))
+        perc = int(100 * cnt / total_cnt)
+        print("%3d" % (i+1) + ". " + "%5d  " % cnt + "  %2d" % perc + "%  " + "%.1f " % rate + " {0: <25}".format(name))
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
 

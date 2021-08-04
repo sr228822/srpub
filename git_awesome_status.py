@@ -58,6 +58,7 @@ def show_sha_grey(sha):
 
 def show_sha_magenta(sha):
     res = cmd('git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
+    res = res.replace(sha, magenta_str(sha))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)

@@ -56,11 +56,17 @@ lsr() {
     ls -lth $@ | head -n 10
 }
 
+tmptmp() {
+    rm -rf /tmp/tmp/
+    mkdir -p /tmp/tmp/
+    cd /tmp/tmp/
+}
+
 search() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,.mypy_cache} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 sc() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
 }
 scw() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
@@ -217,6 +223,19 @@ extract () {
        echo "'$1' is not a valid file!"
    fi
 }
+peek () {
+   if [ -f $1 ] ; then
+       case $1 in
+           *.tar.bz2)   tar -jtvf $1    ;;
+           *.tar.gz)    tar -ztvf $1     ;;
+           *.tar)       tar -tvf $1     ;;
+           *.zip)       unzip -l $1       ;;
+           *)           echo "don't know how to list '$1'..." ;;
+       esac
+   else
+       echo "'$1' is not a valid file!"
+   fi
+}
 alias make_tar='tar -cvzf'
 
 dofrom() {
@@ -286,24 +305,25 @@ cdd() {
         fi
     fi
 }
-vim() {
-    if [ -e "$1" ]; then
-        /usr/bin/vim $1
-    else
-        substr=`ls | grep $1`
-        if [[ ( -n "$substr" ) && ( $(grep -c . <<<"$substr") == 1 ) ]]; then
-            echo "auto-matching file $substr" | yellow
-            /usr/bin/vim $substr
-        else
-            /usr/bin/vim $1
-        fi
-    fi
-}
+#vim() {
+#    if [ -e "$1" ]; then
+#        /usr/bin/vim $1
+#    else
+#        substr=`ls | grep $1`
+#        if [[ ( -n "$substr" ) && ( $(grep -c . <<<"$substr") == 1 ) ]]; then
+#            echo "auto-matching file $substr" | yellow
+#            /usr/bin/vim $substr
+#        else
+#            /usr/bin/vim $1
+#        fi
+#    fi
+#}
 
 alias gb='git branch'
 alias gl='git log'
 alias gd='git diff'
 alias grh='git reset --hard'
+alias griom='git rebase -i origin/master'
 alias gitlastdiff='git diff HEAD^ HEAD'
 alias githeaddiff='git diff origin/master...HEAD'
 alias gitbranchdiff='git diff origin/master HEAD'
