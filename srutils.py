@@ -157,16 +157,20 @@ def hours_between(da, db):
     return seconds_between(da, db) / 3600
 
 def parse_duration(txt):
-    duration = txt
-    if 'm' in duration:
+    """Parses the text as a duration, returned in int seconds"""
+    duration = str(txt)
+    if 'm' in duration:  # minutes
         duration = re.sub('m', '', duration)
         duration = 60 * float(duration)
-    elif 'h' in duration:
+    elif 'h' in duration:  # hours
         duration = re.sub('h', '', duration)
         duration = 60 * 60 * float(duration)
-    elif 'd' in duration:
+    elif 'd' in duration:  # days
         duration = re.sub('d', '', duration)
         duration = 24 * 60 * 60 * float(duration)
+    elif 'y' in duration:  # years
+        duration = re.sub('y', '', duration)
+        duration = 365 * 24 * 60 * 60 * float(duration)
     else:
         duration = re.sub('s', '', duration)
         duration = int(duration)

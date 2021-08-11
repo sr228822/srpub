@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from __future__ import print_function
 
@@ -28,7 +28,7 @@ parser.add_argument(
     '--period',
     type=str,
     required=False,
-    help='The time-period to run-over.')
+    help='The time-period to run-over, (e.g. 200 or 2y)')
 parser.add_argument(
     '--overall', action='store_true', help='Show overall')
 args = parser.parse_args()
@@ -37,6 +37,12 @@ if args.user:
 if args.overall:
     overall = True
 
+def is_int(x):
+    try:
+        x = int(x)
+        return True
+    except ValueError:
+        return False
 
 def epoch_to_date(e):
     return datetime.datetime.utcfromtimestamp(e).strftime('%Y-%m-%d')
@@ -63,12 +69,24 @@ class TimeRange:
     def human_dur(self):
         return dur_to_human(self.seconds())
 
+# Set count and dur thresholds
+thresh_cnt = 100
+thresh_dur = '1y'
+if args.period:
+    if is_int(args.period):
+        thresh_cnt = int(args.period)
+    else:
+        thresh_dur = args.period
+thresh_dur_s = parse_duration(thresh_dur)
+
 all_cnt = {}
 all_tim = TimeRange(9999999999, 0)
 sme_cnt = {}
 sme_tim = TimeRange(9999999999, 0)
-l100_cnt = {}
-l100_tim = TimeRange(9999999999, 0)
+thresh_cnt_cnt = {}
+thresh_cnt_tim = TimeRange(9999999999, 0)
+thresh_dur_cnt = {}
+thresh_dur_tim = TimeRange(9999999999, 0)
 
 user_active_tim = {}
 
@@ -164,6 +182,7 @@ def print_cnt_dict(title, cnts, tim, limit=10):
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
 
+dt_now = int(time.time())
 seen_me = False
 commits = git_log_raw.split('\n')
 for i, c in enumerate(reversed(commits)):
@@ -210,10 +229,14 @@ for i, c in enumerate(reversed(commits)):
         sme_cnt[kname] = sme_cnt.get(kname, 0) + 1
         sme_tim.start = min(sme_tim.start, dt)
         sme_tim.end = max(sme_tim.end, dt)
-    if i > len(commits) - 100:
-        l100_cnt[kname] = l100_cnt.get(kname, 0) + 1
-        l100_tim.start = min(l100_tim.start, dt)
-        l100_tim.end = max(l100_tim.end, dt)
+    if (dt_now - dt) < thresh_dur_s:
+        thresh_dur_cnt[kname] = thresh_dur_cnt.get(kname, 0) + 1
+        thresh_dur_tim.start = min(thresh_dur_tim.start, dt)
+        thresh_dur_tim.end = max(thresh_dur_tim.end, dt)
+    if i > len(commits) - thresh_cnt:
+        thresh_cnt_cnt[kname] = thresh_cnt_cnt.get(kname, 0) + 1
+        thresh_cnt_tim.start = min(thresh_cnt_tim.start, dt)
+        thresh_cnt_tim.end = max(thresh_cnt_tim.end, dt)
 
     # Track each users "active contribution range"
     if kname not in user_active_tim:
@@ -229,30 +252,32 @@ for key in user_active_tim:
     rate_while_active[key] = rate
 
 sorted_x = sorted(rate_while_active.items(), key=operator.itemgetter(1), reverse=True)
-print("\n\n=== {} === \t".format("Rate while active"))
-print("%3s" % "" + "  " + "%5s" % "cnt " + " weeks " + "rate " + " " + "name")
-print("%3s" % "" + "  " + "%5s" % "--- " + " ----- " + "---- " + " " + "----")
-limit = 10
-did_me = False
-for i, x in enumerate(sorted_x):
-    kname = x[0]
-    cnt = all_cnt[kname]
-    weeks = user_active_tim[kname].weeks()
-    is_me = looks_similar(kname, MY_NAME)
-    name = longname[kname].title()
-    name = " {0: <25}".format(name)
-    if is_me:
-        did_me = True
-        name = blue_str(name)
-    val = x[1]
-    if i == limit:
-        if did_me:
-            break
-        else:
-            print("                  ...")
-    if i >= limit and not is_me:
-        continue
-    print("%3d" % (i+1) + ". " + "%5d" % cnt + " %5d " % weeks + fmt_float(val, width=4)  + "  " + name + str(user_active_tim[kname]))
+
+def print_active_rate():
+    print("\n\n=== {} === \t".format("Rate while active"))
+    print("%3s" % "" + "  " + "%5s" % "cnt " + " weeks " + "rate " + " " + "name")
+    print("%3s" % "" + "  " + "%5s" % "--- " + " ----- " + "---- " + " " + "----")
+    limit = 10
+    did_me = False
+    for i, x in enumerate(sorted_x):
+        kname = x[0]
+        cnt = all_cnt[kname]
+        weeks = user_active_tim[kname].weeks()
+        is_me = looks_similar(kname, MY_NAME)
+        name = longname[kname].title()
+        name = " {0: <25}".format(name)
+        if is_me:
+            did_me = True
+            name = blue_str(name)
+        val = x[1]
+        if i == limit:
+            if did_me:
+                break
+            else:
+                print("                  ...")
+        if i >= limit and not is_me:
+            continue
+        print("%3d" % (i+1) + ". " + "%5d" % cnt + " %5d " % weeks + fmt_float(val, width=4)  + "  " + name + str(user_active_tim[kname]))
 
 #print("\n\n== kauth map ==")
 #for k,v in kauths.items():
@@ -264,9 +289,16 @@ for i, x in enumerate(sorted_x):
 
 if overall:
     print_cnt_dict("Overall", all_cnt, all_tim, limit=100)
+elif args.period:
+    if is_int(args.period):
+        print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_cnt, thresh_cnt_tim)
+    else:
+        print_cnt_dict(f"Last {thresh_dur}", thresh_dur_cnt, thresh_dur_tim)
 else:
+    print_active_rate()
     # print personalized
     print_cnt_dict("Overall", all_cnt, all_tim)
     print_cnt_dict("Since-First", sme_cnt, sme_tim)
-    print_cnt_dict("Last 100", l100_cnt, l100_tim)
+    print_cnt_dict(f"Last {thresh_dur}", thresh_dur_cnt, thresh_dur_tim)
+    print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_cnt, thresh_cnt_tim)
 
