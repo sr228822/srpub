@@ -15,14 +15,14 @@ kauths = {}
 # A map of kname to longest-name
 longname = {}
 
-overall = False
-MY_NAME = "sam russell"
+MY_NAME = cmd("git config user.name") or "samuel russell"
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--user',
     type=str,
     required=False,
+    default=MY_NAME,
     help='The user to highlight.')
 parser.add_argument(
     '--period',
@@ -32,10 +32,6 @@ parser.add_argument(
 parser.add_argument(
     '--overall', action='store_true', help='Show overall')
 args = parser.parse_args()
-if args.user:
-    MY_NAME = args.user
-if args.overall:
-    overall = True
 
 def is_int(x):
     try:
@@ -60,6 +56,10 @@ class TimeRange:
     def __str__(self):
         return "[{} - {}]".format(epoch_to_date(self.start), epoch_to_date(self.end))
 
+    def add(self, dt):
+        self.start = min(self.start, dt)
+        self.end = max(self.end, dt)
+
     def seconds(self):
         return (self.end - self.start)
 
@@ -68,6 +68,16 @@ class TimeRange:
 
     def human_dur(self):
         return dur_to_human(self.seconds())
+
+class GitStat:
+    def __init__(self):
+        self.cnt = {}
+        self.tim = TimeRange(9999999999, 0)
+
+    def add(self, kname, dt):
+        self.cnt[kname] = self.cnt.get(kname, 0) + 1
+        self.tim.add(dt)
+
 
 # Set count and dur thresholds
 thresh_cnt = 100
@@ -79,20 +89,21 @@ if args.period:
         thresh_dur = args.period
 thresh_dur_s = parse_duration(thresh_dur)
 
-all_cnt = {}
-all_tim = TimeRange(9999999999, 0)
-sme_cnt = {}
-sme_tim = TimeRange(9999999999, 0)
-thresh_cnt_cnt = {}
-thresh_cnt_tim = TimeRange(9999999999, 0)
-thresh_dur_cnt = {}
-thresh_dur_tim = TimeRange(9999999999, 0)
+all_stat = GitStat()
+since_me_stat = GitStat()
+thresh_cnt_stat = GitStat()
+thresh_dur_stat = GitStat()
 
 user_active_tim = {}
 
 STRIP_PREFX = "ctrl"
 
 def looks_similar(a, b):
+    """Return true if string `a` looks pretty similar to `b`
+
+    The algorithm basically comparse each coresponding word for
+    case-insensitive substring matches
+    """
     a = a.lower().strip()
     b = b.lower().strip()
     if a == b:
@@ -153,23 +164,23 @@ def get_aliases(name, emails=True):
                 res[k] = True
     return res.keys()
 
-def print_cnt_dict(title, cnts, tim, limit=10):
-    sorted_x = sorted(cnts.items(), key=operator.itemgetter(1), reverse=True)
+def print_cnt_dict(title, stat, limit=10):
+    sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    total_time = tim.seconds()
-    total_cnt = sum(cnts.values())
-    print("\n\n=== {} === \t ({}) ({} total)".format(title, tim.human_dur(), total_cnt))
+    total_time = stat.tim.seconds()
+    total_cnt = sum(stat.cnt.values())
+    print("\n\n=== {} === \t ({}) ({} total)".format(title, stat.tim.human_dur(), total_cnt))
     print("%3s" % "" + "   " + "%5s" % "cnt " + " " + "  %  " + " " + "/week" + " " + "name")
     print("%3s" % "" + "   " + "%5s" % "--- " + " " + "-----" + " " + "-----" + " " + "----")
     for i, x in enumerate(sorted_x):
         kname = x[0]
-        is_me = looks_similar(kname, MY_NAME)
+        is_me = looks_similar(kname, args.user)
         name = longname[kname].title()
         if is_me:
             did_me = True
             name = blue_str(name)
         cnt = x[1]
-        rate = (float(cnt) / tim.weeks())  # convert to weekly rate
+        rate = (float(cnt) / stat.tim.weeks())  # convert to weekly rate
         if i == limit:
             if did_me:
                 break
@@ -209,7 +220,7 @@ for i, c in enumerate(reversed(commits)):
     if subj.startswith("Revert"):
         continue
 
-    is_mine = looks_similar(name, MY_NAME)
+    is_mine = looks_similar(name, args.user)
     if is_mine:
         seen_me = True
 
@@ -222,32 +233,24 @@ for i, c in enumerate(reversed(commits)):
     if len(name) >len( longname[kname]):
         longname[kname] = name
 
-    all_cnt[kname] = all_cnt.get(kname, 0) + 1
-    all_tim.start = min(all_tim.start, dt)
-    all_tim.end = max(all_tim.end, dt)
+    # Add this commit to stat-counters it matches
+    all_stat.add(kname, dt)
     if seen_me:
-        sme_cnt[kname] = sme_cnt.get(kname, 0) + 1
-        sme_tim.start = min(sme_tim.start, dt)
-        sme_tim.end = max(sme_tim.end, dt)
+        since_me_stat.add(kname, dt)
     if (dt_now - dt) < thresh_dur_s:
-        thresh_dur_cnt[kname] = thresh_dur_cnt.get(kname, 0) + 1
-        thresh_dur_tim.start = min(thresh_dur_tim.start, dt)
-        thresh_dur_tim.end = max(thresh_dur_tim.end, dt)
+        thresh_dur_stat.add(kname, dt)
     if i > len(commits) - thresh_cnt:
-        thresh_cnt_cnt[kname] = thresh_cnt_cnt.get(kname, 0) + 1
-        thresh_cnt_tim.start = min(thresh_cnt_tim.start, dt)
-        thresh_cnt_tim.end = max(thresh_cnt_tim.end, dt)
+        thresh_cnt_stat.add(kname, dt)
 
     # Track each users "active contribution range"
     if kname not in user_active_tim:
         user_active_tim[kname] = TimeRange(dt, dt)
-    user_active_tim[kname].start = min(user_active_tim[kname].start, dt)
-    user_active_tim[kname].end = max(user_active_tim[kname].end, dt)
+    user_active_tim[kname].add(dt)
 
 # calculate each users rate-while-active
 rate_while_active = {}
 for key in user_active_tim:
-    cnt = all_cnt[key]
+    cnt = all_stat.cnt[key]
     rate = (float(cnt) / user_active_tim[key].weeks())  # convert to weekly rate
     rate_while_active[key] = rate
 
@@ -261,9 +264,9 @@ def print_active_rate():
     did_me = False
     for i, x in enumerate(sorted_x):
         kname = x[0]
-        cnt = all_cnt[kname]
+        cnt = all_stat.cnt[kname]
         weeks = user_active_tim[kname].weeks()
-        is_me = looks_similar(kname, MY_NAME)
+        is_me = looks_similar(kname, args.user)
         name = longname[kname].title()
         name = " {0: <25}".format(name)
         if is_me:
@@ -284,21 +287,21 @@ def print_active_rate():
 #    print("%50s" % k, "   ", "%50s" % v)
 
 #print("\n\n== kauth map ==")
-#for k,v in all_cnt.items():
+#for k,v in all_stat.cnt.items():
 #    print("%50s" % k, "   ", "%50s" % v)
 
-if overall:
-    print_cnt_dict("Overall", all_cnt, all_tim, limit=100)
+if args.overall:
+    print_cnt_dict("Overall", all_stat, limit=100)
 elif args.period:
     if is_int(args.period):
-        print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_cnt, thresh_cnt_tim)
+        print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_stat)
     else:
-        print_cnt_dict(f"Last {thresh_dur}", thresh_dur_cnt, thresh_dur_tim)
+        print_cnt_dict(f"Last {thresh_dur}", thresh_dur_stat)
 else:
     print_active_rate()
     # print personalized
-    print_cnt_dict("Overall", all_cnt, all_tim)
-    print_cnt_dict("Since-First", sme_cnt, sme_tim)
-    print_cnt_dict(f"Last {thresh_dur}", thresh_dur_cnt, thresh_dur_tim)
-    print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_cnt, thresh_cnt_tim)
+    print_cnt_dict("Overall", all_stat)
+    print_cnt_dict("Since-First", since_me_stat)
+    print_cnt_dict(f"Last {thresh_dur}", thresh_dur_stat)
+    print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_stat)
 
