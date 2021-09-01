@@ -285,6 +285,14 @@ gco() {
         fi
     fi
 }
+gnb() {
+    if [ -z "$2" ]
+    then
+        gco -b $1 origin/master
+    else
+        gco -b $1 $2
+    fi
+}
 gbd() {
     git branch -D $@
     if [ $? -eq 1 ]; then
@@ -327,7 +335,7 @@ alias griom='git rebase -i origin/master'
 alias gitlastdiff='git diff HEAD^ HEAD'
 alias githeaddiff='git diff origin/master...HEAD'
 alias gitbranchdiff='git diff origin/master HEAD'
-alias amend='git commit --amend -a'
+alias amend='git commit --amend -a --no-edit'
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
 alias diffrebase='arc diff -m "rebase"'

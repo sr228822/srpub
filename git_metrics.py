@@ -177,7 +177,6 @@ def print_cnt_dict(title, stat, limit=10):
         is_me = looks_similar(kname, args.user)
         name = longname[kname].title()
         if is_me:
-            did_me = True
             name = blue_str(name)
         cnt = x[1]
         rate = (float(cnt) / stat.tim.weeks())  # convert to weekly rate
@@ -190,6 +189,8 @@ def print_cnt_dict(title, stat, limit=10):
             continue
         perc = int(100 * cnt / total_cnt)
         print("%3d" % (i+1) + ". " + "%5d  " % cnt + "  %2d" % perc + "%  " + "%.1f " % rate + " {0: <25}".format(name))
+        if is_me:
+            did_me = True
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
 
@@ -301,7 +302,7 @@ else:
     print_active_rate()
     # print personalized
     print_cnt_dict("Overall", all_stat)
-    print_cnt_dict("Since-First", since_me_stat)
+    print_cnt_dict(f"Since {args.user}'s First", since_me_stat)
     print_cnt_dict(f"Last {thresh_dur}", thresh_dur_stat)
     print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_stat)
 

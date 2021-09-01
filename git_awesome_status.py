@@ -42,7 +42,7 @@ def show_shas(sha_first, sha_last, nmax=100):
 
 def show_my_most_recent(fb):
     print('               ....\n')
-    res = clean_up_decorate(cmd('git --no-pager log --color=always --author=srussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
+    res = clean_up_decorate(cmd('git --no-pager log --color=always --author=samrussell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)
