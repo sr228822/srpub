@@ -1,19 +1,34 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function
+#from __future__ import print_function
+
+import argparse
+import json
+import os
+from operator import itemgetter
+import re
+import sys
 
 from srutils import *
-import sys, re, os
-import argparse
-from operator import itemgetter
 
+###########################################################
+#     Parse args
+###########################################################
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--archive',
+    type=str,
+    required=False,
+    help='Archive the specified branch')
 parser.add_argument(
     '--master', action='store_true', help='Force remote branch to master')
 parser.add_argument(
     '--all', action='store_true', help='Show all missing commits from master')
 args = parser.parse_args()
 
+###########################################################
+#     Helper classes & functions
+###########################################################
 class Commit:
     def __init__(self, sha, title):
         self.sha = sha
@@ -115,25 +130,38 @@ def fb_alternate():
 ###########################################################
 showall = args.all
 rows, cols = get_term_size()
+root = cmd('git rev-parse --show-toplevel')
+repo_name = root.split("/")[-1]
 
 # Read cache file
 home = os.path.expanduser("~")
 # TODO templatize by project
-cachef = os.path.join(home, ".git_awesome_status")
+cachef = os.path.join(home, f".git_awesome_status_{repo_name}")
 cache = {}
+
 if os.path.isfile(cachef):
     with open(cachef, 'r') as f:
         dat = f.read()
-        js = json.loads(dat)
+        cache = json.loads(dat)
 
 archived_branches = cache.get("archived_branches", [])
 
-# Print a new line..... seems to help windows reset its coloring
-print("")
+###########################################################
+#     Archive branches
+###########################################################
+if args.archive:
+    archived_branches.append(args.archive)
+    cache['archived_branches'] = archived_branches
+    with open(cachef, 'w') as f:
+        f.write(json.dumps(cache))
+    sys.exit(0)
 
 ###########################################################
 #     Fetch info about the branch and remote branch
 ###########################################################
+
+# Print a new line..... seems to help windows reset its coloring
+print("")
 
 status = cmd('git status -bs').rstrip().split('\n')
 if not status or len(status) == 0 or not status[0]:
@@ -149,13 +177,11 @@ else:
     current_branch = branchline.split()[1]
     fb = fb_alternate()
 if fb is None:
-    raise Exception("never get here")
+    raise Exception("Failed to detect forward-branch")
 
 master = args.master
 if master:
     fb = "origin/master"
-#print("current_branch", current_branch)
-#print("fb", fb)
 
 ###########################################################
 #     Fetch the log info about local HEAD and remote branch
@@ -206,12 +232,14 @@ while True:
 other_branches = cmd('git branch').strip().split('\n')
 other_branches = [x.strip() for x in other_branches if not x.startswith('*')]
 branches_n = len(other_branches)
+if args.all:
+    archived_branches = []
 other_branches = [x for x in other_branches if x not in archived_branches]
 archived_n = len(other_branches) - branches_n
 
 #max_len = max([len(x) for x in other_branches]) + 10
 max_len = 50
-branch_cols = cols / max_len
+branch_cols = min(3, int(cols / max_len))
 
 print
 print('*' * (cols - 10))
@@ -222,7 +250,7 @@ else:
 branch_data = []
 for branch in other_branches:
     try:
-        stats = cmd('git show --pretty=format:"%ci %cr" ' + branch + ' -- | head -n 1').split(' ')
+        stats = cmd('git log -n 1 --pretty=format:"%ci %cr" ' + branch + ' -- | head -n 1').split(' ')
         dt = datetime.datetime.strptime(stats[0] + ' ' + stats[1], "%Y-%m-%d %H:%M:%S")
         age = stats[3] + ' ' + stats[4]
     except:
@@ -235,9 +263,10 @@ for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
     if 'minutes' in age or 'hours' in age:
         age = ''
     print('%30s ' % branch + grey_str('%-10s' % age), end='')
-    if idx % branch_cols == 0:
+    if (idx+1) % branch_cols == 0 or idx == len(branch_data)-1:
         print('')
-print('')
+if archived_branches:
+    print(grey_str("%30s" % f"{len(archived_branches)} archived branches"))
 print('*' * (cols - 10))
 
 ###########################################################
