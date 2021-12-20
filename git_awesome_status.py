@@ -4,7 +4,15 @@ from __future__ import print_function
 
 from srutils import *
 import sys, re, os
+import argparse
 from operator import itemgetter
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--master', action='store_true', help='Force remote branch to master')
+parser.add_argument(
+    '--all', action='store_true', help='Show all missing commits from master')
+args = parser.parse_args()
 
 class Commit:
     def __init__(self, sha, title):
@@ -105,7 +113,7 @@ def fb_alternate():
 ###########################################################
 #     Init and argv stuff
 ###########################################################
-showall = argpop(sys.argv, "--all")
+showall = args.all
 rows, cols = get_term_size()
 
 # Read cache file
@@ -143,7 +151,7 @@ else:
 if fb is None:
     raise Exception("never get here")
 
-master = argpop(sys.argv, "--master")
+master = args.master
 if master:
     fb = "origin/master"
 #print("current_branch", current_branch)
