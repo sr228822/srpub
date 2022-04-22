@@ -4,6 +4,8 @@ from __future__ import print_function
 
 import re, sys, random
 
+is_windows = sys.platform.lower().startswith('win')
+
 CODE={
     'ENDC':0,  # RESET COLOR
 
@@ -30,12 +32,18 @@ def termcode(num):
     return '\033[%sm'%num
 
 def color_str(txt,color):
+    if is_windows:
+        return txt
     return termcode(CODE[color.upper()])+txt+termcode(CODE['ENDC'])
 
 def dual_color_str(txt,fgcolor,bgcolor):
+    if is_windows:
+        return txt
     return termcode(CODE[fgcolor.upper()]) + termcode(CODE[bgcolor.upper() + "_BG"]) + txt + termcode(CODE['ENDC'])
 
 def bg_color_str(txt,color):
+    if is_windows:
+        return txt
     return termcode(CODE[color.upper() + "_BG"]) + txt + termcode(CODE['ENDC'])
 
 i = 0
