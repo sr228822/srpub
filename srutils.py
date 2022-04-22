@@ -159,7 +159,10 @@ def hours_between(da, db):
 def parse_duration(txt):
     """Parses the text as a duration, returned in int seconds"""
     duration = str(txt)
-    if 'm' in duration:  # minutes
+    if 'mo' in duration:  # months
+        duration = re.sub('mo', '', duration)
+        duration = 30 * 24 * 60 * 60 * float(duration)
+    elif 'm' in duration:  # minutes
         duration = re.sub('m', '', duration)
         duration = 60 * float(duration)
     elif 'h' in duration:  # hours
@@ -344,7 +347,10 @@ def cmd(c, wait=True, noisy=False):
 
 def get_term_size():
     try:
-        rows, cols = os.popen('stty size', 'r').read().split()
+        resp = cmd("stty size")
+        if "command not found" in resp or "not recognized" in resp:
+            raise ValueError("no stty")
+        rows, cols = resp.split()
         return int(rows), int(cols)
     except ValueError:
         return 80, 160

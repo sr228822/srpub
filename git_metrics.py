@@ -30,6 +30,12 @@ parser.add_argument(
     required=False,
     help='The time-period to run-over, (e.g. 200 or 2y)')
 parser.add_argument(
+    '--num',
+    type=int,
+    required=False,
+    default=10,
+    help='The number of users to show per leaderboard')
+parser.add_argument(
     '--overall', action='store_true', help='Show overall')
 args = parser.parse_args()
 
@@ -164,7 +170,7 @@ def get_aliases(name, emails=True):
                 res[k] = True
     return res.keys()
 
-def print_cnt_dict(title, stat, limit=10):
+def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
     total_time = stat.tim.seconds()
@@ -261,7 +267,7 @@ def print_active_rate():
     print("\n\n=== {} === \t".format("Rate while active"))
     print("%3s" % "" + "  " + "%5s" % "cnt " + " weeks " + "rate " + " " + "name")
     print("%3s" % "" + "  " + "%5s" % "--- " + " ----- " + "---- " + " " + "----")
-    limit = 10
+    limit = args.num
     did_me = False
     for i, x in enumerate(sorted_x):
         kname = x[0]
