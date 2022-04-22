@@ -20,7 +20,7 @@ CODE={
     'BLUE':34,
     'LIGHT_BLUE': 94,
     'CYAN': 36,
-    'MAGENTA': 95,
+    'MAGENTA': 35,
 
     'RED_BG':41,
     'GREEN_BG':42,
@@ -70,6 +70,8 @@ def red_str(text):
     return color_str(text,'RED')
 def blue_str(text):
     return color_str(text,'BLUE')
+def magenta_str(text):
+    return color_str(text, 'MAGENTA')
 def green_str(text):
     return color_str(text,'GREEN')
 def yellow_str(text):

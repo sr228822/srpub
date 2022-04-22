@@ -218,26 +218,7 @@ def termcode(num):
     #    return ''
     return '\033[%sm'%num
 
-def brilliant_str(txt):
-    return bold_str(termcode(41) + txt + termcode(0))
-def red_str(txt):
-    return termcode(91) + txt + termcode(0)
-def green_str(txt):
-    return termcode(32) + txt + termcode(0)
-def yellow_str(txt):
-    return termcode(93) + txt + termcode(0)
-def blue_str(txt):
-    if os_name == 'nt':
-        return termcode(95) + txt + termcode(0)
-    return termcode(34) + txt + termcode(0)
-def magenta_str(txt):
-    if os_name == 'nt':
-        return termcode(95) + txt + termcode(0)
-    return termcode(35) + txt + termcode(0)
-def grey_str(txt):
-    return termcode(90) + txt + termcode(0)
-def bold_str(txt):
-    return termcode(1) + txt + termcode(0)
+from colorstrings import *
 
 def print_error(s, fatal=False):
     print(red_str('\n[ERROR] ' + s + '\n'))
