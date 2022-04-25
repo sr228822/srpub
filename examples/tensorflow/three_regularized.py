@@ -1,4 +1,4 @@
-#/usr/bin/python
+#/usr/bin/env python
 
 # These are all the modules we'll be using later. Make sure you can import them
 # before proceeding further.

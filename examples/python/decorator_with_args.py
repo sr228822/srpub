@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 def my_decorator(argument):
     def real_decorator(func):

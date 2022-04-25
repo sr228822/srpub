@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys, traceback
 for threadId, stack in sys._current_frames().items():

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 
 DB_DIR = "/Users/sam/misc/GeoLite2-City-CSV_20190813/"
