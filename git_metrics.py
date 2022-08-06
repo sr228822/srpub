@@ -273,6 +273,8 @@ def print_active_rate():
         kname = x[0]
         cnt = all_stat.cnt[kname]
         weeks = user_active_tim[kname].weeks()
+        if weeks <= 2:
+            continue
         is_me = looks_similar(kname, args.user)
         name = longname[kname].title()
         name = " {0: <25}".format(name)

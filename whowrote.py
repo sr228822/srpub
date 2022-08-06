@@ -43,13 +43,13 @@ for a in sys.argv[1:]:
         else:
             auth_lines[auth] = 0
 
-sorted_cnts = sorted(cnts.iteritems(), key=operator.itemgetter(1))
+sorted_cnts = sorted(cnts.items(), key=operator.itemgetter(1))
 sorted_cnts.reverse()
 for sha, cnt in sorted_cnts:
-    print sha + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + ('%20s' % auths[sha]) + '\t' + title_from_sha(sha)
+    print(sha + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + ('%20s' % auths[sha]) + '\t' + title_from_sha(sha))
 
 # Print the original author, by file
-print '\n---- Original File Creator -----\n'
+print('\n---- Original File Creator -----\n')
 for a in sys.argv[1:]:
     auth = None
     for l in cmd('git log --format=short ' + a).split('\n'):
@@ -58,13 +58,13 @@ for a in sys.argv[1:]:
             auth = m.group(1)
         else:
             continue
-    print '%50s' % auth, a
+    print('%50s' % auth, a)
 
 # Print the aggregated git-blame coverage
-print '\n---- Current Git-Blame Modifier -----\n'
-print ('%20s' % "author") + '\t' + "lines" + '\t' + "perc" + '\t' + "commits"
+print('\n---- Current Git-Blame Modifier -----\n')
+print(('%20s' % "author") + '\t' + "lines" + '\t' + "perc" + '\t' + "commits")
 sorted_auth_lines = sorted(auth_lines.iteritems(), key=operator.itemgetter(1))
 sorted_auth_lines.reverse()
 for auth, cnt in sorted_auth_lines:
-    print ('%20s' % auth) + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + str(auth_commits[auth])
+    print(('%20s' % auth) + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + str(auth_commits[auth]))
 

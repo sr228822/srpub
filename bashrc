@@ -8,6 +8,7 @@ export PATH=${PATH}:$HOME/customize
 export PATH=${PATH}:$HOME/srpub
 export PYTHONPATH=${PYTHONPATH}:$HOME/customize
 export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
+export PYTHONUNBUFFERED="nope"
 
 git config --global core.editor "vim"
 git config --global user.name "Samuel Russell"
@@ -353,7 +354,7 @@ diffit() {
 
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
-alias utcnow='python2.7 -c "from datetime import datetime; import pytz; print datetime.now(pytz.utc)"'
+alias utcnow='python -c "from datetime import datetime; import pytz; print(datetime.now(pytz.utc))"'
 alias epochnow='python2.7 -c "import time; print int(time.time())"'
 alias epochnowmillis='python2.7 -c "import time; print 1000 * int(time.time())"'
 alias epoch="epoch.py"
