@@ -50,14 +50,14 @@ def clean_up_decorate(lines):
     return res
 
 def show_sha(sha):
-    res = clean_up_decorate(cmd('git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + sha))
+    res = clean_up_decorate(cmd(f'git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 {sha}'))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)
     #cmd('git --no-pager show --pretty=format:"%Cgreen%H%Creset   %an%n   %s%n" ' + sha + ' | head -n 3', noisy=True)
 
 def show_shas(sha_first, sha_last, nmax=100):
-    res = clean_up_decorate(cmd('git --no-pager log -n {} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {}...{}'.format(nmax, sha_first, sha_last)))
+    res = clean_up_decorate(cmd(f'git --no-pager log -n {nmax} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {sha_first}...{sha_last}'))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)
@@ -65,13 +65,13 @@ def show_shas(sha_first, sha_last, nmax=100):
 
 def show_my_most_recent(fb):
     print('               ....\n')
-    res = clean_up_decorate(cmd('git --no-pager log --color=always --author=Russell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 ' + fb))
+    res = clean_up_decorate(cmd(f'git --no-pager log --color=always --author=Russell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 {fb}'))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)
 
 def show_sha_grey(sha):
-    res = cmd('git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 ' + sha)
+    res = cmd(f'git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 {sha}')
     if "Samuel Russell" in res:
         ts = res.split("Samuel Russell")
         print(grey_str(ts[0]) + blue_str("Samuel Russell") + grey_str(ts[1]))
@@ -80,7 +80,7 @@ def show_sha_grey(sha):
     print('')
 
 def show_sha_magenta(sha):
-    res = cmd('git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 ' + sha)
+    res = cmd(f'git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 {sha}')
     res = res.replace(sha, magenta_str(sha))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
