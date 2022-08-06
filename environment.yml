@@ -1,0 +1,14 @@
+name: samdev
+channels:
+  - conda-forge
+  - default
+dependencies:
+  - awscli
+  - boto3
+  - click
+  - pip
+  - pytz
+  - requests
+  - vim
+  - git
+  - python==3.8.*
