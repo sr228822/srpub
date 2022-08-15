@@ -292,6 +292,20 @@ gco() {
         fi
     fi
 }
+quick_push_to_github() {
+    b=`git branch | grep "*" | last_word`
+    if [[ "$b" == *"master"* ]];
+    then
+        echo "cannot push master";
+        return 1;
+    fi
+
+    echo "quick-pushing... $b"
+    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
+}
+rebase_push() {
+    git fetch && git rebase && quick_push_to_github
+}
 gnb() {
     if [ -z "$2" ]
     then
