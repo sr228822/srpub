@@ -12,6 +12,7 @@ export PYTHONUNBUFFERED="nope"
 
 git config --global core.editor "vim"
 git config --global user.name "Samuel Russell"
+export KUBE_EDITOR='vim'
 #git config --global user.email "sr228822@gmail.com"
 
 ############################################################
@@ -196,6 +197,9 @@ highlightyellow () {
 highlightgreen () {
     GREP_COLOR='1;32' grep -i --line-buffered --color=always -E "${1}|$"
 }
+highlightgray () {
+    GREP_COLOR='90' grep -i --line-buffered --color=always -E "${1}|$"
+}
 firstwordyellow() {
     GREP_COLOR=93  grep --color=always -E '.*:'
 }
@@ -356,7 +360,9 @@ alias griom='git rebase -i origin/master'
 alias gitlastdiff='git diff HEAD^ HEAD'
 alias githeaddiff='git diff origin/master...HEAD'
 alias gitbranchdiff='git diff origin/master HEAD'
-alias amend='git commit --amend -a --no-edit'
+amend() {
+    git commit --amend -a --no-edit || hg amend
+}
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
 alias diffrebase='arc diff -m "rebase"'
@@ -366,6 +372,19 @@ diffit() {
     arc diff -m "$1 $2 $3 $4 $5"
 }
 
+
+# hg stuff
+function hgs() {
+    echo "****************************************************"
+    hg bookmarks
+    echo "****************************************************"
+    hg status
+    echo "****************************************************"
+    hg log --limit 5
+}
+
+alias hglastdiff='hg show `hg id -i`'
+alias hgamend='hg amend'
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
 alias utcnow='python -c "from datetime import datetime; import pytz; print(datetime.now(pytz.utc))"'
@@ -400,6 +419,7 @@ alias uuid='python2.7 -c "import uuid; print uuid.uuid4()"'
 uuids() {
     for i in `seq 20`; do uuid; done
 }
+
 
 fixgitbranch() {
     git branch --set-upstream-to origin/master
