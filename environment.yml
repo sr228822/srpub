@@ -10,5 +10,7 @@ dependencies:
   - pytz
   - requests
   - vim
+  - jq
   - git
   - python==3.8.*
+  - termcolor

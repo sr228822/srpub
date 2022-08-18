@@ -6,6 +6,16 @@ import re, sys, random
 
 is_windows = sys.platform.lower().startswith('win')
 
+# Try termcolor for windows
+has_termcolor = False
+try:
+    import termcolor
+    import os
+    os.system('color')
+    has_termcolor = True
+except ModuleNotFoundError:
+    pass
+
 CODE={
     'ENDC':0,  # RESET COLOR
 
@@ -33,6 +43,13 @@ def termcode(num):
 
 def color_str(txt,color):
     if is_windows:
+        if has_termcolor:
+            try:
+                color = 'cyan' if color == 'BLUE' else color
+                color = 'magenta' if color == 'GREY' else color
+                return termcolor.colored(txt, color.lower())
+            except KeyError:
+                return txt
         return txt
     return termcode(CODE[color.upper()])+txt+termcode(CODE['ENDC'])
 
