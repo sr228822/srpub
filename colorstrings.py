@@ -3,18 +3,19 @@
 from __future__ import print_function
 
 import re, sys, random
+import os
 
 is_windows = sys.platform.lower().startswith('win')
 
 # Try termcolor for windows
 has_termcolor = False
-try:
-    import termcolor
-    import os
-    os.system('color')
-    has_termcolor = True
-except ModuleNotFoundError:
-    pass
+if is_windows:
+    try:
+        import termcolor
+        os.system('color')
+        has_termcolor = True
+    except ModuleNotFoundError:
+        pass
 
 CODE={
     'ENDC':0,  # RESET COLOR
