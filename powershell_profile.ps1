@@ -1,10 +1,12 @@
+# To install cp to $profile 
+
 ###############################################################
 # person bash helpers
 ###############################################################
 
-]# add srpub to path and pythonpath
-$env:PATH += ';C:\Users\Administrator\srpub\'
-$env:PYTHONPATH += ';C:\Users\Administrator\srpub\'
+# add srpub to path and pythonpath
+$env:PATH += ';C:\Users\samrussell\srpub\'
+$env:PYTHONPATH += ';C:\Users\samrussell\srpub\'
 
 # Setup the prompt to log the full history into a file
 function prompt { "$(date) $( Get-History -Count 1)" >> ~/full_cmd_history.txt; 'PS ' + $(get-location) + '> ' }
@@ -14,7 +16,7 @@ function fullhistory {
 }
 
 Function gs {
-  python C:\Users\Administrator\srpub\git_awesome_status.py
+  python C:\Users\samrussell\srpub\git_awesome_status.py
 }
 
 Function act {
@@ -28,7 +30,7 @@ Function act {
 }
 
 Function cs {
-  cd C:\Users\Administrator\src\platform\ctrlservice
+  cd C:\Users\samrussell\src\platform\ctrlservice
 }
 
 Function gitlastdiff {
