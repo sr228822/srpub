@@ -19,19 +19,6 @@ Function gs {
   python C:\Users\samrussell\srpub\git_awesome_status.py
 }
 
-Function act {
-  cd  C:\ProgramData\Miniconda3\Scripts
-  activate bmi
-
-  # setup extra build stuff
-  conan remote add public-conan https://api.bintray.com/conan/bincrafters/public-conan
-  conan remote add ctrl https://ctrllabs.jfrog.io/ctrllabs/api/conan/ctrl
-  conan user -p AKCp5btevcf1UmwMes3ZMTomZF5AFi7QaxA4NYkrMZJkneYJ3SPnoWzUcuQeVhybA8gFRJxEy -r ctrl sr228822
-}
-
-Function cs {
-  cd C:\Users\samrussell\src\platform\ctrlservice
-}
 
 Function gitlastdiff {
   git diff HEAD^...HEAD
