@@ -303,6 +303,11 @@ quick_push_to_github() {
         echo "cannot push master";
         return 1;
     fi
+    if [[ "$b" == *"main"* ]];
+    then
+	echo "cannot push main";
+	return 1;
+    fi
 
     echo "quick-pushing... $b"
     git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
