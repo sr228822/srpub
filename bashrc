@@ -368,6 +368,31 @@ alias gitbranchdiff='git diff origin/master HEAD'
 amend() {
     git commit --amend -a --no-edit || hg amend
 }
+squashhead() {
+    merge=`git merge-base HEAD origin/master`
+    git reset --soft ${merge}
+    git commit -a
+}
+squashn() {
+    if [ $# -eq 0 ]
+    then
+        echo "No arguments supplied: N is requred"
+        return
+    fi
+    git reset --soft HEAD~${1}
+    git commit -a
+}
+gitfinish() {
+    if [ $# -eq 0 ]
+    then
+        echo "No arguments supplied: branch is required"
+        return
+    fi
+    git checkout master
+    git pull
+    git branch -d $1
+    gs
+}
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
 alias diffrebase='arc diff -m "rebase"'

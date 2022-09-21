@@ -6,6 +6,7 @@ import os
 import subprocess, math, time, sys, datetime, re
 
 os_name = os.name
+is_windows = sys.platform.lower().startswith('win')
 
 def ash(c, wait=True, noisy=False):
     fullcmd = 'adb shell "' + c + '"'

@@ -63,7 +63,7 @@ for a in sys.argv[1:]:
 # Print the aggregated git-blame coverage
 print('\n---- Current Git-Blame Modifier -----\n')
 print(('%20s' % "author") + '\t' + "lines" + '\t' + "perc" + '\t' + "commits")
-sorted_auth_lines = sorted(auth_lines.iteritems(), key=operator.itemgetter(1))
+sorted_auth_lines = sorted(auth_lines.items(), key=operator.itemgetter(1))
 sorted_auth_lines.reverse()
 for auth, cnt in sorted_auth_lines:
     print(('%20s' % auth) + '\t' + str(cnt) + '\t' + str(int(100.0 * float(cnt)/lc)) + '%\t' + str(auth_commits[auth]))
