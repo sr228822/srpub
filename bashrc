@@ -314,8 +314,8 @@ quick_push_to_github() {
     echo "quick-pushing... $b"
     git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
 }
-rebase_push() {
-    git fetch && git rebase && quick_push_to_github
+rebase_master_push() {
+    fixgitbranch && git fetch && git rebase && quick_push_to_github
 }
 gnb() {
     if [ -z "$2" ]
@@ -363,7 +363,6 @@ alias gb='git branch'
 alias gl='git log'
 alias gd='git diff'
 alias grh='git reset --hard'
-alias griom='git rebase -i origin/master'
 alias gitlastdiff='git diff HEAD^ HEAD'
 alias githeaddiff='git diff origin/master...HEAD'
 alias gitbranchdiff='git diff origin/master HEAD'
@@ -419,7 +418,7 @@ alias hglastdiff='hg show `hg id -i`'
 alias hgamend='hg amend'
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
-alias utcnow='python -c "from datetime import datetime; import pytz; print(datetime.now(pytz.utc))"'
+alias utcnow='date -u'
 alias epochnow='python2.7 -c "import time; print int(time.time())"'
 alias epochnowmillis='python2.7 -c "import time; print 1000 * int(time.time())"'
 alias epoch="epoch.py"
