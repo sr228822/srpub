@@ -492,7 +492,7 @@ if [[ $box_id_str == *prod* ]]; then
     # production is red (and named)
     PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *dev* ]]; then
+elif [[ $box_id_str == *dev* || $box_id_str == *ec2* ]]; then
     # Dev boxes are blue
     PS1="\w \[\033[1;34m\]$\[\033[0m\] "
     alias ls="ls -G --color=auto --hide='*.pyc'"
