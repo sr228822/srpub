@@ -1,6 +1,8 @@
 myhostname=`hostname -f`
 datacenter=""
 box_id_str="$myhostname"
+cur_arch=`arch`
+processor=`sysctl -a | grep brand`
 
 export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
@@ -484,9 +486,30 @@ alias author_of_all_time='git log | grep Author | hist_common.py'
 
 alias unfuck_touchbar="sudo pkill TouchBarServer"
 
+rosetta() {
+	env /usr/bin/arch -x86_64 /bin/bash --login
+}
+x86() {
+	env /usr/bin/arch -x86_64 /bin/bash --login
+}
+
+unrosetta() {
+	env /usr/bin/arch -arm64 /bin/bash --login
+}
+arm() {
+	env /usr/bin/arch -arm64 /bin/bash --login
+}
+
+
 ############################################################
 #     setup terminal coloring
 ############################################################
+
+show_arch=''
+if [[ $processor == *Apple* ]]; then
+    echo "Apple processor detected: $processor"
+    show_arch="($cur_arch) "
+fi
 
 if [[ $box_id_str == *prod* ]]; then
     # production is red (and named)
@@ -500,6 +523,6 @@ else
     # Macbooks are yellow
     # everything else is too
     #PS1="\w \[\033[1;93m\]$\[\033[0m\] "
-    PS1="\[\033[1;93m\]\w $\[\033[0m\] "
+    PS1="\[\033[1;93m\]\w $show_arch $\[\033[0m\] "
     alias ls="ls -G"
 fi
