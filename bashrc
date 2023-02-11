@@ -1,8 +1,8 @@
 myhostname=`hostname -f`
 datacenter=""
 box_id_str="$myhostname"
-cur_arch=`arch`
-processor=`sysctl -a | grep brand`
+cur_arch=$(arch)
+processor=$(sysctl -a 2>/dev/null | grep brand)
 
 export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
