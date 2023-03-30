@@ -337,6 +337,16 @@ def get_term_size():
     except ValueError:
         return 80, 160
 
+
+def env_metadata():
+    import socket
+    import getpass
+    return {
+        "hostname": socket.gethostname(),
+        "time": str(datetime.datetime.now()),
+        "user": getpass.getuser(),
+    }
+
 #################################################################
 # math
 #################################################################

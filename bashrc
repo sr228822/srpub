@@ -298,7 +298,7 @@ gco() {
         fi
     fi
 }
-quick_push_to_github() {
+qpush() {
     b=`git branch | grep "*" | last_word`
     if [[ "$b" == *"master"* ]];
     then
@@ -315,7 +315,7 @@ quick_push_to_github() {
     git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
 }
 rebase_master_push() {
-    fixgitbranch && git fetch && git rebase && quick_push_to_github
+    fixgitbranch && git fetch && git rebase && qpush
 }
 gnb() {
     if [ -z "$2" ]
@@ -368,6 +368,9 @@ alias githeaddiff='git diff origin/master...HEAD'
 alias gitbranchdiff='git diff origin/master HEAD'
 amend() {
     git commit --amend -a --no-edit || hg amend
+}
+qamend() {
+    git commit --amend -a --no-edit --no-verify || hg amend
 }
 squashhead() {
     merge=`git merge-base HEAD origin/master`
