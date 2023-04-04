@@ -73,17 +73,18 @@ sh() {
     grep --color=always -iI --exclude-dir={vendor,node_modules,.mypy_cache} . 2>/dev/null -e "$1" | tee /tmp/last_relevant_files
 }
 sc() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):' | tee /tmp/last_relevant_files
 }
 sch() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
+    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):' | tee /tmp/last_relevant_files
 }
 scw() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):' | tee /tmp/last_relevant_files
 }
 scnear() {
-    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb):' | tee /tmp/last_relevant_files
+    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):' | tee /tmp/last_relevant_files
 }
+
 vimlast() {
     f=`cat /tmp/last_relevant_files | head -n 1 | first_word | sed 's/://g' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"`
     echo $f
