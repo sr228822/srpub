@@ -483,7 +483,9 @@ gtv() {
     go test -v 2>&1 | highlightlinered "\<FAIL\>" | highlightlinered "panic" | highlightgreen "\<PASS\>" | highlightline "Unexpected Call" | highlightline "missing call"
 }
 
-alias gs="git_awesome_status.py"
+function gs() {
+    git_awesome_status.py $@
+}
 alias mine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 

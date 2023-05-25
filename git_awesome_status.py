@@ -91,7 +91,7 @@ def fetch_commits_for_branch(branch, n):
     raw = cmd('git log ' + branch + ' --format=oneline -n ' + str(n))
     if 'not a git repository' in raw.lower():
         print(red_str('Not a git repository'))
-        sys.exit(0)
+        sys.exit(1)
     if 'unknown revision or path not in the working tree' in raw:
         return []
     res = []
