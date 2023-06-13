@@ -12,10 +12,12 @@ export PYTHONPATH=${PYTHONPATH}:$HOME/customize
 export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
 export PYTHONUNBUFFERED="nope"
 
+# git initialization
 git config --global core.editor "vim"
 git config --global user.name "Samuel Russell"
-export KUBE_EDITOR='vim'
 #git config --global user.email "sr228822@gmail.com"
+
+export KUBE_EDITOR='vim'
 
 ############################################################
 #     History
@@ -286,56 +288,6 @@ allbutlastword() {
     sed s/'\S*$'//
 }
 
-# git
-alias gcp='git cherry-pick'
-alias gc='git commit'
-gco() {
-    git checkout $@
-    if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1`
-        if [ -n "$substr" ]; then
-            echo "auto-matching branch $substr" | yellow
-            git checkout $substr
-        fi
-    fi
-}
-qpush() {
-    b=`git branch | grep "*" | last_word`
-    if [[ "$b" == *"master"* ]];
-    then
-        echo "cannot push master";
-        return 1;
-    fi
-    if [[ "$b" == *"main"* ]];
-    then
-	echo "cannot push main";
-	return 1;
-    fi
-
-    echo "quick-pushing... $b"
-    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
-}
-rebase_master_push() {
-    fixgitbranch && git fetch && git rebase && qpush
-}
-gnb() {
-    if [ -z "$2" ]
-    then
-        gco -b $1 origin/master
-    else
-        gco -b $1 $2
-    fi
-}
-gbd() {
-    git branch -D $@
-    if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1 | grep -v "*"`
-        if [ -n "$substr" ]; then
-            echo "auto-matching branch $substr" | yellow
-            git branch -D $substr
-        fi
-    fi
-}
 cdd() {
     cd $1
     if [ $? -eq 1 ]; then
@@ -360,44 +312,6 @@ cdd() {
 #    fi
 #}
 
-alias gb='git branch'
-alias gl='git log'
-alias gd='git diff'
-alias grh='git reset --hard'
-alias gitlastdiff='git diff HEAD^ HEAD'
-alias githeaddiff='git diff origin/master...HEAD'
-alias gitbranchdiff='git diff origin/master HEAD'
-amend() {
-    git commit --amend -a --no-edit || hg amend
-}
-qamend() {
-    git commit --amend -a --no-edit --no-verify || hg amend
-}
-squashhead() {
-    merge=`git merge-base HEAD origin/master`
-    git reset --soft ${merge}
-    git commit -a
-}
-squashn() {
-    if [ $# -eq 0 ]
-    then
-        echo "No arguments supplied: N is requred"
-        return
-    fi
-    git reset --soft HEAD~${1}
-    git commit -a
-}
-gitfinish() {
-    if [ $# -eq 0 ]
-    then
-        echo "No arguments supplied: branch is required"
-        return
-    fi
-    git checkout master
-    git pull
-    git branch -d $1
-    gs
-}
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
 alias diffrebase='arc diff -m "rebase"'
@@ -408,18 +322,6 @@ diffit() {
 }
 
 
-# hg stuff
-function hgs() {
-    echo "****************************************************"
-    hg bookmarks
-    echo "****************************************************"
-    hg status
-    echo "****************************************************"
-    hg log --limit 5
-}
-
-alias hglastdiff='hg show `hg id -i`'
-alias hgamend='hg amend'
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
 alias utcnow='date -u'
@@ -483,11 +385,198 @@ gtv() {
     go test -v 2>&1 | highlightlinered "\<FAIL\>" | highlightlinered "panic" | highlightgreen "\<PASS\>" | highlightline "Unexpected Call" | highlightline "missing call"
 }
 
-function gs() {
+
+#######################################################
+# Git stuff
+#######################################################
+
+alias gb='git branch'
+alias gl='git log'
+alias gd='git diff'
+alias grh='git reset --hard'
+alias gcp='git cherry-pick'
+alias gc='git commit'
+alias gitlastdiff='git diff HEAD^ HEAD'
+alias githeaddiff='git diff origin/master...HEAD'
+alias gitbranchdiff='git diff origin/master HEAD'
+
+squashhead() {
+    merge=`git merge-base HEAD origin/master`
+    git reset --soft ${merge}
+    git commit -a
+}
+squashn() {
+    if [ $# -eq 0 ]
+    then
+        echo "No arguments supplied: N is requred"
+        return
+    fi
+    git reset --soft HEAD~${1}
+    git commit -a
+}
+#gitfinish() {
+#    if [ $# -eq 0 ]
+#    then
+#        echo "No arguments supplied: branch is required"
+#        return
+#    fi
+#    git checkout master
+#    git pull
+#    git branch -d $1
+#    gs
+#}
+
+gco() {
+    git checkout $@
+    if [ $? -eq 1 ]; then
+        substr=`git branch | grep $1`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            git checkout $substr
+        fi
+    fi
+}
+
+qpush() {
+    b=`git branch | grep "*" | last_word`
+    if [[ "$b" == *"master"* ]];
+    then
+        echo "cannot push master";
+        return 1;
+    fi
+    if [[ "$b" == *"main"* ]];
+    then
+	echo "cannot push main";
+	return 1;
+    fi
+
+    echo "quick-pushing... $b"
+    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
+}
+
+#rebase_master_push() {
+#    fixgitbranch && git fetch && git rebase && qpush
+#}
+
+gnb() {
+    if [ -z "$2" ]
+    then
+        gco -b $1 origin/master
+    else
+        gco -b $1 $2
+    fi
+}
+gbd() {
+    git branch -D $@
+    if [ $? -eq 1 ]; then
+        substr=`git branch | grep $1 | grep -v "*"`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            git branch -D $substr
+        fi
+    fi
+}
+
+function gits() {
     git_awesome_status.py $@
 }
 alias mine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
+
+#######################################################
+# HG stuff
+#######################################################
+
+function hgs() {
+    echo "****************************************************"
+    hg bookmarks
+    echo "****************************************************"
+    hg status
+    echo "****************************************************"
+    hg sl
+}
+
+function hg_new_branch() {
+    hg bookmark -r master $1
+    hg update $1
+}
+
+alias hglastdiff='hg show `hg id -i`'
+alias hgamend='hg amend'
+alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
+alias hgrebasemaster='hg pull --rebase -d master'
+
+#######################################################
+# Source control ambiguation
+#######################################################
+has_hg=false
+
+GIT_ENUM=10
+HG_ENUM=11
+UNRECOGNIZED_ENUM=-1
+
+function is_git() {
+    git rev-parse --is-inside-work-tree 1>/dev/null 2>/dev/null
+    if [[ $? -eq 0 ]]; then
+        #echo "is git"
+        echo $GIT_ENUM
+    else
+        hg root 1>/dev/null 2>/dev/null
+        if [[ $? -eq 0 ]]; then
+            #echo "is hg"
+            echo $HG_ENUM
+        else
+            echo $UNRECOGNIZED_ENUM
+        fi
+    fi
+}
+
+function test_is_git() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        echo "git command"
+    elif [[ $typ = $HG_ENUM ]]; then
+        echo "hg command"
+    else
+        echo "no source control"
+    fi
+}
+
+function gs() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        git_awesome_status.py $@
+    elif [[ $typ = $HG_ENUM ]]; then
+        hgs $@
+    else
+        echo "no source control"
+    fi
+}
+
+amend() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        git commit --amend -a --no-edit
+    elif [[ $typ = $HG_ENUM ]]; then
+        hg amend
+    else
+        echo "no source control"
+    fi
+}
+qamend() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        git commit --amend -a --no-edit --no-verify
+    elif [[ $typ = $HG_ENUM ]]; then
+        hg amend
+    else
+        echo "no source control"
+    fi
+}
+
+#######################################################
+# MacOS Stuff
+#######################################################
 
 alias unfuck_touchbar="sudo pkill TouchBarServer"
 
