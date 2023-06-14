@@ -61,6 +61,9 @@ alias sparse="sed -n '0~10p'"
 lsr() {
     ls -lth $@ | head -n 10
 }
+lsl() {
+    ls -l $@
+}
 
 tmptmp() {
     rm -rf /tmp/tmp/
