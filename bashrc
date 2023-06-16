@@ -395,7 +395,7 @@ gtv() {
 
 alias gb='git branch'
 alias gl='git log'
-alias gd='git diff'
+alias ggd='git diff'
 alias grh='git reset --hard'
 alias gcp='git cherry-pick'
 alias gc='git commit'
@@ -504,6 +504,18 @@ function hg_new_branch() {
     hg update $1
 }
 
+hgco() {
+    hg checkout $@
+    if [ $? -ne 0 ]; then
+        substr=`hg bookmarks | grep $1 | awk '{print $1}'`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            hg checkout $substr
+            return
+        fi
+    fi
+}
+
 alias hglastdiff='hg show `hg id -i`'
 alias hgamend='hg amend'
 alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
@@ -572,6 +584,17 @@ qamend() {
         git commit --amend -a --no-edit --no-verify
     elif [[ $typ = $HG_ENUM ]]; then
         hg amend
+    else
+        echo "no source control"
+    fi
+}
+
+gd() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        git diff
+    elif [[ $typ = $HG_ENUM ]]; then
+        hg diff
     else
         echo "no source control"
     fi
