@@ -12,9 +12,11 @@ lprint = get_now()
 t0 = get_now()
 
 n = 10
+duplicated = 'dups' in sys.argv or 'duplicated' in sys.argv
+sys.argv.remove('dups')
+#sys.argv.remove('duplicated')
 if len(sys.argv) > 1:
     n = 10000000 if sys.argv[1] == 'all' else int(sys.argv[1])
-duplicated = 'dups' in sys.argv or 'duplicated' in sys.argv
 
 def _print_hist(with_rate=True, alphabetical=False, dups_only=False, with_perc=False):
     global seen, lprint, t0, total_cnt

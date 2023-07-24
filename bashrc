@@ -484,6 +484,8 @@ function gits() {
     git_awesome_status.py $@
 }
 alias mine="git log --format=short --author='Russell'"
+alias hgmine="hg log --user=samrussell@meta.com --limit 10"
+
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
 #######################################################
@@ -516,7 +518,7 @@ hgco() {
     fi
 }
 
-alias hglastdiff='hg show `hg id -i`'
+alias hglastdiff='hg show `hg id -i | cut -d"+" -f1`'
 alias hgamend='hg amend'
 alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
 alias hgrebasemaster='hg pull --rebase -d master'
