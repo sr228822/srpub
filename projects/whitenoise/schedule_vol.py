@@ -75,7 +75,7 @@ def main(interval=120):
     while True:
         now = get_now()
         vol = get_vol(now)
-        print(f"{now.strftime('%I:%M %p')}: {vol}")
+        print(f"{now.strftime('%I:%M %p')}: {vol:.2f}")
         set_vol(vol)
         time.sleep(interval)
 
