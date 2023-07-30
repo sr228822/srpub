@@ -44,7 +44,7 @@ def _alice_post_status(s, perc_done=None, message=None):
         c += " -d message='" + str(message) + "'"
     if alice_custom_actions:
         c += " -d custom_actions='" + str(','.join(alice_custom_actions.keys())) + "'"
-    c += " http://ec2.sfflux.com/alice/report"
+    c += " http://ec3.sfflux.com/alice/report"
     resp = cmd(c)
     return resp
 
@@ -59,7 +59,7 @@ def _alice_status_once(perc_done=None,message=None):
 
     resp = _alice_post_status(alice_status, perc_done=perc_done, message=messages)
     if alice_debug:
-        print 'cmd was\n-----------------------------------------\n' + str(resp) + '\n----------------------------------------\n'
+        print('cmd was\n-----------------------------------------\n' + str(resp) + '\n----------------------------------------\n')
 
     # special, since can be combined with others
     if 'action_fast_interval' in resp:
@@ -75,7 +75,7 @@ def _alice_status_once(perc_done=None,message=None):
 
     # Terminating actions
     if 'action_terminate' in resp:
-        print str(get_now()) + ' i am dying'
+        print(str(get_now()) + ' i am dying')
         alice_status = ALICE_STATUS_KILLED
         _alice_post_status(alice_status)
         sys.exit(1)
@@ -92,7 +92,7 @@ def _alice_status_once(perc_done=None,message=None):
             alice_fast_until = get_now() + datetime.timedelta(minutes=3)
         return False
     else:
-        print 'error getting status, response was >' + str(resp) + '<'
+        print('error getting status, response was >' + str(resp) + '<')
         return True
 
 # Interface functions
@@ -129,14 +129,14 @@ def alice_check_status(perc_done=None, message=None):
     if get_now() > alice_fast_until:
         alice_interval = ALICE_INTERVAL_SLOW
     if alice_debug:
-        print 'interval is ' + str(alice_interval) + ' expire fast interval in ' + str(alice_fast_until - get_now())
+        print('interval is ' + str(alice_interval) + ' expire fast interval in ' + str(alice_fast_until - get_now()))
 
     # Update if we haven't updated in interval seconds
     now = get_now()
     if alice_lastcheck is None or seconds_between(alice_lastcheck, now) > alice_interval:
         alice_lastcheck = now
         while not _alice_status_once(perc_done=perc_done, message=message):
-            print str(get_now()) + ' i am  paused'
+            print(str(get_now()) + ' i am  paused')
             time.sleep(alice_interval)
 
 def alice_complete():
