@@ -12,31 +12,32 @@ HIGH = 0.7
 MAX = 1.0
 
 ipoints = {
-    0: MED,   # 12am   [xxx   ]
-    1: LOW,   #  1am   [x     ]
-    2: LOW,   #  2am   [x     ]
-    3: LOW,   #  3am   [x     ]
-    4: LOW,   #  4am   [x     ]
-    5: LOW,   #  5am   [x     ]
-    6: MED,   #  6am   [xxx   ]
-    7: HIGH,  #  7am   [xxxxx ]
-    8: HIGH,  #  8am   [xxxxx ]
-    9: MED,   #  9am   [xxx   ]
-    10: OFF,  # 10am   [      ]
-    11: OFF,  # 11am   [      ]
-    12: OFF,  # 12am   [      ]
-    13: OFF,  #  1pm   [      ]
-    14: OFF,  #  2pm   [      ]
-    15: OFF,  #  3pm   [      ]
-    16: OFF,  #  4pm   [      ]
-    17: OFF,  #  5pm   [      ]
-    18: OFF,  #  6pm   [      ]
-    19: OFF,  #  7pm   [      ]
-    20: OFF,  #  8pm   [      ]
-    21: LOW,  #  9pm   [x     ]
-    22: MED,  # 10pm   [xxx   ]
-    23: MED,  # 11pm   [xxx   ]
-    24: MED,  # 12am   [xxx   ]
+    # Hour: [weekday-vol, weekend-vol]
+    0:  [0.4, 0.4], # 12am   [xx    ]
+    1:  [0.4, 0.4], #  1am   [xx    ]
+    2:  [0.3, 0.3], #  2am   [x     ]
+    3:  [0.3, 0.3], #  3am   [x     ]
+    4:  [0.3, 0.3], #  4am   [x     ]
+    5:  [0.4, 0.4], #  5am   [xx    ]
+    6:  [0.5, 0.5], #  6am   [xxx   ]
+    7:  [0.6, 0.6], #  7am   [xxxx  ]
+    8:  [0.6, 0.6], #  8am   [xxxx  ]
+    9:  [0.5, 0.6], #  9am   [xxx   ]
+    10: [OFF, 0.5], # 10am   [      ]
+    11: [OFF, 0.3], # 11am   [      ]
+    12: [OFF, OFF], # 12am   [      ]
+    13: [OFF, OFF], #  1pm   [      ]
+    14: [OFF, OFF], #  2pm   [      ]
+    15: [OFF, OFF], #  3pm   [      ]
+    16: [OFF, OFF], #  4pm   [      ]
+    17: [OFF, OFF], #  5pm   [      ]
+    18: [OFF, OFF], #  6pm   [      ]
+    19: [OFF, OFF], #  7pm   [      ]
+    20: [OFF, OFF], #  8pm   [      ]
+    21: [OFF, OFF], #  9pm   [      ]
+    22: [0.4, 0.4], # 10pm   [xx    ]
+    23: [0.4, 0.4], # 11pm   [xx    ]
+    24: [0.4, 0.4], # 12am   [xx    ]
 }
 
 
@@ -56,27 +57,28 @@ def set_vol(v: float):
     cmd(f'osascript -e "set Volume {vnorm:.1f}"', noisy=True)
 
 def get_vol(t):
-    #weekday = t.weekday()  # 0 is Mon, 6 is Sun
-    #is_weekend = weekday in (5, 6)
+    dow = t.weekday()  # 0 is Mon, 6 is Sun
+    weekend = int(dow in (5, 6))
 
     hour = t.hour
     minute = t.minute
     minutes_perc = float(minute) / 60.0
 
-    cur_h = ipoints[hour]
-    next_h = ipoints[hour+1]
+    cur_h = ipoints[hour][weekend]
+    next_h = ipoints[hour+1][weekend]
 
     vol = ((1.0 - minutes_perc) * cur_h) + (minutes_perc * next_h)
     #print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
     return vol
 
+def _update(t):
+    vol = get_vol(t)
+    print(f"{t.strftime('%a %I:%M %p')}: {vol:.2f}")
+    set_vol(vol)
 
 def main(interval=120):
     while True:
-        now = get_now()
-        vol = get_vol(now)
-        print(f"{now.strftime('%I:%M %p')}: {vol:.2f}")
-        set_vol(vol)
+        _update(get_now())
         time.sleep(interval)
 
 if __name__ == "__main__":
