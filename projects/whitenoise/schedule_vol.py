@@ -99,15 +99,18 @@ class Volumizer:
         #print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
         return vol
 
-    def apply_boost(self, b):
-        self.boost += b
+    def apply_boost(self, b_delta=None, b_abs=None):
+        if b_abs is not None:
+            self.boost = b_abs
+        if b_delta is not None:
+            self.boost += b_delta
         self.updated_at = get_now()
         self.update()
 
     def print_status(self, t, vol):
         boost_str = ""
         if self.boost != 0.0:
-            age = (get_now() - self.updated_at).total_seconds()
+            age = int((get_now() - self.updated_at).total_seconds())
             boost_str = f" [Boost {self.boost:.2f} age {age}] "
         print(f"{t.strftime('%a %I:%M %p')}: {boost_str}{vol:.2f}")
 

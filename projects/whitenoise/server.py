@@ -30,29 +30,36 @@ _g = Globals()
 def vol_off():
     global _g
     print("vol off")
-    _g.v.apply_boost(-100)
+    _g.v.apply_boost(b_abs=-10)
     return {'res': 'OK', 'command': 'vol_off'}
 
 @app.route('/vol/less')
 def vol_less():
     global _g
-    _g.v.apply_boost(-1)
+    _g.v.apply_boost(b_delta=-1)
     print("vol less")
     return {'res': 'OK', 'command': 'vol_less'}
 
 @app.route('/vol/more')
 def vol_more():
     global _g
-    _g.v.apply_boost(1)
+    _g.v.apply_boost(b_delta=1)
     print("vol more")
     return {'res': 'OK', 'command': 'vol_more'}
 
 @app.route('/vol/max')
 def vol_max():
     global _g
-    _g.v.apply_boost(100)
+    _g.v.apply_boost(b_abs=7)
     print("vol max")
     return {'res': 'OK', 'command': 'vol_max'}
+
+@app.route('/vol/unset')
+def vol_unset():
+    global _g
+    _g.v.apply_boost(b_abs=0.0)
+    print("vol boost unset")
+    return {'res': 'OK', 'command': 'vol_unset'}
 
 @app.route('/status')
 def status():
@@ -73,13 +80,7 @@ def homepage():
 def background_job():
     global _g
 
-    _g.update()
-    #now = schedule_vol.get_now()
-    #vol = _g.v.get_vol(now)
-    #_g.v.print_status(now, vol)
-    #schedule_vol.set_vol(vol)
-
-    #print(f'i am test job. boost is {_g.boost}')
+    _g.v.update()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
