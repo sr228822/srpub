@@ -5,7 +5,7 @@ import os
 import socket
 import time
 
-import schedule_vol
+from schedule_vol import Volumizer, get_now
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 class Globals:
     def __init__(self):
-        self.v = schedule_vol.Volumizer()
+        self.v = Volumizer()
 
 _g = Globals()
 
@@ -32,52 +32,58 @@ def _serve_file(fid):
     pth = f'./files/{fid}'
     if not os.path.exists(pth):
         raise Exception(f"Path not found: {pth}")
-    with open(pth, 'r') as f:
+    mode = 'r'
+    if 'png' in fid or 'ico' in fid:
+        mode = 'rb'
+    with open(pth, mode) as f:
         return f.read()
 
 ####################################################
 # Routes
 ####################################################
 
+def _cmd_resp(c):
+    return {'res': 'OK', 'command': c, 'time': get_now()}
+
 @app.route('/vol/off')
 def vol_off():
     global _g
     print("vol off")
     _g.v.apply_boost(b_abs=-10)
-    return {'res': 'OK', 'command': 'vol_off'}
+    return _cmd_resp('vol_off')
 
 @app.route('/vol/less')
 def vol_less():
     global _g
     _g.v.apply_boost(b_delta=-1)
     print("vol less")
-    return {'res': 'OK', 'command': 'vol_less'}
+    return _cmd_resp('vol_less')
 
 @app.route('/vol/more')
 def vol_more():
     global _g
     _g.v.apply_boost(b_delta=1)
     print("vol more")
-    return {'res': 'OK', 'command': 'vol_more'}
+    return _cmd_resp('vol_more')
 
 @app.route('/vol/max')
 def vol_max():
     global _g
     _g.v.apply_boost(b_abs=7)
     print("vol max")
-    return {'res': 'OK', 'command': 'vol_max'}
+    return _cmd_resp('vol_max')
 
 @app.route('/vol/unset')
 def vol_unset():
     global _g
     _g.v.apply_boost(b_abs=0.0)
     print("vol boost unset")
-    return {'res': 'OK', 'command': 'vol_unset'}
+    return _cmd_resp('vol_unset')
 
 @app.route('/status')
 def status():
     global _g
-    now = schedule_vol.get_now()
+    now = get_now()
     vol = _g.v.get_vol(now)
     return {"boost": round(_g.v.boost, 2), "updated_at": _g.v.updated_at, "vol": round(vol, 2), "now": now}
 
@@ -89,10 +95,6 @@ def get_files(fid):
 @app.route('/index.html')
 def get_index(fid):
     return _serve_file('index.html')
-
-@app.route('/logic.js')
-def get_logic(fid):
-    return _serve_file('logic.js')
 
 @app.route('/')
 def homepage():
@@ -128,7 +130,7 @@ if __name__ == "__main__":
 
     print("Starting background scheduler")
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(background_job, 'interval', minutes=0.1)
+    job = scheduler.add_job(background_job, 'interval', minutes=5)
     scheduler.start()
 
     #app.run(debug=args.debug_mode, host="127.0.0.1", port=80)

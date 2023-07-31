@@ -64,15 +64,23 @@ class Volumizer:
     def __init__(self):
         self.boost = 0.0
         self.updated_at = None
+        self.last_degrade = get_now()
 
     def degrade_boost(self):
         if not self.updated_at:
             return
-        age = (get_now() - self.updated_at).total_seconds()
+
+        now = get_now()
+        age = (now - self.updated_at).total_seconds()
 
         # leave as is for 2 hours
         if age < (2 * 3600):
             return
+
+        # this can be called frequently so only degrade every 3 mins
+        if (now - self.last_degrade).total_seconds() < 3*60:
+            return
+        self.last_degrade = now
 
         # then ramp back to baseline (0 boost)
         self.boost = (self.boost - 0.02) * 0.95

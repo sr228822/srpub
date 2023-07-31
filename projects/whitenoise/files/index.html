@@ -7,8 +7,8 @@
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
+  font-size: 50px;
+  margin: 8px 4px;
   cursor: pointer;
 }
 </style>
@@ -19,33 +19,58 @@ function callAPI(route) {
   fetch(route).then(resp => {return resp.json()}).then(body => {
     console.log(body)
     document.getElementById("api_resp").innerHTML = JSON.stringify(body);
+    pollStatus();
   });
 }
 
 lastResp = null;
+
+function pollStatus() {
+  console.log("polling status");
+  fetch('/status').then(resp => {return resp.json()}).then(body => {
+    var html = "Time: " + body['now'] + '<br>Boost: ' + body['boost'] + '<br>Volume: ' + body['vol'];
+    document.getElementById("status").innerHTML = html;
+  });
+}
+
+pollStatus();
+var intervalId = setInterval(pollStatus, 15000);
+
 </script>
 
-<b> DJ Olicat's Noise Machine </b>
+<head>
+  <title>DJ-Oli Noise Machine</title>
+  <link rel="icon" href="/files/favicon.ico">
+</head>
 
-<table>
+<body style="font-size:30px">
+<h1> DJ Olicat's Noise Machine </h1>
 
+<br>
+<span id="status"></span>
+</br>
+
+<table style="width:100%">
   <tr>
    <td>
-    <button class="button" onclick="callAPI('/vol/off')">Off</button>
+    <button style="width:100%" class="button" onclick="callAPI('/vol/off')">Off</button>
    </td>
    <td>
-    <button class="button" onclick="callAPI('/vol/less')">Down</button>
+    <button style="width:100%" class="button" onclick="callAPI('/vol/less')">Down</button>
    </td>
    <td>
-    <button class="button" onclick="callAPI('/vol/more')">Up</button>
+    <button style="width:100%" class="button" onclick="callAPI('/vol/more')">Up</button>
    </td>
    <td>
-    <button class="button" onclick="callAPI('/vol/max')">Max</button>
+    <button style="width:100%" class="button" onclick="callAPI('/vol/max')">Max</button>
    </td>
   </tr>
-  <br>
+  <tr>
+   <td>
+    <button class="button" style="background-color: #BBBBBB;" onclick="callAPI('/vol/unset')">Unset</button>
+   </td>
+  </tr>
 </table>
 
 <span id="api_resp"></span>
-
-
+</body>
