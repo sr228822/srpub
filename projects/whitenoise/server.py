@@ -16,10 +16,9 @@ def myip():
     print(s.getsockname()[0])
     s.close()
 
-@dataclass
 class Globals:
-    boost = 0.0
-    updated_at = None
+    def __init__(self):
+        self.v = schedule_vol.Volumizer()
 
 _g = Globals()
 
@@ -31,31 +30,27 @@ _g = Globals()
 def vol_off():
     global _g
     print("vol off")
-    _g.boost = -100
-    _g.updated_at = time.time()
+    _g.v.apply_boost(-100)
     return {'res': 'OK', 'command': 'vol_off'}
 
 @app.route('/vol/less')
 def vol_less():
     global _g
-    _g.boost -= 1
-    _g.updated_at = time.time()
+    _g.v.apply_boost(-1)
     print("vol less")
     return {'res': 'OK', 'command': 'vol_less'}
 
 @app.route('/vol/more')
 def vol_more():
     global _g
-    _g.boost += 1
-    _g.updated_at = time.time()
+    _g.v.apply_boost(1)
     print("vol more")
     return {'res': 'OK', 'command': 'vol_more'}
 
 @app.route('/vol/max')
 def vol_max():
     global _g
-    _g.boost = 100
-    _g.updated_at = time.time()
+    _g.v.apply_boost(100)
     print("vol max")
     return {'res': 'OK', 'command': 'vol_max'}
 
@@ -63,8 +58,8 @@ def vol_max():
 def status():
     global _g
     now = schedule_vol.get_now()
-    vol = schedule_vol.get_vol(now)
-    return {"boost": _g.boost, "updated_at": _g.udpated_at, "vol": vol, "now": now}
+    vol = _g.v.get_vol(now)
+    return {"boost": _g.v.boost, "updated_at": _g.v.udpated_at, "vol": vol, "now": now}
 
 
 @app.route('/')
@@ -75,15 +70,16 @@ def homepage():
 # Main
 ####################################################
 
-def test_job():
+def background_job():
     global _g
 
-    now = schedule_vol.get_now()
-    vol = schedule_vol.get_vol(now)
-    schedule_vol.print_status(now, vol)
-    schedule_vol.set_vol(vol)
+    _g.update()
+    #now = schedule_vol.get_now()
+    #vol = _g.v.get_vol(now)
+    #_g.v.print_status(now, vol)
+    #schedule_vol.set_vol(vol)
 
-    print(f'i am test job. boost is {_g.boost}')
+    #print(f'i am test job. boost is {_g.boost}')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -101,9 +97,12 @@ if __name__ == "__main__":
 
     myip()
 
+    # run once immediately on init
+    background_job()
+
     print("Starting background scheduler")
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(test_job, 'interval', minutes=0.1)
+    job = scheduler.add_job(background_job, 'interval', minutes=0.1)
     scheduler.start()
 
     #app.run(debug=args.debug_mode, host="127.0.0.1", port=80)

@@ -2,14 +2,22 @@
 
 import datetime
 import time
+import mock
 
-from schedule_vol import get_vol, set_vol, _update
+import schedule_vol
 
 def test_interp():
     fake_time = datetime.datetime.now()
-    while True:
-        _update(fake_time)
+    schedule_vol.get_now = mock.MagicMock(return_value=fake_time)
+
+    v = schedule_vol.Volumizer()
+    for i in range(1000):
         fake_time = fake_time + datetime.timedelta(minutes=5)
+        schedule_vol.get_now = mock.MagicMock(return_value=fake_time)
+        v.update()
+        if i == 30:
+            print("booosting")
+            v.apply_boost(0.3)
         time.sleep(0.1)
 
 if __name__ == "__main__":
