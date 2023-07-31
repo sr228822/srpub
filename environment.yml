@@ -9,7 +9,6 @@ dependencies:
   - pip
   - pytz
   - requests
-  - vim
   - jq
   - git
   - python==3.8.*

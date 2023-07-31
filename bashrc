@@ -524,6 +524,20 @@ alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
 alias hgrebasemaster='hg pull --rebase -d master'
 
 #######################################################
+# Conda stuff
+#######################################################
+
+act() {
+  conda deactivate;
+  local env="${1:-$DEFAULTENV}"
+  echo "env is $env";
+  conda activate $env;
+}
+deact() {
+  conda deactivate;
+}
+
+#######################################################
 # Source control ambiguation
 #######################################################
 has_hg=false
