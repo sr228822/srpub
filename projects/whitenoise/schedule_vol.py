@@ -71,9 +71,12 @@ def get_vol(t):
     #print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
     return vol
 
+def print_status(t, vol):
+    print(f"{t.strftime('%a %I:%M %p')}: {vol:.2f}")
+
 def _update(t):
     vol = get_vol(t)
-    print(f"{t.strftime('%a %I:%M %p')}: {vol:.2f}")
+    print_status(t, vol)
     set_vol(vol)
 
 def main(interval=120):
