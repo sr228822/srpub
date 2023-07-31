@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
 from flask import Flask
+import os
 import socket
 import time
 
@@ -10,17 +11,29 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-def myip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    print(s.getsockname()[0])
-    s.close()
-
 class Globals:
     def __init__(self):
         self.v = schedule_vol.Volumizer()
 
 _g = Globals()
+
+####################################################
+# Heper functions
+####################################################
+
+def myip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = str(s.getsockname()[0])
+    s.close()
+    return ip
+
+def _serve_file(fid):
+    pth = f'./files/{fid}'
+    if not os.path.exists(pth):
+        raise Exception(f"Path not found: {pth}")
+    with open(pth, 'r') as f:
+        return f.read()
 
 ####################################################
 # Routes
@@ -69,9 +82,21 @@ def status():
     return {"boost": round(_g.v.boost, 2), "updated_at": _g.v.updated_at, "vol": round(vol, 2), "now": now}
 
 
+@app.route('/files/<fid>')
+def get_files(fid):
+    return _serve_file(fid)
+
+@app.route('/index.html')
+def get_index(fid):
+    return _serve_file('index.html')
+
+@app.route('/logic.js')
+def get_logic(fid):
+    return _serve_file('logic.js')
+
 @app.route('/')
 def homepage():
-    return 'Hello, World!'
+    return _serve_file('index.html')
 
 ####################################################
 # Main
@@ -96,7 +121,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    myip()
+    print(f"IP is {myip()}")
 
     # run once immediately on init
     background_job()

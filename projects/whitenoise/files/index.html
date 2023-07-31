@@ -1,0 +1,51 @@
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+function callAPI(route) {
+  console.log('callAPI ' + route);
+  fetch(route).then(resp => {return resp.json()}).then(body => {
+    console.log(body)
+    document.getElementById("api_resp").innerHTML = JSON.stringify(body);
+  });
+}
+
+lastResp = null;
+</script>
+
+<b> DJ Olicat's Noise Machine </b>
+
+<table>
+
+  <tr>
+   <td>
+    <button class="button" onclick="callAPI('/vol/off')">Off</button>
+   </td>
+   <td>
+    <button class="button" onclick="callAPI('/vol/less')">Down</button>
+   </td>
+   <td>
+    <button class="button" onclick="callAPI('/vol/more')">Up</button>
+   </td>
+   <td>
+    <button class="button" onclick="callAPI('/vol/max')">Max</button>
+   </td>
+  </tr>
+  <br>
+</table>
+
+<span id="api_resp"></span>
+
+
