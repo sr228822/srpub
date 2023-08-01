@@ -59,7 +59,7 @@ def status():
     global _g
     now = schedule_vol.get_now()
     vol = _g.v.get_vol(now)
-    return {"boost": _g.v.boost, "updated_at": _g.v.udpated_at, "vol": vol, "now": now}
+    return {"boost": round(_g.v.boost, 2), "updated_at": _g.v.updated_at, "vol": round(vol, 2), "now": now}
 
 
 @app.route('/')
