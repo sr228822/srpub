@@ -200,6 +200,13 @@ def print_cnt_dict(title, stat, limit=args.num):
 
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
 
+def length_score(k):
+    s = len(k)
+    # penalize emails
+    if '@' not in k:
+        s += 20
+    return s
+
 dt_now = int(time.time())
 seen_me = False
 commits = git_log_raw.split('\n')
@@ -237,7 +244,7 @@ for i, c in enumerate(reversed(commits)):
     # set the longest-name which kname maps to
     if kname not in longname:
         longname[kname] = kname
-    if len(name) >len( longname[kname]):
+    if length_score(name) >length_score(longname[kname]):
         longname[kname] = name
 
     # Add this commit to stat-counters it matches
@@ -298,6 +305,7 @@ def print_active_rate():
 #print("\n\n== kauth map ==")
 #for k,v in all_stat.cnt.items():
 #    print("%50s" % k, "   ", "%50s" % v)
+
 
 if args.overall:
     print_cnt_dict("Overall", all_stat, limit=100)

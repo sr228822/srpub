@@ -12,8 +12,12 @@ lprint = get_now()
 t0 = get_now()
 
 n = 10
-duplicated = 'dups' in sys.argv or 'duplicated' in sys.argv
-sys.argv.remove('dups')
+
+duplicated = False
+if 'dups' in sys.argv:
+    duplicated=True
+    sys.argv.remove('dups')
+
 #sys.argv.remove('duplicated')
 if len(sys.argv) > 1:
     n = 10000000 if sys.argv[1] == 'all' else int(sys.argv[1])

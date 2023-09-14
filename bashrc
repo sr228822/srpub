@@ -361,12 +361,19 @@ uuids() {
 }
 
 
-fixgitbranch() {
-    git branch --set-upstream-to origin/master
+gittrack() {
+    if [ -z "$1" ]; then
+        echo "tracking origin is required"
+        return 1;
+    fi
+    git branch --set-upstream-to $1
 }
-fixgitbranchself() {
+gittrackmaster() {
+    gittrack origin/master
+}
+gittrackself() {
     b=`git branch | grep "*" | last_word`
-    git branch --set-upstream-to origin/$b
+    gittrack origin/$b
 }
 
 jqm() {
