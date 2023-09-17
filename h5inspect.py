@@ -7,23 +7,6 @@ import h5py
 
 from colorstrings import *
 
-fpath = sys.argv[1]
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "path",
-    type=str,
-    help="The file",
-)
-parser.add_argument(
-    "--no-trunc",
-    action="store_true",
-    help="use the inline typing corpora",
-)
-args = parser.parse_args()
-fpath = args.path
-
-f = h5py.File(fpath, "r")
-
 tab = "  "
 
 
@@ -51,17 +34,32 @@ def show(name, thing, tabs, full=False):
         show(subthing, thing[subthing], tabs + 1, full=focus)
 
 
-print(f)
-attrs = f.attrs.items()
-if len(attrs) > 0:
-    print_blue("Attrs:")
-    for k, v in attrs:
-        v = str(v)
-        if len(v) > 50 and not args.no_trunc:
-            v = v[0:50].replace("\n", "\\n") + "..."
-        print(blue_str("%25s" % k), v)
-print(f.keys())
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "path",
+        type=str,
+        help="The file",
+    )
+    parser.add_argument(
+        "--no-trunc",
+        action="store_true",
+        help="dont truncate strings",
+    )
+    args = parser.parse_args()
+    f = h5py.File(args.path, "r")
 
-for key in f.keys():
-    print("\n=== {} ===".format(key))
-    show(key, f[key], 0)
+    print(f)
+    attrs = f.attrs.items()
+    if len(attrs) > 0:
+        print_blue("Attrs:")
+        for k, v in attrs:
+            v = str(v)
+            if len(v) > 50 and not args.no_trunc:
+                v = v[0:50].replace("\n", "\\n") + "..."
+            print(blue_str("%25s" % k), v)
+    print(f.keys())
+
+    for key in f.keys():
+        print("\n=== {} ===".format(key))
+        show(key, f[key], 0)
