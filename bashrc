@@ -447,6 +447,10 @@ gco() {
     fi
 }
 
+git_push_as_me() {
+    git push https://sr228822@github.com/sr228822/srpub master:master
+}
+
 qpush() {
     b=`git branch | grep "*" | last_word`
     if [[ "$b" == *"master"* ]];
