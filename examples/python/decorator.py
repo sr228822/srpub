@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 def my_decorator(func):
     def inner(*args, **kwargs):

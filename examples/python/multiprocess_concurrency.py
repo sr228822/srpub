@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import multiprocessing
 from contextlib import closing
@@ -6,10 +6,10 @@ import time, random
 
 def foo(x):
     myid = multiprocessing.current_process()._identity[0]
-    print "I am worker " + str(myid)
-    print 'starting ' + str(x)
+    print("I am worker " + str(myid))
+    print('starting ' + str(x))
     time.sleep(random.randint(0,10))
-    print 'done ' + str(x)
+    print('done ' + str(x))
 
 if __name__ == '__main__':
     with closing(multiprocessing.Pool(5)) as p:

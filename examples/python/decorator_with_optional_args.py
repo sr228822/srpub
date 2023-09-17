@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 def decorator(func=None, **options):
     if func != None:
@@ -6,12 +6,12 @@ def decorator(func=None, **options):
         # and return the inner function
         def inner(*args, **kwargs):
             if len(options) > 0:
-                print "Decorated function with options:"
+                print("Decorated function with options:")
             else:
-                print "Decorated function without options!"
+                print("Decorated function without options!")
     
             for k, v in options.items():
-                print "\t{}: {}".format(k, v)
+                print("\t{}: {}".format(k, v))
     
             func(*args, **kwargs)
    
@@ -26,9 +26,9 @@ def decorator(func=None, **options):
     
 @decorator
 def function_a(x, y):
-    print x + y
+    print(x + y)
  
 @decorator(foo="bar", baz=42)
 def function_b(x, y):
-    print x + y
+    print(x + y)
 

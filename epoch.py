@@ -13,4 +13,4 @@ else:
 t = int(time.time()) - ago
 if millis:
     t *= 1000
-print t
+print(t)

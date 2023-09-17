@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 class MyClass:
@@ -6,11 +6,11 @@ class MyClass:
         pass
 
     def foo(self):
-        print 'i am foo'
+        print('i am foo')
 
 
 def monkey(self):
-    print 'banana'
+    print('banana')
 
 MyClass.foo = monkey
 

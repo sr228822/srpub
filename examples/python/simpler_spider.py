@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import HTMLParser
 import time
@@ -12,9 +12,9 @@ concurrency = 10
 
 @gen.coroutine
 def fake_web_request(ident):
-    print 'starting web request ' + ident
+    print('starting web request ' + ident)
     time.sleep(4)
-    print 'finished with web request ' + ident
+    print('finished with web request ' + ident)
     return ident
 
 

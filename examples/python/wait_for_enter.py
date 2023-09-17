@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-print 'here'
+print('here')
 
 try:
     res = input("Press Enter to continue...")
-    print res
+    print(res)
 except:
     pass
 
-print 'and here'
+print('and here')

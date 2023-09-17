@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 class Test:
     def __init__(self):
@@ -6,8 +6,8 @@ class Test:
 
     def foo(self):
         if hasattr(self, '_has_foo'):
-            print 'yay'
-        print 'foo'
+            print('yay')
+        print('foo')
         self._has_foo = True
 
 

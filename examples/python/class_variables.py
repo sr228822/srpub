@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 class MyClass():
@@ -12,8 +12,8 @@ class MyClass():
     def inc(cls):
         cls.myvar += 1
 
-print MyClass.get()
+print(MyClass.get())
 MyClass.inc()
-print MyClass.get()
+print(MyClass.get())
 MyClass.inc()
-print MyClass.get()
+print(MyClass.get())

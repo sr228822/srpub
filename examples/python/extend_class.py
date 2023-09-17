@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 class MyClass():
@@ -6,7 +6,7 @@ class MyClass():
         self.a = a
 
     def foo(self):
-        print 'a is ', self.a
+        print('a is ', self.a)
 
 
 class OtherClass(MyClass):
@@ -15,7 +15,7 @@ class OtherClass(MyClass):
         self.b = b
 
     def bork(self):
-        print 'b is ', self.b
+        print('b is ', self.b)
 
 oc = OtherClass(6, 7)
 

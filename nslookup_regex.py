@@ -67,7 +67,7 @@ if __name__ == '__main__':
             whois = whois_lookup(ip)
             if dns or whois:
                 comb = colorstrings.green_str(ip) + " : " + colorstrings.blue_str("{} : {}".format(dns, whois))
-                #print ip + ' is ' + box
+                # print(ip + ' is ' + box)
                 line = line.replace(ip, comb)
             else:
                 line = line.replace(ip, colorstrings.green_str(ip))

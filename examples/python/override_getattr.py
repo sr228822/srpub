@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 class MyClass(object):
@@ -6,7 +6,7 @@ class MyClass(object):
         pass
 
     def __getattribute__(self, name):
-        print 'request for attr ' + str(name)
+        print('request for attr ' + str(name))
         if name == 'bak':
             return "I drink your milkshake"
 
@@ -26,6 +26,6 @@ class MyClass(object):
 
 c = MyClass()
 
-print c.foo
-print c.bak
-print c.bar
+print(c.foo)
+print(c.bak)
+print(c.bar)

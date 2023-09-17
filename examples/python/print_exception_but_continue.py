@@ -5,7 +5,7 @@ print('running\n\n')
 try:
     raise TypeError("Oups!")
 except Exception as e:
-    print('oh no... about to print my exception')
+    print('oh no... about to print(my exception'))
     traceback.print_exc()
 
 print("still alive")

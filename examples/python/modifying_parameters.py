@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 def foo(d):
@@ -9,4 +9,4 @@ mydict['cool'] = 'neat'
 
 foo(mydict)
 
-print mydict
+print(mydict)

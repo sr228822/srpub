@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from functools import wraps
 import errno
@@ -40,13 +40,13 @@ def long():
     except TimeoutError:
         raise
     except:
-        print 'wopps caught'
+        print('wopps caught')
 
-print 'running the decorator version'
+print('running the decorator version')
 try:
     long()
 except TimeoutError:
-    print 'long timed out'
+    print('long timed out')
 
 #########################
 # Context Manager Version
@@ -68,7 +68,7 @@ def ctxtimeout(timeout):
         signal.alarm(0)
 
 
-print '\n\nrunning the context manager version'
+print('\n\nrunning the context manager version')
 with ctxtimeout(2):
     time.sleep(15)
-    print 'never makes it'
+    print('never makes it')

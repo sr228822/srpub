@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 def my_decorator(argument):
     def real_decorator(func):
         def inner(*args, **kwargs):
-            print 'one'
-            print 'arg to wrapper was ', argument
+            print('one')
+            print('arg to wrapper was ', argument)
             resp = func(*args, **kwargs)
-            print 'three'
+            print('three')
             return resp
         return inner
     return real_decorator
@@ -14,13 +14,13 @@ def my_decorator(argument):
 
 @my_decorator("wapperarglolz")
 def foo(fooarg):
-    print 'foo with fooarg ', fooarg
+    print('foo with fooarg ', fooarg)
 
 def bar(bararg):
-    print 'bar with bararg ', bararg
+    print('bar with bararg ', bararg)
 
-print 'here is the decorated foo'
+print('here is the decorated foo')
 foo('my fooarg')
 
-print '\n\n\nhere is the inline bar'
+print('\n\n\nhere is the inline bar')
 my_decorator("thearg")(bar)("thebararg")

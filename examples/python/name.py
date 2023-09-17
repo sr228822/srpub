@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 class Test():
@@ -6,7 +6,7 @@ class Test():
         pass
 
     def foo(cls):
-        print 'you are in ' + str(cls.__name__)
+        print('you are in ' + str(cls.__name__))
 
 
 

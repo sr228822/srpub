@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
 def foo():
-    print 'woooo'
+    print('woooo')
 
 if __name__ == "__main__":
-    print "i am being run"
+    print("i am being run")
 else:
-    print "I am being imported"
+    print("I am being imported")
 
-print sys.argv
+print(sys.argv)

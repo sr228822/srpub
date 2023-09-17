@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import random, time
 
@@ -16,16 +16,16 @@ class Solution:
             i += weight
             self.items.append((i, word))
         self.max = i
-        print self.items
+        print(self.items)
 
     def get_random_word(self):
         r = random.randint(0, self.max)
-        print r
+        print(r)
         left = 0
         right = len(self.items)
         while True:
             mid = (left + right) / 2
-            print '{} {} {}'.format(left, mid, right)
+            print('{} {} {}'.format(left, mid, right))
             if r < self.items[mid][0]:
                 right = mid
                 if left == mid:
@@ -37,4 +37,4 @@ class Solution:
             time.sleep(1)
 
 s = Solution(example_list)
-print s.get_random_word()
+print(s.get_random_word())

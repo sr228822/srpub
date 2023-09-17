@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop
@@ -10,18 +10,18 @@ import contextlib2
 ######## old ############
 @gen.coroutine
 def fake_web_request(ident):
-    print 'starting web request ' + ident
+    print('starting web request ' + ident)
     time.sleep(4)
-    print 'finished with web request ' + ident
+    print('finished with web request ' + ident)
     return 'hello world'
 
 @gen.coroutine
 def my_coroutine(url):
-    print 'enter coroutine'
+    print('enter coroutine')
     response_a = yield fake_web_request('a')
     response_b = yield fake_web_request('b')
     response_c = yield fake_web_request('c')
-    print 'back in fetch coroutine'
+    print('back in fetch coroutine')
     raise gen.Return(response_a)
 
 @gen.coroutine
@@ -37,10 +37,10 @@ i = 0
 def my_context():
     global i
     i += 1
-    print 'enter my context ' + str(i)
+    print('enter my context ' + str(i))
     yield
     i -= 1
-    print 'exit my context' + str(i)
+    print('exit my context' + str(i))
 
 ######### A timeout decorator using signals
 
@@ -79,12 +79,12 @@ def instrument():
     try:
         yield
     except:
-        print 'instruemtn exception'
+        print('instruemtn exception')
         raise
     else:
         end_time = time.time()
         ms = (end_time - start_time) * 1000
-        print 'instrument timing was ' + str(ms)
+        print('instrument timing was ' + str(ms))
 
 
 ######## new ############
@@ -92,14 +92,14 @@ def instrument():
 @gen.coroutine
 @instrument()
 def foo():
-    print "I am fooooooo"
+    print("I am fooooooo")
     time.sleep(3)
 
 @gen.coroutine
 def pek():
-    print "I am pekk"
+    print("I am pekk")
     yield foo()
     raise gen.Return(1)
 
-print IOLoop().run_sync(lambda: pek())
+print(IOLoop().run_sync(lambda: pek()))
 

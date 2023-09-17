@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import multiprocessing
 from contextlib import closing
@@ -17,9 +17,9 @@ def foo(x):
     with counter.get_lock():
         counter.value += 1
     
-    print "starting worker", myid, "value", x, "progress", counter.value
+    print("starting worker", myid, "value", x, "progress", counter.value)
     time.sleep(random.randint(0,10))
-    print 'done ' + str(x)
+    print('done ' + str(x))
 
 if __name__ == '__main__':
     counter = multiprocessing.Value('i', 0)

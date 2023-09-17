@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import mmap
@@ -14,6 +14,6 @@ data = mmap.mmap(fd, size, mmap.MAP_SHARED, mmap.PROT_WRITE)
 
 i = 0
 while True:
-    print i
+    print(i)
     data[0] = i
     time.sleep(1)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import tornado.ioloop
 import tornado.web
@@ -13,24 +13,24 @@ def instrument():
     try:
         yield
     except:
-        print 'instruemtn exception'
+        print('instruemtn exception')
         raise
     else:
         end_time = time.time()
         ms = (end_time - start_time) * 1000
-        print 'instrument timing was ' + str(ms)
+        print('instrument timing was ' + str(ms))
 
 class MainHandler(tornado.web.RequestHandler):
     @coroutine
     def get(self):
         rid = str(uuid.uuid4())
-        print 'start ' + rid
+        print('start ' + rid)
         #t0 = time.time()
         with instrument():
             yield self.foo()
         #t1 = time.time()
-        #print 'it took ' + str((t1-t0)*1000)
-        print 'done ' + rid
+        #print('it took ' + str((t1-t0)*1000))
+        print('done ' + rid)
         self.write("hellooooooo")
 
     @coroutine
@@ -42,6 +42,6 @@ application = tornado.web.Application([
 ])
 
 if __name__ == "__main__":
-    print 'launching'
+    print('launching')
     application.listen(8888)
     tornado.ioloop.IOLoop.current().start()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 b = 10
@@ -9,4 +9,4 @@ for z in range(1000000):
     x += 0.000001
 x -= b
 
-print x
+print(x)

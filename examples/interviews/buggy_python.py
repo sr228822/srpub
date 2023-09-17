@@ -5,7 +5,7 @@ class Token:
         self.dot = '.' in self.chars
 
     def display(self):
-        print self.chars, self.type
+        print(self.chars, self.type)
 
     def match(self, text):
         if self.type == '*':
@@ -63,7 +63,7 @@ def testMatch(pattern, test, expected):
     result = "FAIL"
     if expected == actual:
         result = "SUCCESS"
-    print pattern, test, result
+    print(pattern, test, result)
 
 def main():
     testMatch("abc", "abc", True)

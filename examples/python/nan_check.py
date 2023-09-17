@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import math
 
@@ -11,9 +11,9 @@ def check_for_nan(path, d):
             check_for_nan("{}.{}".format(path, k), d[k])
     if type(d) == float:
         if math.isnan(d):
-            print "I FOUND A NAN"
-            print path
-            print d
+            print("I FOUND A NAN")
+            print(path)
+            print(d)
 
 
 example = {
@@ -26,4 +26,3 @@ example = {
 }
 
 check_for_nan("", example)
-    
