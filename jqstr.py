@@ -2,6 +2,7 @@
 import json
 import sys
 
-for k in sys.stdin:
-    js = json.loads(k)
-    print(js)
+if __name__ == "__main__":
+    for k in sys.stdin:
+        js = json.loads(k)
+        print(js)
