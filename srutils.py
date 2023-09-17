@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -8,6 +8,9 @@ import os
 
 os_name = os.name
 is_windows = sys.platform.lower().startswith("win")
+
+if __name__ == "__main__":
+    print("nope")
 
 
 def ash(c, wait=True, noisy=False):

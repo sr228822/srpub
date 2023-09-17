@@ -18,7 +18,7 @@ def get_url(q, url):
     q.put(f"result {url}")
 
 
-theurls = ["http://google.com", "http://yahoo.com", "http://uber.com"]
+theurls = ["http://google.com", "http://yahoo.com", "http://nytimes.com"]
 
 q = Queue()
 

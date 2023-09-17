@@ -55,10 +55,7 @@ def ns_lookup(ip):
     except:
         nscache[ip] = None
         return None
-    if "prod.uber.internal" in fullhost:
-        res = fullhost.split(".")[0]
-    else:
-        res = fullhost
+    res = fullhost
     nscache[ip] = res
     return res
 
