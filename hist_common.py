@@ -1,30 +1,23 @@
 #!/usr/bin/env python3
 
+import argparse
 import operator
 import sys
 from srutils import *
 
 # |sort | uniq -c | sort -nr
 
-seen = dict()
-total_cnt = 0
-lprint = get_now()
-t0 = get_now()
 
-n = 10
-
-duplicated = False
-if "dups" in sys.argv:
-    duplicated = True
-    sys.argv.remove("dups")
-
-# sys.argv.remove('duplicated')
-if len(sys.argv) > 1:
-    n = 10000000 if sys.argv[1] == "all" else int(sys.argv[1])
-
-
-def _print_hist(with_rate=True, alphabetical=False, dups_only=False, with_perc=False):
-    global seen, lprint, t0, total_cnt
+def _print_hist(
+    seen,
+    total_cnt,
+    t0,
+    lim,
+    with_rate=True,
+    alphabetical=False,
+    dups_only=False,
+    with_perc=False,
+):
 
     if alphabetical:
         sortseen = sorted(seen.items(), key=operator.itemgetter(0), reverse=False)
@@ -46,7 +39,7 @@ def _print_hist(with_rate=True, alphabetical=False, dups_only=False, with_perc=F
         print("  cnt thing")
         print("  --- -----")
     tdelt = seconds_between(t0, get_now())
-    for x in sortseen[0:n]:
+    for x in sortseen[0:lim]:
         tot = int(x[1])
         if dups_only and tot == 1:
             continue
@@ -59,31 +52,78 @@ def _print_hist(with_rate=True, alphabetical=False, dups_only=False, with_perc=F
             print(("%5d , " % tot) + str(x[0]))
 
 
-alphabetical = argpop(sys.argv, "--alphabetical")
-with_perc = argpop(sys.argv, "--percent")
-no_rate = argpop(sys.argv, "--no-rate")
-for line in quick_ingest_line():
-    line = line.rstrip().lstrip()
-    seen[line] = seen.get(line, 0) + 1
-    total_cnt += 1
-    if seconds_between(lprint, get_now()) > 3:
-        lprint = get_now()
+def main():
+    parser = argparse.ArgumentParser("histogram common lines from file or stdin")
+    parser.add_argument(
+        "--alphabetical",
+        action="store_true",
+        help="sort alphametically, not by frequency",
+    )
+    parser.add_argument("--percent", action="store_true", help="show percent")
+    parser.add_argument("--no-rate", action="store_true", help="dont show the rate")
+    parser.add_argument(
+        "--duplicates", action="store_true", help="only show duplciates"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=10, help="number of entries to show"
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="show all values (overrides limit)"
+    )
+
+    args = parser.parse_args()
+    _main(args)
+
+
+def _main(args):
+    limit = args.limit
+    if args.all:
+        limit = 10000000
+    seen = dict()
+    total_cnt = 0
+    lprint = get_now()
+    t0 = get_now()
+
+    for line in quick_ingest_line():
+        line = line.rstrip().lstrip()
+        seen[line] = seen.get(line, 0) + 1
+        total_cnt += 1
+        if seconds_between(lprint, get_now()) > 3:
+            lprint = get_now()
+            _print_hist(
+                seen,
+                total_cnt,
+                t0,
+                limit,
+                alphabetical=args.alphabetical,
+                dups_only=args.duplicates,
+                with_perc=args.percent,
+            )
+
+    print("\nSTDOUT terminated\n\n\n")
+    if seconds_between(t0, get_now()) < 3:
         _print_hist(
-            alphabetical=alphabetical, dups_only=duplicated, with_perc=with_perc
+            seen,
+            total_cnt,
+            t0,
+            limit,
+            with_rate=False,
+            alphabetical=args.alphabetical,
+            dups_only=args.duplicates,
+            with_perc=args.percent,
+        )
+    else:
+        _print_hist(
+            seen,
+            total_cnt,
+            t0,
+            limit,
+            with_rate=(not args.no_rate),
+            alphabetical=args.alphabetical,
+            dups_only=args.duplicates,
+            with_perc=args.percent,
         )
 
-print("\nSTDOUT terminated\n\n\n")
-if seconds_between(t0, get_now()) < 3:
-    _print_hist(
-        with_rate=False,
-        alphabetical=alphabetical,
-        dups_only=duplicated,
-        with_perc=with_perc,
-    )
-else:
-    _print_hist(
-        with_rate=(not no_rate),
-        alphabetical=alphabetical,
-        dups_only=duplicated,
-        with_perc=with_perc,
-    )
+
+if __name__ == "__main__":
+    main()
