@@ -3,6 +3,7 @@ This solution is more complicated, but efficient
 because it will not re-do computation on get calls
 """
 
+
 class Cell:
     def __init__(self):
         self.raw = None
@@ -23,12 +24,14 @@ class Cell:
 def is_formula(v):
     return v.strip().startswith("=")
 
+
 def is_number(v):
     try:
         int(v)
         return True
     except:
         return False
+
 
 class MySheet:
     def __init__(self):

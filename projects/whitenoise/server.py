@@ -1,25 +1,28 @@
 import argparse
-from dataclasses import dataclass
-from flask import Flask
 import os
 import socket
 import time
-
-from schedule_vol import Volumizer, get_now
+from dataclasses import dataclass
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
+
+from schedule_vol import get_now, Volumizer
 
 app = Flask(__name__)
+
 
 class Globals:
     def __init__(self):
         self.v = Volumizer()
+
 
 _g = Globals()
 
 ####################################################
 # Heper functions
 ####################################################
+
 
 def myip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -28,86 +31,105 @@ def myip():
     s.close()
     return ip
 
+
 def _serve_file(fid):
-    pth = f'./files/{fid}'
+    pth = f"./files/{fid}"
     if not os.path.exists(pth):
         raise Exception(f"Path not found: {pth}")
-    mode = 'r'
-    if 'png' in fid or 'ico' in fid:
-        mode = 'rb'
+    mode = "r"
+    if "png" in fid or "ico" in fid:
+        mode = "rb"
     with open(pth, mode) as f:
         return f.read()
+
 
 ####################################################
 # Routes
 ####################################################
 
-def _cmd_resp(c):
-    return {'res': 'OK', 'command': c, 'time': get_now()}
 
-@app.route('/vol/off')
+def _cmd_resp(c):
+    return {"res": "OK", "command": c, "time": get_now()}
+
+
+@app.route("/vol/off")
 def vol_off():
     global _g
     print("vol off")
     _g.v.apply_boost(b_abs=-10)
-    return _cmd_resp('vol_off')
+    return _cmd_resp("vol_off")
 
-@app.route('/vol/less')
+
+@app.route("/vol/less")
 def vol_less():
     global _g
     _g.v.apply_boost(b_delta=-1)
     print("vol less")
-    return _cmd_resp('vol_less')
+    return _cmd_resp("vol_less")
 
-@app.route('/vol/more')
+
+@app.route("/vol/more")
 def vol_more():
     global _g
     _g.v.apply_boost(b_delta=1)
     print("vol more")
-    return _cmd_resp('vol_more')
+    return _cmd_resp("vol_more")
 
-@app.route('/vol/max')
+
+@app.route("/vol/max")
 def vol_max():
     global _g
     _g.v.apply_boost(b_abs=7)
     print("vol max")
-    return _cmd_resp('vol_max')
+    return _cmd_resp("vol_max")
 
-@app.route('/vol/unset')
+
+@app.route("/vol/unset")
 def vol_unset():
     global _g
     _g.v.apply_boost(b_abs=0.0)
     print("vol boost unset")
-    return _cmd_resp('vol_unset')
+    return _cmd_resp("vol_unset")
 
-@app.route('/status')
+
+@app.route("/status")
 def status():
     global _g
     now = get_now()
     vol = _g.v.get_vol(now)
-    return {"boost": round(_g.v.boost, 2), "updated_at": _g.v.updated_at, "vol": round(vol, 2), "now": now}
+    return {
+        "boost": round(_g.v.boost, 2),
+        "updated_at": _g.v.updated_at,
+        "vol": round(vol, 2),
+        "now": now,
+    }
 
 
-@app.route('/files/<fid>')
+@app.route("/files/<fid>")
 def get_files(fid):
     return _serve_file(fid)
 
-@app.route('/index.html')
-def get_index(fid):
-    return _serve_file('index.html')
 
-@app.route('/')
+@app.route("/index.html")
+def get_index(fid):
+    return _serve_file("index.html")
+
+
+@app.route("/")
 def homepage():
-    return _serve_file('index.html')
+    return _serve_file("index.html")
+
 
 ####################################################
 # Main
 ####################################################
 
+
 def background_job():
     global _g
 
     _g.v.update()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -130,8 +152,8 @@ if __name__ == "__main__":
 
     print("Starting background scheduler")
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(background_job, 'interval', minutes=5)
+    job = scheduler.add_job(background_job, "interval", minutes=5)
     scheduler.start()
 
-    #app.run(debug=args.debug_mode, host="127.0.0.1", port=80)
+    # app.run(debug=args.debug_mode, host="127.0.0.1", port=80)
     app.run(debug=args.debug_mode, host="0.0.0.0", port=8080)

@@ -1,7 +1,6 @@
-
 class BaseClass:
     def __init__(self, name):
-        print(f'BaseClass init {name}')
+        print(f"BaseClass init {name}")
 
         self.name = name
 
@@ -10,7 +9,6 @@ class MyMixin:
     def __init__(self, *args, **kwargs):
         print("MyMixin init")
         self.mixer = 1
-    
 
 
 class SuperClass(BaseClass, MyMixin):
@@ -19,6 +17,5 @@ class SuperClass(BaseClass, MyMixin):
         MyMixin.__init__(self, *args, **kwargs)
 
 
-sc = SuperClass('hello')
+sc = SuperClass("hello")
 print(sc.__class__)
-

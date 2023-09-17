@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
-import multiprocessing
-from contextlib import closing
-import time, random
 import commands
+import multiprocessing
+import random, time
+from contextlib import closing
+
 
 def foo(x):
-    res = commands.getoutput('curl localhost:8888/')
+    res = commands.getoutput("curl localhost:8888/")
     print(res)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     with closing(multiprocessing.Pool(3)) as p:
-        p.map(foo, [1,2,3])
+        p.map(foo, [1, 2, 3])
         p.terminate()

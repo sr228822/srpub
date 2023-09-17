@@ -18,7 +18,7 @@ for path in sys.argv[1:]:
             year = start[1]
             if len(year) == 2:
                 year = f"19{year}"
-            assert (int(year) > 1980 and int(year) < 2015)
+            assert int(year) > 1980 and int(year) < 2015
             full_date = f"{year}:{month}:{day:02} {hour}:01:01-04:00"
             hour += 1
             if hour > 22:
@@ -27,5 +27,3 @@ for path in sys.argv[1:]:
             print(path, full_date)
             print(cmd(f'exiftool "-CreateDate={full_date}" "{path}"'))
             os.remove(f"{path}_original")
-
-

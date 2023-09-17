@@ -11,6 +11,7 @@ import re
 def is_formula(v):
     return type(v) == str and v.strip().startswith("=")
 
+
 class MySheet:
     def __init__(self):
         self.data = {}

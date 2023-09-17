@@ -5,6 +5,8 @@ A small repo holding:
 
 Probably not of much interest to others.
 
+# Linting/Formatting
+Linted with pyfmt (black==22.12.0)
 
 # Conda
 Intel

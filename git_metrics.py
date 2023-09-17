@@ -4,10 +4,10 @@ from __future__ import print_function
 
 from srutils import *
 import argparse
-import sys, re
-import operator
-from collections import namedtuple
 import datetime
+import operator
+import re, sys
+from collections import namedtuple
 
 # A map of known aliases -> name
 kauths = {}
@@ -19,25 +19,24 @@ MY_NAME = cmd("git config user.name") or "samuel russell"
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '--user',
+    "--user", type=str, required=False, default=MY_NAME, help="The user to highlight."
+)
+parser.add_argument(
+    "--period",
     type=str,
     required=False,
-    default=MY_NAME,
-    help='The user to highlight.')
+    help="The time-period to run-over, (e.g. 200 or 2y)",
+)
 parser.add_argument(
-    '--period',
-    type=str,
-    required=False,
-    help='The time-period to run-over, (e.g. 200 or 2y)')
-parser.add_argument(
-    '--num',
+    "--num",
     type=int,
     required=False,
     default=10,
-    help='The number of users to show per leaderboard')
-parser.add_argument(
-    '--overall', action='store_true', help='Show overall')
+    help="The number of users to show per leaderboard",
+)
+parser.add_argument("--overall", action="store_true", help="Show overall")
 args = parser.parse_args()
+
 
 def is_int(x):
     try:
@@ -46,13 +45,16 @@ def is_int(x):
     except ValueError:
         return False
 
+
 def epoch_to_date(e):
-    return datetime.datetime.utcfromtimestamp(e).strftime('%Y-%m-%d')
+    return datetime.datetime.utcfromtimestamp(e).strftime("%Y-%m-%d")
+
 
 def fmt_float(f, decimals=1, width=4):
     f_fmt = "%." + str(decimals) + "f"
     s_fmt = "%" + str(width) + "s"
-    return s_fmt % (f_fmt % f) 
+    return s_fmt % (f_fmt % f)
+
 
 class TimeRange:
     def __init__(self, start, end):
@@ -67,13 +69,14 @@ class TimeRange:
         self.end = max(self.end, dt)
 
     def seconds(self):
-        return (self.end - self.start)
+        return self.end - self.start
 
     def weeks(self):
         return max(1, (self.seconds() / 604800))
 
     def human_dur(self):
         return dur_to_human(self.seconds())
+
 
 class GitStat:
     def __init__(self):
@@ -87,7 +90,7 @@ class GitStat:
 
 # Set count and dur thresholds
 thresh_cnt = 100
-thresh_dur = '1y'
+thresh_dur = "1y"
 if args.period:
     if is_int(args.period):
         thresh_cnt = int(args.period)
@@ -103,6 +106,7 @@ thresh_dur_stat = GitStat()
 user_active_tim = {}
 
 STRIP_PREFX = "ctrl"
+
 
 def looks_similar(a, b):
     """Return true if string `a` looks pretty similar to `b`
@@ -124,6 +128,7 @@ def looks_similar(a, b):
         return False
     return True
 
+
 def put_in_known(name, email):
     global kauths
     name = name
@@ -131,7 +136,7 @@ def put_in_known(name, email):
 
     # if we have both the name and email, we're done
     if name in kauths and email in kauths:
-        #if kauths[name] == kauths[email]:
+        # if kauths[name] == kauths[email]:
         #    return
         return
 
@@ -157,9 +162,10 @@ def put_in_known(name, email):
     # so add a new entry
     fname = name
     if name.startswith(STRIP_PREFX):
-        fname = name[len(STRIP_PREFX):]
+        fname = name[len(STRIP_PREFX) :]
     kauths[name] = fname
     kauths[email] = fname
+
 
 def get_aliases(name, emails=True):
     global kauths
@@ -170,14 +176,39 @@ def get_aliases(name, emails=True):
                 res[k] = True
     return res.keys()
 
+
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
     total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
-    print("\n\n=== {} === \t ({}) ({} total)".format(title, stat.tim.human_dur(), total_cnt))
-    print("%3s" % "" + "   " + "%5s" % "cnt " + " " + "  %  " + " " + "/week" + " " + "name")
-    print("%3s" % "" + "   " + "%5s" % "--- " + " " + "-----" + " " + "-----" + " " + "----")
+    print(
+        "\n\n=== {} === \t ({}) ({} total)".format(
+            title, stat.tim.human_dur(), total_cnt
+        )
+    )
+    print(
+        "%3s" % ""
+        + "   "
+        + "%5s" % "cnt "
+        + " "
+        + "  %  "
+        + " "
+        + "/week"
+        + " "
+        + "name"
+    )
+    print(
+        "%3s" % ""
+        + "   "
+        + "%5s" % "--- "
+        + " "
+        + "-----"
+        + " "
+        + "-----"
+        + " "
+        + "----"
+    )
     for i, x in enumerate(sorted_x):
         kname = x[0]
         is_me = looks_similar(kname, args.user)
@@ -185,7 +216,7 @@ def print_cnt_dict(title, stat, limit=args.num):
         if is_me:
             name = blue_str(name)
         cnt = x[1]
-        rate = (float(cnt) / stat.tim.weeks())  # convert to weekly rate
+        rate = float(cnt) / stat.tim.weeks()  # convert to weekly rate
         if i == limit:
             if did_me:
                 break
@@ -194,24 +225,35 @@ def print_cnt_dict(title, stat, limit=args.num):
         if i >= limit and not is_me:
             continue
         perc = int(100 * cnt / total_cnt)
-        print("%3d" % (i+1) + ". " + "%5d  " % cnt + "  %2d" % perc + "%  " + "%.1f " % rate + " {0: <25}".format(name))
+        print(
+            "%3d" % (i + 1)
+            + ". "
+            + "%5d  " % cnt
+            + "  %2d" % perc
+            + "%  "
+            + "%.1f " % rate
+            + " {0: <25}".format(name)
+        )
         if is_me:
             did_me = True
 
+
 git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
+
 
 def length_score(k):
     s = len(k)
     # penalize emails
-    if '@' not in k:
+    if "@" not in k:
         s += 20
     return s
 
+
 dt_now = int(time.time())
 seen_me = False
-commits = git_log_raw.split('\n')
+commits = git_log_raw.split("\n")
 for i, c in enumerate(reversed(commits)):
-    cs = c.strip().split(',')
+    cs = c.strip().split(",")
     if len(cs) < 5:
         continue
     sha = cs[0].strip()
@@ -219,7 +261,7 @@ for i, c in enumerate(reversed(commits)):
 
     # ewww, some names have commas in them
     if "@" not in cs[2] and "@" in cs[3]:
-        name = (name + " " + cs[2].strip().lower())
+        name = name + " " + cs[2].strip().lower()
         cs.pop(2)
 
     email = cs[2].strip().lower()
@@ -244,7 +286,7 @@ for i, c in enumerate(reversed(commits)):
     # set the longest-name which kname maps to
     if kname not in longname:
         longname[kname] = kname
-    if length_score(name) >length_score(longname[kname]):
+    if length_score(name) > length_score(longname[kname]):
         longname[kname] = name
 
     # Add this commit to stat-counters it matches
@@ -265,10 +307,11 @@ for i, c in enumerate(reversed(commits)):
 rate_while_active = {}
 for key in user_active_tim:
     cnt = all_stat.cnt[key]
-    rate = (float(cnt) / user_active_tim[key].weeks())  # convert to weekly rate
+    rate = float(cnt) / user_active_tim[key].weeks()  # convert to weekly rate
     rate_while_active[key] = rate
 
 sorted_x = sorted(rate_while_active.items(), key=operator.itemgetter(1), reverse=True)
+
 
 def print_active_rate():
     print("\n\n=== {} === \t".format("Rate while active"))
@@ -296,14 +339,24 @@ def print_active_rate():
                 print("                  ...")
         if i >= limit and not is_me:
             continue
-        print("%3d" % (i+1) + ". " + "%5d" % cnt + " %5d " % weeks + fmt_float(val, width=4)  + "  " + name + str(user_active_tim[kname]))
+        print(
+            "%3d" % (i + 1)
+            + ". "
+            + "%5d" % cnt
+            + " %5d " % weeks
+            + fmt_float(val, width=4)
+            + "  "
+            + name
+            + str(user_active_tim[kname])
+        )
 
-#print("\n\n== kauth map ==")
-#for k,v in kauths.items():
+
+# print("\n\n== kauth map ==")
+# for k,v in kauths.items():
 #    print("%50s" % k, "   ", "%50s" % v)
 
-#print("\n\n== kauth map ==")
-#for k,v in all_stat.cnt.items():
+# print("\n\n== kauth map ==")
+# for k,v in all_stat.cnt.items():
 #    print("%50s" % k, "   ", "%50s" % v)
 
 
@@ -321,4 +374,3 @@ else:
     print_cnt_dict(f"Since {args.user}'s First", since_me_stat)
     print_cnt_dict(f"Last {thresh_dur}", thresh_dur_stat)
     print_cnt_dict(f"Last {thresh_cnt}", thresh_cnt_stat)
-

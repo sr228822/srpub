@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from functools import wraps
 import errno
 import os
 import signal
 import time
+from functools import wraps
+
 
 class TimeoutError(Exception):
     pass
@@ -13,6 +14,7 @@ class TimeoutError(Exception):
 #########################
 # Decorator Version
 #########################
+
 
 def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
     def decorator(func):
@@ -40,13 +42,14 @@ def long():
     except TimeoutError:
         raise
     except:
-        print('wopps caught')
+        print("wopps caught")
 
-print('running the decorator version')
+
+print("running the decorator version")
 try:
     long()
 except TimeoutError:
-    print('long timed out')
+    print("long timed out")
 
 #########################
 # Context Manager Version
@@ -54,9 +57,11 @@ except TimeoutError:
 
 import contextlib2
 
+
 @contextlib2.contextmanager
 def ctxtimeout(timeout):
     """Core instrumentation logic."""
+
     def _handle_timeout(signum, frame):
         raise TimeoutError("asdf")
 
@@ -68,7 +73,7 @@ def ctxtimeout(timeout):
         signal.alarm(0)
 
 
-print('\n\nrunning the context manager version')
+print("\n\nrunning the context manager version")
 with ctxtimeout(2):
     time.sleep(15)
-    print('never makes it')
+    print("never makes it")

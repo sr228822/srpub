@@ -2,13 +2,13 @@ class Token:
     def __init__(self, token, token_type):
         self.chars = dict.fromkeys(token)
         self.type = token_type
-        self.dot = '.' in self.chars
+        self.dot = "." in self.chars
 
     def display(self):
         print(self.chars, self.type)
 
     def match(self, text):
-        if self.type == '*':
+        if self.type == "*":
             offsets = [0]
             index = 0
             while index < len(text) and self.matchBase(text[index]):
@@ -24,24 +24,26 @@ class Token:
             return True
         return False
 
+
 def tokenize(pattern):
     tokens = []
     i = 0
     while i < len(pattern):
         sub = str(pattern[i])
-        if pattern[i] == '[':
+        if pattern[i] == "[":
             start = i
-            while pattern[i] != ']':
+            while pattern[i] != "]":
                 i = i + 1
-            sub = pattern[start+1:i]
-        if i+1 < len(pattern) and pattern[i+1] == '*':
-            tokens.append(Token(sub, '*'))
+            sub = pattern[start + 1 : i]
+        if i + 1 < len(pattern) and pattern[i + 1] == "*":
+            tokens.append(Token(sub, "*"))
             i = i + 2
         else:
-            tokens.append(Token(sub, 'base'))
+            tokens.append(Token(sub, "base"))
             i = i + 1
 
     return tokens
+
 
 def matchWorker(tokens, text):
     if len(tokens) == 0 and len(text) == 0:
@@ -54,9 +56,11 @@ def matchWorker(tokens, text):
             return True
     return False
 
+
 def match(pattern, text):
     tokens = tokenize(pattern)
     return matchWorker(tokens, text)
+
 
 def testMatch(pattern, test, expected):
     actual = match(pattern, test)
@@ -64,6 +68,7 @@ def testMatch(pattern, test, expected):
     if expected == actual:
         result = "SUCCESS"
     print(pattern, test, result)
+
 
 def main():
     testMatch("abc", "abc", True)
@@ -74,6 +79,7 @@ def main():
     testMatch("a[abc]*", "aacacbavab", False)
     testMatch("a[abc]*gg", "aacacbaabgg", True)
     testMatch("a[a.bc]*", "aacacbavab", True)
+
 
 if __name__ == "__main__":
     main()

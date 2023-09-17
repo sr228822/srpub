@@ -5,9 +5,9 @@ import time
 import urlparse
 from datetime import timedelta
 
-from tornado import httpclient, gen, ioloop, queues
+from tornado import gen, httpclient, ioloop, queues
 
-base_url = 'http://www.tornadoweb.org/en/stable/'
+base_url = "http://www.tornadoweb.org/en/stable/"
 concurrency = 10
 
 
@@ -21,11 +21,13 @@ def get_links_from_url(url):
     """
     try:
         response = yield httpclient.AsyncHTTPClient().fetch(url)
-        print('fetched %s' % url)
-        urls = [urlparse.urljoin(url, remove_fragment(new_url))
-                for new_url in get_links(response.body)]
+        print("fetched %s" % url)
+        urls = [
+            urlparse.urljoin(url, remove_fragment(new_url))
+            for new_url in get_links(response.body)
+        ]
     except Exception as e:
-        print('Exception: %s %s' % (e, url))
+        print("Exception: %s %s" % (e, url))
         raise gen.Return([])
 
     raise gen.Return(urls)
@@ -33,7 +35,7 @@ def get_links_from_url(url):
 
 def remove_fragment(url):
     scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
-    return urlparse.urlunparse((scheme, netloc, url, params, query, ''))
+    return urlparse.urlunparse((scheme, netloc, url, params, query, ""))
 
 
 def get_links(html):
@@ -43,8 +45,8 @@ def get_links(html):
             self.urls = []
 
         def handle_starttag(self, tag, attrs):
-            href = dict(attrs).get('href')
-            if href and tag == 'a':
+            href = dict(attrs).get("href")
+            if href and tag == "a":
                 self.urls.append(href)
 
     url_seeker = URLSeeker()
@@ -65,7 +67,7 @@ def main():
             if current_url in fetching:
                 return
 
-            print('fetching %s' % current_url)
+            print("fetching %s" % current_url)
             fetching.add(current_url)
             urls = yield get_links_from_url(current_url)
             fetched.add(current_url)
@@ -90,12 +92,12 @@ def main():
         worker()
     yield q.join(timeout=timedelta(seconds=300))
     assert fetching == fetched
-    print('Done in %d seconds, fetched %s URLs.' % (
-        time.time() - start, len(fetched)))
+    print("Done in %d seconds, fetched %s URLs." % (time.time() - start, len(fetched)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import logging
+
     logging.basicConfig()
     io_loop = ioloop.IOLoop.current()
     io_loop.run_sync(main)

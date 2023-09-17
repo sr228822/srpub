@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import asyncio
-import time
-import random
 import contextvars
 import functools
+import random
+import time
 
 
 async def to_thread(func, /, *args, **kwargs):
@@ -13,6 +13,7 @@ async def to_thread(func, /, *args, **kwargs):
     ctx = contextvars.copy_context()
     func_call = functools.partial(ctx.run, func, *args, **kwargs)
     return await loop.run_in_executor(None, func_call)
+
 
 class Transformer:
     def __init__(self):
@@ -31,20 +32,18 @@ class Transformer:
 
     def stream_transform(self):
         if self.work_task is None:
-            print('creating task')
+            print("creating task")
             self.work_task = self.loop.create_task(to_thread(self._heavy_io))
             return
         elif not self.work_task.done():
-            print(f'task {self.work_task.__class__} not-done')
+            print(f"task {self.work_task.__class__} not-done")
             return
         else:
             # do something with self.work_task.result()
-            print(f'task {self.work_task.__class__} done!')
+            print(f"task {self.work_task.__class__} done!")
             result = self.work_task.result()
-            print('result is ', result)
+            print("result is ", result)
             self.work_task = None
-
-
 
 
 async def main():
@@ -56,5 +55,6 @@ async def main():
         res = t.stream_transform()
         print(f"stream_transform res {res} last_status {t.last_status}")
         await asyncio.sleep(0.5)
+
 
 asyncio.run(main())

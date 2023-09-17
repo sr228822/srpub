@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, traceback
+
 for threadId, stack in sys._current_frames().items():
     print("\n# ThreadID: %s" % threadId)
     for filename, lineno, name, line in traceback.extract_stack(stack):

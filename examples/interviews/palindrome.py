@@ -1,16 +1,18 @@
 # given a string, return all palindromes
-#  "kayak" => ["k", "a", "y", "a", "k", "aya", "kayak"] 
+#  "kayak" => ["k", "a", "y", "a", "k", "aya", "kayak"]
 # "panna" => ["p", "a", "n", "n", "a", "nn", "anna"]
+
 
 def is_palindrome(s):
     i = 0
-    j = len(s)-1
+    j = len(s) - 1
     while i < j:
         if s[i] != s[j]:
             return False
         i += 1
         j -= 1
     return True
+
 
 def palindrome_brute(s):
     print("===== palindrome_brute {} === ".format(s))
@@ -42,13 +44,13 @@ def palindrome_better(s):
         print(mid, s[mid])
         seq_length = 0
         while True:  # N
-            start = mid-seq_length
-            end = mid+seq_length
+            start = mid - seq_length
+            end = mid + seq_length
             if start < 0 or end >= len(s):
                 break
             if s[start] == s[end]:
                 # this is a palindrome
-                results.append(s[start:end+1])
+                results.append(s[start : end + 1])
                 seq_length += 1
             else:
                 break
@@ -62,7 +64,7 @@ def palindrome_better(s):
                 break
             if s[start] == s[end]:
                 # this is a palindrome
-                results.append(s[start:end+1])
+                results.append(s[start : end + 1])
                 seq_length += 1
             else:
                 break

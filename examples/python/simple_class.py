@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-class Blah():
+
+class Blah:
     def __init__(self):
         self.foo = 7
 

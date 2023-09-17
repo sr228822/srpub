@@ -1,8 +1,10 @@
-from flask import Flask, request
 from multiprocessing import Lock
+
+from flask import Flask, request
 
 app = Flask(__name__)
 lock = Lock()
+
 
 class MySheet:
     def __init__(self):
@@ -20,10 +22,13 @@ class MySheet:
     def get(self, addr):
         return self.data.get(addr, "")
 
+
 sheet = MySheet()
+
 
 def is_formula(v):
     return v.strip().startswith("=")
+
 
 def eval_formula(v):
     r = v.strip("=")
@@ -31,11 +36,13 @@ def eval_formula(v):
     as_ints = [int(x) for x in terms]
     return sum(as_ints)
 
-@app.route('/cell/<addr>', methods=['GET'])
+
+@app.route("/cell/<addr>", methods=["GET"])
 def get(addr):
     return str(sheet.get(addr))
 
-@app.route('/cell/<addr>', methods=['POST'])
+
+@app.route("/cell/<addr>", methods=["POST"])
 def set(addr):
     content = request.get_json()
     if not content:
@@ -44,10 +51,11 @@ def set(addr):
     if not value:
         return "value required", 400
     sheet.set(addr, value)
-    return 'ok'
+    return "ok"
 
-if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port="5050")
+
+if __name__ == "__main__":
+    app.run(debug=True, host="127.0.0.1", port="5050")
 
 
 # curl -XPOST -H "Content-Type:application/json" "127.0.01:5050/cell/A1" --data '{"value": "hello"}'

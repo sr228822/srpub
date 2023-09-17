@@ -2,9 +2,11 @@
 
 import datetime, time
 
+
 def foo(x):
     print(x)
     return datetime.datetime.now()
+
 
 print(datetime.datetime.now())
 

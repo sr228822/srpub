@@ -2,8 +2,10 @@
 
 import sys
 
+
 def foo():
-    print('woooo')
+    print("woooo")
+
 
 if __name__ == "__main__":
     print("i am being run")

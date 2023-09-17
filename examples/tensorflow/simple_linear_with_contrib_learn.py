@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import numpy as np
 import tensorflow as tf
 
@@ -19,10 +20,11 @@ estimator = tf.contrib.learn.LinearRegressor(feature_columns=features)
 # TensorFlow provides many helper methods to read and set up data sets.
 # Here we use `numpy_input_fn`. We have to tell the function how many batches
 # of data (num_epochs) we want and how big each batch should be.
-x = np.array([1., 2., 3., 4.])
-y = np.array([0., -1., -2., -3.])
-input_fn = tf.contrib.learn.io.numpy_input_fn({"x":x}, y, batch_size=4,
-                                              num_epochs=1000)
+x = np.array([1.0, 2.0, 3.0, 4.0])
+y = np.array([0.0, -1.0, -2.0, -3.0])
+input_fn = tf.contrib.learn.io.numpy_input_fn(
+    {"x": x}, y, batch_size=4, num_epochs=1000
+)
 
 # We can invoke 1000 training steps by invoking the `fit` method and passing the
 # training data set.

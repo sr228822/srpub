@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 
-from queue import Queue
+import random
 import threading
+
 # import requests
 # import urllib2
 import time
-import random
+from queue import Queue
 
 # called by each thread
 def get_url(q, url):
     delay = 4 + int(random.random() * 3)
     print(f"starting {url} sleep {delay}")
     time.sleep(delay)
-    #q.put(urllib2.urlopen(url).read())
+    # q.put(urllib2.urlopen(url).read())
     print(f"finished {url}")
     q.put(f"result {url}")
+
 
 theurls = ["http://google.com", "http://yahoo.com", "http://uber.com"]
 
@@ -22,8 +24,8 @@ q = Queue()
 
 threads = []
 for u in theurls:
-    t = threading.Thread(target=get_url, args = (q,u))
-    #t.daemon = True
+    t = threading.Thread(target=get_url, args=(q, u))
+    # t.daemon = True
     t.start()
     threads.append(t)
 
@@ -33,7 +35,7 @@ while True:
     status = [t.is_alive() for t in threads]
     print(status)
     if not any(status):
-         break
+        break
     time.sleep(0.1)
 
 for i in range(len(theurls)):

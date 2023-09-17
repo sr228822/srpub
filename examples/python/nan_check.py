@@ -2,6 +2,7 @@
 
 import math
 
+
 def check_for_nan(path, d):
     if type(d) == list:
         for x in d:
@@ -21,8 +22,8 @@ example = {
     "bork": "asdfa",
     "ban": {
         "notanan": 89.0,
-        "target": float('nan'),
-    }
+        "target": float("nan"),
+    },
 }
 
 check_for_nan("", example)

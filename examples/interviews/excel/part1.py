@@ -1,12 +1,13 @@
-
 def is_formula(v):
     return v.strip().startswith("=")
+
 
 def eval_formula(v):
     r = v.strip("=")
     terms = r.split("+")
     as_ints = [int(x) for x in terms]
     return sum(as_ints)
+
 
 class MySheet:
     def __init__(self):
@@ -19,7 +20,6 @@ class MySheet:
 
     def get(self, addr):
         return self.data.get(addr, "")
-
 
 
 sheet = MySheet()

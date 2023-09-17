@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from contextlib import contextmanager
 import time
+from contextlib import contextmanager
+
 
 @contextmanager
 def my_context(block_description):
@@ -14,8 +15,8 @@ def my_context(block_description):
     print(f"Block {block_description} too {end_time-start_time}s")
 
 
-with my_context('myblock'):
+with my_context("myblock"):
     time.sleep(1)
-    print('foo')
+    print("foo")
     time.sleep(2)
-    print('bork')
+    print("bork")

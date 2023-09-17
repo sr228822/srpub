@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-class MyClass():
+class MyClass:
     myvar = 0
 
     @classmethod
@@ -11,6 +11,7 @@ class MyClass():
     @classmethod
     def inc(cls):
         cls.myvar += 1
+
 
 print(MyClass.get())
 MyClass.inc()

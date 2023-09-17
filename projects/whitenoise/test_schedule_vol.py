@@ -2,9 +2,11 @@
 
 import datetime
 import time
+
 import mock
 
 import schedule_vol
+
 
 def test_interp():
     fake_time = datetime.datetime.now()
@@ -19,6 +21,7 @@ def test_interp():
             print("booosting")
             v.apply_boost(0.3)
         time.sleep(0.1)
+
 
 if __name__ == "__main__":
     test_interp()

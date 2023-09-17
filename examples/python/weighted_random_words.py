@@ -2,11 +2,8 @@
 
 import random, time
 
-example_list = [
-    ("apple", 5),
-    ("banana", 2),
-    ("orange", 9),
-    ("grape", 1)]
+example_list = [("apple", 5), ("banana", 2), ("orange", 9), ("grape", 1)]
+
 
 class Solution:
     def __init__(self, words):
@@ -24,8 +21,8 @@ class Solution:
         left = 0
         right = len(self.items)
         while True:
-            mid = (left + right) / 2
-            print('{} {} {}'.format(left, mid, right))
+            mid = int((left + right) / 2)
+            print("{} {} {}".format(left, mid, right))
             if r < self.items[mid][0]:
                 right = mid
                 if left == mid:
@@ -35,6 +32,7 @@ class Solution:
                 if right == mid:
                     return self.items[left][1]
             time.sleep(1)
+
 
 s = Solution(example_list)
 print(s.get_random_word())

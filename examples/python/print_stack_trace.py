@@ -1,5 +1,3 @@
-
-
 def womp():
     print("inside womp")
 
@@ -21,8 +19,10 @@ def womp():
 
     return 5
 
+
 def bork():
     return 4 * womp()
+
 
 def foo():
     a = 1

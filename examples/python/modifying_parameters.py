@@ -2,10 +2,11 @@
 
 
 def foo(d):
-    d['word'] = 'seven'
+    d["word"] = "seven"
+
 
 mydict = {}
-mydict['cool'] = 'neat'
+mydict["cool"] = "neat"
 
 foo(mydict)
 

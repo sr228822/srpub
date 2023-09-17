@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import h5py
-import sys
 import argparse
+import sys
+
+import h5py
 
 from colorstrings import *
 
@@ -29,14 +30,14 @@ tab = "  "
 def show(name, thing, tabs, full=False):
     if "Group" not in str(type(thing)):
         print(red_str(tab * tabs + name + ": ") + str(thing))
-        #if full:
+        # if full:
         #    for k in thing:
         #        print(k)
         return
 
     print(tab * tabs + "{}:".format(name))
     attrs = thing.attrs.items()
-    focus =  full or "cv_skeleton" in str(list(attrs))
+    focus = full or "cv_skeleton" in str(list(attrs))
     if len(attrs) > 0:
         print_blue(tab * tabs + "Attrs:")
         for k, v in attrs:
@@ -45,10 +46,10 @@ def show(name, thing, tabs, full=False):
                 v = v[0:50].replace("\n", "\\n") + "..."
             print(blue_str(tab * tabs + "%25s" % k), v)
 
-
     for subthing in thing.keys():
-        #print(tab * tabs + "{}:".format(subthing))
-        show(subthing, thing[subthing], tabs+1, full=focus)
+        # print(tab * tabs + "{}:".format(subthing))
+        show(subthing, thing[subthing], tabs + 1, full=focus)
+
 
 print(f)
 attrs = f.attrs.items()

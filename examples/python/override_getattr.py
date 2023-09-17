@@ -6,8 +6,8 @@ class MyClass(object):
         pass
 
     def __getattribute__(self, name):
-        print('request for attr ' + str(name))
-        if name == 'bak':
+        print("request for attr " + str(name))
+        if name == "bak":
             return "I drink your milkshake"
 
         return object.__getattribute__(self, name)
@@ -23,6 +23,7 @@ class MyClass(object):
     @property
     def bar(self):
         return "womp bar"
+
 
 c = MyClass()
 

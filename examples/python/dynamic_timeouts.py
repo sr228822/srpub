@@ -2,12 +2,15 @@
 
 import contextlib2
 
+
 class TimeoutError(Exception):
     pass
+
 
 @contextlib2.contextmanager
 def ctxtimeout(timeout):
     """Core instrumentation logic."""
+
     def _handle_timeout(signum, frame):
         raise TimeoutError("asdf")
 
@@ -17,6 +20,7 @@ def ctxtimeout(timeout):
         yield
     finally:
         signal.alarm(0)
+
 
 # A value which most requests should fall under
 LOW_TIMEOUT = 0.3
@@ -37,9 +41,6 @@ def simualted_call():
     time.sleep(t)
     return
 
+
 with ctxtimeout(HIGH_TIMEOUT):
     simulated_call()
-
-
-
-

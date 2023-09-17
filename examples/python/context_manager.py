@@ -2,14 +2,16 @@
 
 import contextlib2
 
+
 @contextlib2.contextmanager
 def my_context():
     """Core instrumentation logic."""
-    print('before')
+    print("before")
 
     yield
 
-    print('after')
+    print("after")
+
 
 with my_context():
-    print('foo')
+    print("foo")

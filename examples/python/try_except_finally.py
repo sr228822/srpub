@@ -4,4 +4,4 @@
 try:
     raise Exception("My Exception")
 finally:
-    print('this happens')
+    print("this happens")

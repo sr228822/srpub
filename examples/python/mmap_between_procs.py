@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import mmap
+import os
 import time
 
-fd = os.open('/tmp/mmaptest', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+fd = os.open("/tmp/mmaptest", os.O_CREAT | os.O_TRUNC | os.O_RDWR)
 
-assert os.write(fd, '\x00' * mmap.PAGESIZE) == mmap.PAGESIZE
+assert os.write(fd, "\x00" * mmap.PAGESIZE) == mmap.PAGESIZE
 
 size = mmap.PAGESIZE
 

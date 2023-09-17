@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-print('here')
+print("here")
 
 try:
     res = input("Press Enter to continue...")
@@ -8,4 +8,4 @@ try:
 except:
     pass
 
-print('and here')
+print("and here")

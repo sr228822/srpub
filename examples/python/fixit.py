@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import re
-import sys
-import requests
 import subprocess
+import sys
+
+import requests
 
 problem = "+".join(sys.argv[1:])
 live = False
