@@ -8,7 +8,7 @@ from srutils import *
 
 
 def whois_query(q):
-    resp = cmd("whois {}".format(q))
+    resp = cmd(f"whois {q}")
     result = ""
     d = dict()
     for l in resp.split("\n"):
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 comb = (
                     colorstrings.green_str(ip)
                     + " : "
-                    + colorstrings.blue_str("{} : {}".format(dns, whois))
+                    + colorstrings.blue_str(f"{dns} : {whois}")
                 )
                 # print(ip + ' is ' + box)
                 line = line.replace(ip, comb)

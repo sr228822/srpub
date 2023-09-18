@@ -12,7 +12,7 @@ def decorator(func=None, **options):
                 print("Decorated function without options!")
 
             for k, v in options.items():
-                print("\t{}: {}".format(k, v))
+                print(f"\t{k}: {v}")
 
             func(*args, **kwargs)
 

@@ -6,7 +6,7 @@ import uuid
 
 def str_to_uuid(s):
     h = hash(s) + sys.maxsize
-    return uuid.UUID("%032d" % h)
+    return uuid.UUID(f"{int(h):032}")
 
 
 a = "i like apples"

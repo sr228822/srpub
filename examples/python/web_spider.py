@@ -21,13 +21,13 @@ def get_links_from_url(url):
     """
     try:
         response = yield httpclient.AsyncHTTPClient().fetch(url)
-        print("fetched %s" % url)
+        print(f"fetched {url}")
         urls = [
             urlparse.urljoin(url, remove_fragment(new_url))
             for new_url in get_links(response.body)
         ]
     except Exception as e:
-        print("Exception: %s %s" % (e, url))
+        print(f"Exception: {e} {url}")
         raise gen.Return([])
 
     raise gen.Return(urls)
@@ -67,7 +67,7 @@ def main():
             if current_url in fetching:
                 return
 
-            print("fetching %s" % current_url)
+            print(f"fetching {current_url}")
             fetching.add(current_url)
             urls = yield get_links_from_url(current_url)
             fetched.add(current_url)
@@ -92,7 +92,7 @@ def main():
         worker()
     yield q.join(timeout=timedelta(seconds=300))
     assert fetching == fetched
-    print("Done in %d seconds, fetched %s URLs." % (time.time() - start, len(fetched)))
+    print(f"Done in {int(time.time() - start)} seconds, fetched {len(fetched)} URLs.")
 
 
 if __name__ == "__main__":

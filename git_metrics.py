@@ -62,7 +62,7 @@ class TimeRange:
         self.end = end
 
     def __str__(self):
-        return "[{} - {}]".format(epoch_to_date(self.start), epoch_to_date(self.end))
+        return f"[{epoch_to_date(self.start)} - {epoch_to_date(self.end)}]"
 
     def add(self, dt):
         self.start = min(self.start, dt)
@@ -182,33 +182,9 @@ def print_cnt_dict(title, stat, limit=args.num):
     did_me = False
     total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
-    print(
-        "\n\n=== {} === \t ({}) ({} total)".format(
-            title, stat.tim.human_dur(), total_cnt
-        )
-    )
-    print(
-        "%3s" % ""
-        + "   "
-        + "%5s" % "cnt "
-        + " "
-        + "  %  "
-        + " "
-        + "/week"
-        + " "
-        + "name"
-    )
-    print(
-        "%3s" % ""
-        + "   "
-        + "%5s" % "--- "
-        + " "
-        + "-----"
-        + " "
-        + "-----"
-        + " "
-        + "----"
-    )
+    print(f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total)")
+    print(f"{'':3}   {'cnt ':5}   %   /week name")
+    print(f"{'':3}   {'--- ':5} ----- ----- ----")
     for i, x in enumerate(sorted_x):
         kname = x[0]
         is_me = looks_similar(kname, args.user)
@@ -226,13 +202,13 @@ def print_cnt_dict(title, stat, limit=args.num):
             continue
         perc = int(100 * cnt / total_cnt)
         print(
-            "%3d" % (i + 1)
+            f"{int(i + 1):3}"
             + ". "
-            + "%5d  " % cnt
-            + "  %2d" % perc
+            + f"{int(cnt):5}  "
+            + f"  {int(perc):2}"
             + "%  "
-            + "%.1f " % rate
-            + " {0: <25}".format(name)
+            + f"{rate:.1f} "
+            + f" {name: <25}"
         )
         if is_me:
             did_me = True
@@ -314,9 +290,9 @@ sorted_x = sorted(rate_while_active.items(), key=operator.itemgetter(1), reverse
 
 
 def print_active_rate():
-    print("\n\n=== {} === \t".format("Rate while active"))
-    print("%3s" % "" + "  " + "%5s" % "cnt " + " weeks " + "rate " + " " + "name")
-    print("%3s" % "" + "  " + "%5s" % "--- " + " ----- " + "---- " + " " + "----")
+    print("\n\n=== Rate while active === \t")
+    print(f"{'':3}  {'cnt ':5} weeks rate  name")
+    print(f"{'':3}  {'--- ':5} ----- ----  ----")
     limit = args.num
     did_me = False
     for i, x in enumerate(sorted_x):
@@ -327,7 +303,7 @@ def print_active_rate():
             continue
         is_me = looks_similar(kname, args.user)
         name = longname[kname].title()
-        name = " {0: <25}".format(name)
+        name = f" {name: <25}"
         if is_me:
             did_me = True
             name = blue_str(name)
@@ -340,10 +316,10 @@ def print_active_rate():
         if i >= limit and not is_me:
             continue
         print(
-            "%3d" % (i + 1)
+            f"{int(i + 1):3}"
             + ". "
-            + "%5d" % cnt
-            + " %5d " % weeks
+            + f"{int(cnt):5}"
+            + f" {int(weeks):5} "
             + fmt_float(val, width=4)
             + "  "
             + name

@@ -25,9 +25,7 @@ def _print_hist(
         sortseen = sorted(seen.items(), key=operator.itemgetter(1), reverse=True)
 
     print(
-        "------------------------------------------ {} unique, {} total".format(
-            len(sortseen), total_cnt
-        )
+        f"------------------------------------------ {len(sortseen)} unique, {total_cnt} total"
     )
     if with_rate:
         print("  cnt  rate  thing")
@@ -45,11 +43,11 @@ def _print_hist(
             continue
         rate = tot / tdelt
         if with_rate:
-            print(("%5d , " % tot) + ("%5.1f " % rate) + str(x[0]))
+            print(f"{int(tot):5} , " + f"{rate:5.1f} " + str(x[0]))
         elif with_perc:
-            print(("%5d , " % tot) + ("%5.1f " % (100.0 * tot / total_cnt)) + str(x[0]))
+            print(f"{int(tot):5} , " + f"{100.0 * tot / total_cnt:5.1f} " + str(x[0]))
         else:
-            print(("%5d , " % tot) + str(x[0]))
+            print(f"{int(tot):5} , " + str(x[0]))
 
 
 def main():

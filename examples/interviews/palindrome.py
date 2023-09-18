@@ -15,7 +15,7 @@ def is_palindrome(s):
 
 
 def palindrome_brute(s):
-    print("===== palindrome_brute {} === ".format(s))
+    print(f"===== palindrome_brute {s} === ")
     results = []
     for seq_length in range(1, len(s) + 1):  # n
         print("seq_length", seq_length)
@@ -36,7 +36,7 @@ print(palindrome_brute("panna"))
 
 
 def palindrome_better(s):
-    print("===== palindrome_better {} === ".format(s))
+    print(f"===== palindrome_better {s} === ")
     mid = 0
     results = []
     for mid in range(len(s)):  # N

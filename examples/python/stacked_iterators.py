@@ -12,7 +12,7 @@ for x in i:
 def outer():
     i = inner()
     for x in i:
-        yield "neat-{}".format(x)
+        yield f"neat-{x}"
 
 
 o = outer()

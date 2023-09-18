@@ -43,7 +43,7 @@ def noisy_sleep(duration, tag=""):
         hrs = int(left / 3600)
         mins = int((left / 60) % 60)
         secs = left % 60
-        flushprint(tag + " " + "%02d" % hrs + ":" + "%02d" % mins + ":" + "%02d" % secs)
+        flushprint(+f"{tag} {int(hrs):02}:{int(mins):02}:{int(secs):02}")
         if int(secs) % 10 == 0:
             try:
                 import alice
@@ -258,7 +258,7 @@ def termcode(num):
     # womp windows
     # if os_name == 'nt':
     #    return ''
-    return "\033[%sm" % num
+    return f"\x1b[{num}m"
 
 
 from colorstrings import *
@@ -336,14 +336,14 @@ def html_table(table):
     for row in table:
         resp += "  <tr>\n"
         for col in row:
-            resp += "    <td>{}</td>\n".format(col)
+            resp += f"    <td>{col}</td>\n"
         resp += "  </tr>\n"
     resp += "</table>\n"
     return resp
 
 
 def html_link(txt, link):
-    return '<a href="{}">{}</a>'.format(link, txt)
+    return f'<a href="{link}">{txt}</a>'
 
 
 #################################################################

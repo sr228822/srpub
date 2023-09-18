@@ -49,15 +49,7 @@ sorted_cnts = sorted(cnts.items(), key=operator.itemgetter(1))
 sorted_cnts.reverse()
 for sha, cnt in sorted_cnts:
     print(
-        sha
-        + "\t"
-        + str(cnt)
-        + "\t"
-        + str(int(100.0 * float(cnt) / lc))
-        + "%\t"
-        + ("%20s" % auths[sha])
-        + "\t"
-        + title_from_sha(sha)
+        f"{sha}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{auths[sha]:20}\t{title_from_sha(sha)}"
     )
 
 # Print the original author, by file
@@ -70,20 +62,12 @@ for a in sys.argv[1:]:
             auth = m.group(1)
         else:
             continue
-    print("%50s" % auth, a)
+    print(f"{auth:50}", a)
 
 # Print the aggregated git-blame coverage
 print("\n---- Current Git-Blame Modifier -----\n")
-print(("%20s" % "author") + "\t" + "lines" + "\t" + "perc" + "\t" + "commits")
+print(f"{'author':20}\tlines\tperc\tcommits")
 sorted_auth_lines = sorted(auth_lines.items(), key=operator.itemgetter(1))
 sorted_auth_lines.reverse()
 for auth, cnt in sorted_auth_lines:
-    print(
-        ("%20s" % auth)
-        + "\t"
-        + str(cnt)
-        + "\t"
-        + str(int(100.0 * float(cnt) / lc))
-        + "%\t"
-        + str(auth_commits[auth])
-    )
+    print(f"{auth:20}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{auth_commits[auth]}")

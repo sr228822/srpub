@@ -40,7 +40,7 @@ CODE = {
 
 
 def termcode(num):
-    return "\033[%sm" % num
+    return f"\x1b[{num}m"
 
 
 def color_str(txt, color):

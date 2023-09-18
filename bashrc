@@ -539,7 +539,7 @@ alias hgrebasemaster='hg pull --rebase -d master'
 # Conda stuff
 #######################################################
 
-DEFAULTENV=base
+export DEFAULTENV=base
 act() {
   conda deactivate;
   local env="${1:-$DEFAULTENV}"

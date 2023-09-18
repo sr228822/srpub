@@ -18,7 +18,7 @@ def show(name, thing, tabs, full=False):
         #        print(k)
         return
 
-    print(tab * tabs + "{}:".format(name))
+    print(tab * tabs + f"{name}:")
     attrs = thing.attrs.items()
     focus = full or "cv_skeleton" in str(list(attrs))
     if len(attrs) > 0:
@@ -27,10 +27,10 @@ def show(name, thing, tabs, full=False):
             v = str(v)
             if len(v) > 50 and not args.no_trunc:
                 v = v[0:50].replace("\n", "\\n") + "..."
-            print(blue_str(tab * tabs + "%25s" % k), v)
+            print(blue_str(tab * tabs + f"{k:25}"), v)
 
     for subthing in thing.keys():
-        # print(tab * tabs + "{}:".format(subthing))
+        # print(f"{tab * tabs}{subthing}:")
         show(subthing, thing[subthing], tabs + 1, full=focus)
 
 
@@ -57,9 +57,9 @@ if __name__ == "__main__":
             v = str(v)
             if len(v) > 50 and not args.no_trunc:
                 v = v[0:50].replace("\n", "\\n") + "..."
-            print(blue_str("%25s" % k), v)
+            print(blue_str(f"{k:25}"), v)
     print(f.keys())
 
     for key in f.keys():
-        print("\n=== {} ===".format(key))
+        print(f"\n=== {key} ===")
         show(key, f[key], 0)

@@ -22,7 +22,7 @@ class Solution:
         right = len(self.items)
         while True:
             mid = int((left + right) / 2)
-            print("{} {} {}".format(left, mid, right))
+            print(f"{left} {mid} {right}")
             if r < self.items[mid][0]:
                 right = mid
                 if left == mid:

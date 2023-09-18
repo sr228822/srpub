@@ -55,7 +55,7 @@ def _secstr(sec):
     res = ""
     if sec >= 100:
         h = int(sec / 100)
-        res += "{} Hundred ".format(one_labels[h])
+        res += f"{one_labels[h]} Hundred "
         sec = sec % 100
     if sec >= 10 and sec <= 19:
         return res + teens[sec]
@@ -73,7 +73,7 @@ if i < 0:
 g = 0
 while i != 0:
     diff = i % 1000
-    res = "{} {} {}".format(_secstr(diff), groups[g], res)
+    res = f"{_secstr(diff)} {groups[g]} {res}"
     i = int((i - diff) / 1000)
     g += 1
 print(neg + res)

@@ -9,7 +9,7 @@ def check_for_nan(path, d):
             check_for_nan(path, x)
     if type(d) == dict:
         for k in d.keys():
-            check_for_nan("{}.{}".format(path, k), d[k])
+            check_for_nan(f"{path}.{k}", d[k])
     if type(d) == float:
         if math.isnan(d):
             print("I FOUND A NAN")
