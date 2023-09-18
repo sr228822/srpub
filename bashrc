@@ -218,6 +218,7 @@ alias red='~/srpub/colorstrings.py red'
 alias yellow='~/srpub/colorstrings.py yellow'
 alias rainbow='~/srpub/colorstrings.py rainbow'
 alias blink='~/srpub/colorstrings.py blink'
+alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"'
 
 alias asdf='fortune'
 alias frak='fortune'
@@ -328,8 +329,8 @@ diffit() {
 alias kbn='killbyname.py'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"'
 alias utcnow='date -u'
-alias epochnow='python2.7 -c "import time; print int(time.time())"'
-alias epochnowmillis='python2.7 -c "import time; print 1000 * int(time.time())"'
+alias epochnow='python -c "import time; print(int(time.time()))"'
+alias epochnowmillis='python -c "import time; print(1000 * int(time.time()))"'
 alias epoch="epoch.py"
 alias tmx='tmux attach || tmux new'
 
@@ -512,7 +513,7 @@ function hgs() {
     hg sl
 }
 
-function hg_new_branch() {
+function hg_new_bookmark() {
     hg bookmark -r master $1
     hg update $1
 }
@@ -538,6 +539,7 @@ alias hgrebasemaster='hg pull --rebase -d master'
 # Conda stuff
 #######################################################
 
+DEFAULTENV=base
 act() {
   conda deactivate;
   local env="${1:-$DEFAULTENV}"
