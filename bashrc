@@ -356,7 +356,7 @@ alias notests='antigrep "/tests/" | antigrep "/script/" | antigrep "build/lib.li
 nolonglines() {
     awk 'length($0)<5000 {print $0}'
 }
-alias uuid='python2.7 -c "import uuid; print uuid.uuid4()"'
+alias uuid='python3 -c "import uuid; print(uuid.uuid4())"'
 uuids() {
     for i in `seq 20`; do uuid; done
 }
