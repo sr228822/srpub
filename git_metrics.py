@@ -182,7 +182,9 @@ def print_cnt_dict(title, stat, limit=args.num):
     did_me = False
     total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
-    print(f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total)")
+    print(
+        f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total commits;  {len(stat.cnt.keys())} unique authors)"
+    )
     print(f"{'':3}   {'cnt ':5}   %   /week name")
     print(f"{'':3}   {'--- ':5} ----- ----- ----")
     for i, x in enumerate(sorted_x):

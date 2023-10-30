@@ -56,6 +56,16 @@ def color_str(txt, color):
     return termcode(CODE[color.upper()]) + txt + termcode(CODE["ENDC"])
 
 
+def loglevel_color(txt, level):
+    if level == "DEBUG":
+        return color_str(txt, "GREY")
+    elif level == "WARN" or level == "WARNING":
+        return color_str(txt, "YELLOW")
+    elif level == "ERROR" or level == "FATAL":
+        return color_str(txt, "RED")
+    return txt
+
+
 def dual_color_str(txt, fgcolor, bgcolor):
     if is_windows:
         return txt
