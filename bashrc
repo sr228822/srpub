@@ -551,6 +551,9 @@ alias hgamend='hg amend'
 alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
 alias hgrebasemaster='hg pull --rebase -d master'
 
+# This is wrong
+alias hgheaddiff='hglastdiff'
+
 hgbd() {
     hg bookmark -d $@
     if [ $? -ne 0 ]; then
@@ -672,6 +675,29 @@ gd() {
         git diff
     elif [[ $typ = $HG_ENUM ]]; then
         hg diff
+    else
+        echo "no source control"
+    fi
+}
+
+lastdiff() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        gitlastdiff
+    elif [[ $typ = $HG_ENUM ]]; then
+        hglastdiff
+    else
+        echo "no source control"
+    fi
+
+}
+
+headdiff() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        githeaddiff
+    elif [[ $typ = $HG_ENUM ]]; then
+        hgheaddiff
     else
         echo "no source control"
     fi
