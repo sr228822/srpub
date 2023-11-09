@@ -15,7 +15,7 @@ kauths = {}
 # A map of kname to longest-name
 longname = {}
 
-MY_NAME = cmd("git config user.name") or "samuel russell"
+MY_NAME = cmd("git config user.name") or me_aliases[0]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

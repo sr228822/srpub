@@ -49,8 +49,8 @@ def git_op_colored(c):
         return cmd(c)
 
     res = clean_up_decorate(cmd(c))
-    res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
-    res = res.replace("Sam Russell", blue_str("Sam Russell"))
+    for alias in me_aliases:
+        res = res.replace(alias, blue_str(alias))
     print(res)
     return res
 
@@ -78,11 +78,14 @@ def show_sha_grey(sha):
         return
 
     res = cmd(c)
-    if "Samuel Russell" in res:
-        ts = res.split("Samuel Russell")
-        print(grey_str(ts[0]) + blue_str("Samuel Russell") + grey_str(ts[1]))
-    else:
-        print(grey_str(res))
+    for alias in me_aliases:
+        res = res.replace(alias, blue_str(alias))
+        if alias in res:
+            parts = res.split(alias)
+            res = grey_str(parts[0]) + blue_str(alias) + grey_str(parts[1])
+        else:
+            res = grey_str(alias)
+    print(res)
     print("")
 
 
@@ -95,8 +98,8 @@ def show_sha_magenta(sha):
 
     res = cmd(c)
     res = res.replace(sha, magenta_str(sha))
-    res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
-    res = res.replace("Sam Russell", blue_str("Sam Russell"))
+    for alias in me_aliases:
+        res = res.replace(alias, blue_str(alias))
     print(res)
     print("")
 
@@ -386,5 +389,5 @@ if __name__ == "__main__":
     ###########################################################
     #     print my last merged commit if not in the above
     ###########################################################
-    if "Samuel Russell" not in originz and "Sam Russell" not in originz:
+    if not any(alias in originz for alias in me_aliases):
         show_my_most_recent(fb)

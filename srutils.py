@@ -9,6 +9,8 @@ import os
 os_name = os.name
 is_windows = sys.platform.lower().startswith("win")
 
+me_aliases = ["Samuel Russell", "Sam Russell"]
+
 if __name__ == "__main__":
     print("nope")
 
