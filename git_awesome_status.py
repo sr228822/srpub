@@ -54,11 +54,12 @@ def show_sha(sha):
 
 
 def show_shas(sha_first, sha_last, nmax=100):
-    res = clean_up_decorate(
-        cmd(
-            f'git --no-pager log -n {nmax} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {sha_first}...{sha_last}'
-        )
-    )
+    c = f'git --no-pager log -n {nmax} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {sha_first}...{sha_last}'
+    if is_windows:
+        cmd(c, straight_through=True)
+        return
+
+    res = clean_up_decorate(cmd(c))
     res = res.replace("Samuel Russell", blue_str("Samuel Russell"))
     res = res.replace("Sam Russell", blue_str("Sam Russell"))
     print(res)

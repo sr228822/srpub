@@ -351,10 +351,17 @@ def html_link(txt, link):
 #################################################################
 
 
-def cmd(c, wait=True, noisy=False):
+def cmd(c, wait=True, noisy=False, straight_through=False):
     # this seems to be much faster for the simple case
     # if wait and not noisy:
     #    return commands.getoutput(c)
+
+    if straight_through:
+        process = subprocess.Popen(
+            c,
+            shell=True,
+        )
+        process.communicate()
 
     if not wait:
         process = subprocess.Popen(
