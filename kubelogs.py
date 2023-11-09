@@ -36,10 +36,12 @@ def stream(c):
         nextline = process.stdout.readline()
         proc_poll = process.poll()
         if nextline == "" and proc_poll != None:
-            print(f"Process extied with code {proc_poll}, waiting_to_start={waiting_to_start}")
+            print(
+                f"Process extied with code {proc_poll}, waiting_to_start={waiting_to_start}"
+            )
             return waiting_to_start
         if nextline:
-            waiting_to_start = 'is waiting to start' in nextline
+            waiting_to_start = "is waiting to start" in nextline
             if js := as_json(nextline):
                 level = js.get("level")
                 msg = js.get("message")
