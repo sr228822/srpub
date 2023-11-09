@@ -362,6 +362,7 @@ def cmd(c, wait=True, noisy=False, straight_through=False):
             shell=True,
         )
         process.communicate()
+        return ""
 
     if not wait:
         process = subprocess.Popen(
