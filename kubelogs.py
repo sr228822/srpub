@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 from colorstrings import loglevel_color
 
@@ -20,6 +21,41 @@ def as_json(s):
         return json.loads(s)
     except:
         return None
+
+
+def stream(c):
+    waiting_to_start = False
+    process = subprocess.Popen(
+        c,
+        stdout=subprocess.PIPE,
+        stderr=sys.stderr,
+        shell=True,
+        universal_newlines=True,
+    )
+    while True:
+        nextline = process.stdout.readline()
+        proc_poll = process.poll()
+        if nextline == "" and proc_poll != None:
+            print(f"Process extied with code {proc_poll}, waiting_to_start={waiting_to_start}")
+            return waiting_to_start
+        if nextline:
+            waiting_to_start = 'is waiting to start' in nextline
+            if js := as_json(nextline):
+                level = js.get("level")
+                msg = js.get("message")
+                if not msg:
+                    sys.stdout.write(nextline)
+                    sys.stdout.flush()
+                    continue
+                tim = js.get("asctime")
+                if tim:
+                    msg = f"[{tim}] {msg}\n"
+                msg = loglevel_color(msg, level)
+                sys.stdout.write(msg)
+            else:
+                sys.stdout.write(nextline)
+            sys.stdout.flush()
+    return False
 
 
 def main():
@@ -48,35 +84,11 @@ def main():
         c += " --follow"
     print(c)
 
-    process = subprocess.Popen(
-        c,
-        stdout=subprocess.PIPE,
-        stderr=sys.stderr,
-        shell=True,
-        universal_newlines=True,
-    )
     while True:
-        nextline = process.stdout.readline()
-        proc_poll = process.poll()
-        if nextline == "" and proc_poll != None:
-            print(f"Process extied with code {proc_poll}")
+        retry = stream(c)
+        if not retry:
             break
-        if nextline:
-            if js := as_json(nextline):
-                level = js.get("level")
-                msg = js.get("message")
-                if not msg:
-                    sys.stdout.write(nextline)
-                    sys.stdout.flush()
-                    continue
-                tim = js.get("asctime")
-                if tim:
-                    msg = f"[{tim}] {msg}\n"
-                msg = loglevel_color(msg, level)
-                sys.stdout.write(msg)
-            else:
-                sys.stdout.write(nextline)
-            sys.stdout.flush()
+        time.sleep(2)
 
 
 if __name__ == "__main__":

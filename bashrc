@@ -452,7 +452,23 @@ git_push_as_me() {
     git push https://sr228822@github.com/sr228822/srpub master:master
 }
 
-qpush() {
+git_pre_push() {
+    echo "override me pre-push"
+}
+
+gitpush() {
+    b=`git branch | grep "*" | last_word`
+    if [[ "$b" == *"master"* ]];
+    then
+        echo "cannot push master";
+        return 1;
+    fi
+
+    git_pre_push || return 1
+    echo "pushing... $b"
+    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
+}
+gitqpush() {
     b=`git branch | grep "*" | last_word`
     if [[ "$b" == *"master"* ]];
     then
@@ -461,8 +477,8 @@ qpush() {
     fi
     if [[ "$b" == *"main"* ]];
     then
-	echo "cannot push main";
-	return 1;
+	    echo "cannot push main";
+	    return 1;
     fi
 
     echo "quick-pushing... $b"
@@ -534,6 +550,18 @@ alias hglastdiff='hg show `hg id -i | cut -d"+" -f1`'
 alias hgamend='hg amend'
 alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
 alias hgrebasemaster='hg pull --rebase -d master'
+
+hgbd() {
+    hg bookmark -d $@
+    if [ $? -ne 0 ]; then
+        substr=`hg bookmarks | grep $1 | awk '{print $1}'`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            hg bookmark -d $substr
+            return
+        fi
+    fi
+}
 
 #######################################################
 # Conda stuff
@@ -613,6 +641,26 @@ qamend() {
         git commit --amend -a --no-edit --no-verify
     elif [[ $typ = $HG_ENUM ]]; then
         hg amend
+    else
+        echo "no source control"
+    fi
+}
+push() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        gitpush $@
+    elif [[ $typ = $HG_ENUM ]]; then
+        arc lint && jf submit
+    else
+        echo "no source control"
+    fi
+}
+qpush() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        gitqpush $@
+    elif [[ $typ = $HG_ENUM ]]; then
+        jf submit
     else
         echo "no source control"
     fi
