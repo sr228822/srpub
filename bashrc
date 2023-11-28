@@ -703,6 +703,17 @@ headdiff() {
     fi
 }
 
+rebasemaster() {
+    typ=$(is_git)
+    if [[ $typ = $GIT_ENUM ]]; then
+        git fetch && git rebase origin/master
+    elif [[ $typ = $HG_ENUM ]]; then
+        hgrebasemaster
+    else
+        echo "no source control"
+    fi
+}
+
 #######################################################
 # MacOS Stuff
 #######################################################
