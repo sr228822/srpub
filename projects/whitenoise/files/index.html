@@ -20,6 +20,9 @@ function callAPI(route) {
     console.log(body)
     document.getElementById("api_resp").innerHTML = JSON.stringify(body);
     pollStatus();
+    setTimeout( function() {
+         document.getElementById("api_resp").innerHTML = "";
+    }, 5000);
   });
 }
 
