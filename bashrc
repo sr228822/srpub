@@ -71,29 +71,28 @@ tmptmp() {
     cd /tmp/tmp/
 }
 
+
+color_code_files() {
+    GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
+}
+
+shere() {
+    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} * 2>/dev/null -e "$1" ${@:2}
+}
 search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1" ${@:2}
 }
-sh() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1"
-}
 sc() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
+    search $@ --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
 }
 sch() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
+    shere $@ --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
 }
 scw() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "\<$1\>" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
+    sc "\<$1\>" ${@:2}
 }
 scnear() {
-    grep --color=always -iIr -A 2 -B 2 --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} . 2>/dev/null -e "$1" | GREP_COLOR=95  grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
-}
-
-vimlast() {
-    f=`cat /tmp/last_relevant_files | head -n 1 | first_word | sed 's/://g' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"`
-    echo $f
-    vim $f
+    sc $@ -A 2 -B 2
 }
 
 alias search_case='grep -Ir * -e'
