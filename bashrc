@@ -513,6 +513,11 @@ function gits() {
 alias gitmine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
+function mac_unquarantine() {
+    xattr -d com.apple.metadata:kMDItemWhereFroms $1
+    xattr -d com.apple.quarantine $1
+}
+
 #######################################################
 # HG stuff
 #######################################################
