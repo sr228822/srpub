@@ -23,12 +23,12 @@ def as_json(s):
         return None
 
 
-def stream(c):
+def stream(c, verbose=False):
     waiting_to_start = False
     process = subprocess.Popen(
         c,
         stdout=subprocess.PIPE,
-        stderr=sys.stderr,
+        stderr=subprocess.STDOUT,
         shell=True,
         universal_newlines=True,
     )
@@ -36,9 +36,10 @@ def stream(c):
         nextline = process.stdout.readline()
         proc_poll = process.poll()
         if nextline == "" and proc_poll != None:
-            print(
-                f"Process extied with code {proc_poll}, waiting_to_start={waiting_to_start}"
-            )
+            if verbose:
+                print(
+                    f"Process {c} extied with code {proc_poll}, waiting_to_start={waiting_to_start}"
+                )
             return waiting_to_start
         if nextline:
             waiting_to_start = "is waiting to start" in nextline
@@ -78,16 +79,24 @@ def main():
         action="store_true",
         help="tail live",
     )
+    parser.add_argument('--no-tail', dest='tail', action='store_false')
+    parser.set_defaults(tail=True)
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="debug verbose",
+    )
     args = parser.parse_args()
 
     _ka = ka()
     c = f"{_ka} logs -n {args.namespace} {args.pod}"
     if args.tail:
         c += " --follow"
-    print(c)
+    if args.verbose:
+        print(c)
 
     while True:
-        retry = stream(c)
+        retry = stream(c, verbose=args.verbose)
         if not retry:
             break
         time.sleep(2)
