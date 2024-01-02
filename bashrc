@@ -83,10 +83,10 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
-    search $@ --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
+    search "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
 }
 sch() {
-    shere $@ --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
+    shere "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}
