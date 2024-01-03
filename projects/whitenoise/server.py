@@ -3,6 +3,7 @@ import os
 import socket
 import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
@@ -10,11 +11,14 @@ from flask import Flask
 from schedule_vol import get_now, Volumizer
 
 app = Flask(__name__)
+scheduler = None
 
 
 class Globals:
     def __init__(self):
         self.v = Volumizer()
+        self.scheduler = None
+        self.stop_ramp = False
 
 
 _g = Globals()
@@ -75,7 +79,6 @@ def vol_more():
     print("vol more")
     return _cmd_resp("vol_more")
 
-
 @app.route("/vol/max")
 def vol_max():
     global _g
@@ -84,9 +87,58 @@ def vol_max():
     return _cmd_resp("vol_max")
 
 
+##################################################
+# Ramps
+##################################################
+
+def do_ramp(delta):
+    print(f"Background job doing ramp {delta}")
+    ramp_intervals = int(10 * abs(delta))
+    ramp_seconds = int(5 * abs(delta))
+    for i in range(ramp_intervals):
+        if _g.stop_ramp:
+            _g.stop_ramp = False
+            print("Stopping ramp")
+            return
+        _g.v.apply_boost(b_delta = (delta / ramp_intervals))
+        time.sleep(ramp_seconds / ramp_intervals)
+
+
+@app.route("/vol/rampup")
+def ramp_up():
+    global _g
+    print("ramp up")
+    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[1.0])
+    return _cmd_resp("rampup")
+
+@app.route("/vol/rampdown")
+def ramp_down():
+    global _g
+    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[-1.0])
+    print("ramp down")
+    return _cmd_resp("ramp_down")
+
+@app.route("/vol/rampmax")
+def ramp_max():
+    global _g
+    print("ramp_max")
+    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[7.0])
+    return _cmd_resp("ramp_max")
+
+@app.route("/vol/rampoff")
+def ramp_off():
+    global _g
+    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[-10.0])
+    print("ramp off")
+    return _cmd_resp("ramp_off")
+
+
+
+
 @app.route("/vol/unset")
 def vol_unset():
     global _g
+    _g.stop_ramp = True
     _g.v.apply_boost(b_abs=0.0)
     print("vol boost unset")
     return _cmd_resp("vol_unset")
@@ -151,9 +203,9 @@ if __name__ == "__main__":
     background_job()
 
     print("Starting background scheduler")
-    scheduler = BackgroundScheduler()
-    job = scheduler.add_job(background_job, "interval", minutes=5)
-    scheduler.start()
+    _g.scheduler = BackgroundScheduler()
+    job = _g.scheduler.add_job(background_job, "interval", minutes=5)
+    _g.scheduler.start()
 
     # app.run(debug=args.debug_mode, host="127.0.0.1", port=80)
     app.run(debug=args.debug_mode, host="0.0.0.0", port=8080)

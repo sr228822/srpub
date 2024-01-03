@@ -37,7 +37,7 @@ function pollStatus() {
 }
 
 pollStatus();
-var intervalId = setInterval(pollStatus, 15000);
+var intervalId = setInterval(pollStatus, 10000);
 
 </script>
 
@@ -56,21 +56,37 @@ var intervalId = setInterval(pollStatus, 15000);
 <table style="width:100%">
   <tr>
    <td>
-    <button style="width:100%" class="button" onclick="callAPI('/vol/off')">Off</button>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/off')">Off</button>
    </td>
    <td>
-    <button style="width:100%" class="button" onclick="callAPI('/vol/less')">Down</button>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/less')">Down</button>
    </td>
    <td>
-    <button style="width:100%" class="button" onclick="callAPI('/vol/more')">Up</button>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/more')">Up</button>
    </td>
    <td>
-    <button style="width:100%" class="button" onclick="callAPI('/vol/max')">Max</button>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/max')">Max</button>
    </td>
   </tr>
   <tr>
    <td>
-    <button class="button" style="background-color: #BBBBBB;" onclick="callAPI('/vol/unset')">Unset</button>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampoff')">Ramp-Off</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampdown')">Ramp-Down</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampup')">Ramp-Up</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampmax')">Ramp-Max</button>
+   </td>
+  </tr>
+  <tr>
+  </tr>
+  <tr>
+   <td>
+    <button class="button" style="width:100%; background-color: #BBBBBB;" onclick="callAPI('/vol/unset')">Unset Boost</button>
    </td>
   </tr>
 </table>
