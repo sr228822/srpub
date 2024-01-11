@@ -1,0 +1,14 @@
+#!/bin/bash
+
+remote="$1"
+url="$2"
+
+pyfmt --check .
+if [ $? -eq 0 ]; then
+    echo "Lint succeeded"
+else
+    echo "Lint failed.  Run `make fmt` before pushing"
+    exit 1
+fi
+
+exit 0
