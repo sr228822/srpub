@@ -79,6 +79,7 @@ def vol_more():
     print("vol more")
     return _cmd_resp("vol_more")
 
+
 @app.route("/vol/max")
 def vol_max():
     global _g
@@ -91,6 +92,7 @@ def vol_max():
 # Ramps
 ##################################################
 
+
 def do_ramp(delta):
     print(f"Background job doing ramp {delta}")
     ramp_intervals = int(10 * abs(delta))
@@ -100,7 +102,7 @@ def do_ramp(delta):
             _g.stop_ramp = False
             print("Stopping ramp")
             return
-        _g.v.apply_boost(b_delta = (delta / ramp_intervals))
+        _g.v.apply_boost(b_delta=(delta / ramp_intervals))
         time.sleep(ramp_seconds / ramp_intervals)
 
 
@@ -108,31 +110,40 @@ def do_ramp(delta):
 def ramp_up():
     global _g
     print("ramp up")
-    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[1.0])
+    _g.scheduler.add_job(
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[1.0]
+    )
     return _cmd_resp("rampup")
+
 
 @app.route("/vol/rampdown")
 def ramp_down():
     global _g
-    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[-1.0])
+    _g.scheduler.add_job(
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-1.0]
+    )
     print("ramp down")
     return _cmd_resp("ramp_down")
+
 
 @app.route("/vol/rampmax")
 def ramp_max():
     global _g
     print("ramp_max")
-    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[7.0])
+    _g.scheduler.add_job(
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[7.0]
+    )
     return _cmd_resp("ramp_max")
+
 
 @app.route("/vol/rampoff")
 def ramp_off():
     global _g
-    _g.scheduler.add_job(do_ramp, 'date', run_date=datetime.now() + timedelta(seconds=1), args=[-10.0])
+    _g.scheduler.add_job(
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-10.0]
+    )
     print("ramp off")
     return _cmd_resp("ramp_off")
-
-
 
 
 @app.route("/vol/unset")

@@ -79,7 +79,7 @@ def main():
         action="store_true",
         help="tail live",
     )
-    parser.add_argument('--no-tail', dest='tail', action='store_false')
+    parser.add_argument("--no-tail", dest="tail", action="store_false")
     parser.set_defaults(tail=True)
     parser.add_argument(
         "--verbose",
