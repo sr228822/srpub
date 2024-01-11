@@ -1,6 +1,6 @@
 
 fmt:
-	pyfmt .
+	black .
 
 lint:
-	pyfmt --check .
+	black --check .

@@ -13,3 +13,4 @@ dependencies:
   - git
   - python==3.8.*
   - termcolor
+  - black==22.*

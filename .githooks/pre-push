@@ -3,7 +3,7 @@
 remote="$1"
 url="$2"
 
-pyfmt --check .
+black --check .
 if [ $? -eq 0 ]; then
     echo "Lint succeeded"
 else
