@@ -361,21 +361,6 @@ uuids() {
 }
 
 
-gittrack() {
-    if [ -z "$1" ]; then
-        echo "tracking origin is required"
-        return 1;
-    fi
-    git branch --set-upstream-to $1
-}
-gittrackmaster() {
-    gittrack origin/master
-}
-gittrackself() {
-    b=`git branch | grep "*" | last_word`
-    gittrack origin/$b
-}
-
 jqm() {
     raw=`cat`
     echo $raw | jq -S -e $1 || printf "~~invalid json~~\n\n$raw\n"
@@ -424,17 +409,6 @@ squashn() {
     git reset --soft HEAD~${1}
     git commit -a
 }
-#gitfinish() {
-#    if [ $# -eq 0 ]
-#    then
-#        echo "No arguments supplied: branch is required"
-#        return
-#    fi
-#    git checkout master
-#    git pull
-#    git branch -d $1
-#    gs
-#}
 
 gco() {
     git checkout $@
@@ -513,10 +487,21 @@ function gits() {
 alias gitmine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
-function mac_unquarantine() {
-    xattr -d com.apple.metadata:kMDItemWhereFroms $1
-    xattr -d com.apple.quarantine $1
+gittrack() {
+    if [ -z "$1" ]; then
+        echo "tracking origin is required"
+        return 1;
+    fi
+    git branch --set-upstream-to $1
 }
+gittrackmaster() {
+    gittrack origin/master
+}
+gittrackself() {
+    b=`git branch | grep "*" | last_word`
+    gittrack origin/$b
+}
+
 
 #######################################################
 # HG stuff
@@ -729,6 +714,14 @@ rebasemaster() {
 }
 
 #######################################################
+# AWS Stuff
+#######################################################
+
+s3cat() {
+    aws s3 cp $1 /tmp/t.txt && cat /tmp/t.txt
+}
+
+#######################################################
 # MacOS Stuff
 #######################################################
 
@@ -747,6 +740,12 @@ unrosetta() {
 arm() {
 	env /usr/bin/arch -arm64 /bin/bash --login
 }
+
+function mac_unquarantine() {
+    xattr -d com.apple.metadata:kMDItemWhereFroms $1
+    xattr -d com.apple.quarantine $1
+}
+
 
 
 ############################################################
