@@ -758,18 +758,37 @@ if [[ $processor == *Apple* ]]; then
     show_arch="($cur_arch) "
 fi
 
-if [[ $box_id_str == *prod* ]]; then
-    # production is red (and named)
-    PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
-    alias ls="ls -G --color=auto --hide='*.pyc'"
-elif [[ $box_id_str == *dev* || $box_id_str == *ec2* ]]; then
-    # Dev boxes are blue
-    PS1="\w \[\033[1;34m\]$\[\033[0m\] "
-    alias ls="ls -G --color=auto --hide='*.pyc'"
-else
-    # Macbooks are yellow
-    # everything else is too
-    #PS1="\w \[\033[1;93m\]$\[\033[0m\] "
-    PS1="\[\033[1;93m\]\w $show_arch $\[\033[0m\] "
-    alias ls="ls -G"
-fi
+get_term_label() {
+    echo "${PSEXTRA}"
+}
+
+set_ps1() {
+    if [[ $box_id_str == *prod* ]]; then
+        # production is red (and named)
+        PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
+        alias ls="ls -G --color=auto --hide='*.pyc'"
+    elif [[ $box_id_str == *dev* || $box_id_str == *ec2* ]]; then
+        # Dev boxes are blue
+        PS1="\w \[\033[1;34m\]$\[\033[0m\] "
+        alias ls="ls -G --color=auto --hide='*.pyc'"
+    else
+        # Macbooks are yellow
+        # everything else is too
+        #PS1="\w \[\033[1;93m\]$\[\033[0m\] "
+        PS1="\[\033[1;93m\]\w $show_arch`get_term_label`$\[\033[0m\] "
+        alias ls="ls -G"
+    fi
+}
+
+set_ps1
+
+set_term_label() {
+    #export PSEXTRA="[${1}]"
+    export PSEXTRA="[\[\033[1;91m\]${1}] "
+    set_ps1
+}
+clear_term_label() {
+    export PSEXTRA=""
+    set_ps1
+}
+
