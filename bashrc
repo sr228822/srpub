@@ -536,7 +536,8 @@ hgco() {
 alias hglastdiff='hg show `hg id -i | cut -d"+" -f1`'
 alias hgamend='hg amend'
 alias hgctrllog='hg log arvr/projects/ctrl-r -l 100'
-alias hgrebasemaster='hg pull --rebase -d fbcode/warm'
+alias hgrebasemaster='hg pull --rebase -d master'
+alias hgrebasewarm='hg pull --rebase -d fbcode/warm'
 alias hgmine="hg log --user=samrussell@meta.com --limit 10"
 
 # This is wrong
@@ -707,7 +708,7 @@ rebasemaster() {
     if [[ $typ = $GIT_ENUM ]]; then
         git fetch && git rebase origin/master
     elif [[ $typ = $HG_ENUM ]]; then
-        hgrebasemaster
+        hgrebasewarm
     else
         echo "no source control"
     fi
