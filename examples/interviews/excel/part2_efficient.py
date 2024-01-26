@@ -4,6 +4,7 @@ because it will not re-do computation on get calls
 """
 
 
+import re
 from dataclasses import dataclass, field
 
 
@@ -11,7 +12,7 @@ from dataclasses import dataclass, field
 class Cell:
     raw: str = None
     value: str = None
-    dependents: dict[str, str] = field(default_factory=dict)
+    dependents: set[str] = field(default_factory=set)
 
 
 class MySheet:
@@ -21,17 +22,18 @@ class MySheet:
     def _eval_formula(self, addr, v) -> int:
         terms = v.lstrip("=").split("+")
         s = 0
-        for x in terms:
-            if x.isnumeric():
-                s += int(x)
+        for term in terms:
+            if term.isnumeric():
+                s += int(term)
             else:
                 # if its not a number, it must be a cell-addr
-                other = self.data.get(x, None)
+                assert re.match("^[A-Z]+\d+$", term)
+                ref_cell = self.data.get(term, None)
 
                 # Put this cell as a dependent of the other
-                if other:
-                    s += int(other.value)
-                    other.dependents[addr] = True
+                if ref_cell:
+                    s += int(ref_cell.value)
+                    ref_cell.dependents.add(addr)
 
         return s
 
@@ -41,14 +43,14 @@ class MySheet:
         if value:
             c.raw = value
 
-        # put value from the raw
+        # calculate/set value from the raw
         if c.raw.startswith("="):
             c.value = str(self._eval_formula(addr, c.raw))
         else:
             c.value = c.raw
 
-        # update dependents
-        for dep in c.dependents.keys():
+        # propegate _update to dependents
+        for dep in c.dependents:
             self._update(dep)
 
         self.data[addr] = c
