@@ -13,7 +13,7 @@ class MySheet:
     def __init__(self):
         self.data = {}
 
-    def set(self, addr, value):
+    def put(self, addr, value):
         if is_formula(value):
             value = eval_formula(value)
         self.data[addr] = value
@@ -24,11 +24,11 @@ class MySheet:
 
 sheet = MySheet()
 
-sheet.set("A1", "hello")
+sheet.put("A1", "hello")
 print("A1", sheet.get("A1"))
 
-sheet.set("B2", "5")
+sheet.put("B2", "5")
 print("B2", sheet.get("B2"))
 
-sheet.set("A3", "=2+2")
+sheet.put("A3", "=2+2")
 print("A3", sheet.get("A3"))

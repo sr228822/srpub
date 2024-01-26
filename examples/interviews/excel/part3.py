@@ -10,7 +10,7 @@ class MySheet:
     def __init__(self):
         self.data = {}
 
-    def set(self, addr, value):
+    def put(self, addr, value):
         lock.acquire()
         try:
             if is_formula(value):
@@ -42,15 +42,15 @@ def get(addr):
     return str(sheet.get(addr))
 
 
-@app.route("/cell/<addr>", methods=["POST"])
-def set(addr):
+@app.route("/cell/<addr>", methods=["PUT"])
+def put(addr):
     content = request.get_json()
     if not content:
         return "request body required", 400
     value = content.get("value", None)
     if not value:
         return "value required", 400
-    sheet.set(addr, value)
+    sheet.put(addr, value)
     return "ok"
 
 
@@ -58,11 +58,11 @@ if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port="5050")
 
 
-# curl -XPOST -H "Content-Type:application/json" "127.0.01:5050/cell/A1" --data '{"value": "hello"}'
+# curl -XPUT -H "Content-Type:application/json" "127.0.01:5050/cell/A1" --data '{"value": "hello"}'
 # curl -XGET  -H "Content-Type:application/json" "127.0.01:5050/cell/A1" -H "Content-Type:application/json"
 
-# curl -XPOST -H "Content-Type:application/json" "127.0.01:5050/cell/B2" --data '{"value": "5"}'
+# curl -XPUT -H "Content-Type:application/json" "127.0.01:5050/cell/B2" --data '{"value": "5"}'
 # curl -XGET  -H "Content-Type:application/json" "127.0.01:5050/cell/B2" -H "Content-Type:application/json"
 
-# curl -XPOST -H "Content-Type:application/json" "127.0.01:5050/cell/A3" --data '{"value": "=2+2"}'
+# curl -XPUT -H "Content-Type:application/json" "127.0.01:5050/cell/A3" --data '{"value": "=2+2"}'
 # curl -XGET  -H "Content-Type:application/json" "127.0.01:5050/cell/A3" -H "Content-Type:application/json"

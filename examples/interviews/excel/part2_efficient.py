@@ -4,52 +4,33 @@ because it will not re-do computation on get calls
 """
 
 
+from dataclasses import dataclass, field
+
+
+@dataclass
 class Cell:
-    def __init__(self):
-        self.raw = None
-        self.value = None
-
-        # A map containing the addrs of all cells
-        # referencing this one
-        self.dependents = {}
-
-    def set(self, raw):
-        self.raw = raw
-        self.is_form = is_formula(raw)
-
-    def value(self):
-        return self.val
-
-
-def is_formula(v):
-    return v.strip().startswith("=")
-
-
-def is_number(v):
-    try:
-        int(v)
-        return True
-    except:
-        return False
+    raw: str = None
+    value: str = None
+    dependents: dict[str, str] = field(default_factory=dict)
 
 
 class MySheet:
     def __init__(self):
-        self.data = {}
+        self.data: [str, Cell] = {}
 
-    def _eval_formula(self, addr, v):
-        r = v.strip("=")
-        terms = r.split("+")
+    def _eval_formula(self, addr, v) -> int:
+        terms = v.lstrip("=").split("+")
         s = 0
         for x in terms:
-            if is_number(x):
+            if x.isnumeric():
                 s += int(x)
             else:
                 # if its not a number, it must be a cell-addr
                 other = self.data.get(x, None)
+
                 # Put this cell as a dependent of the other
                 if other:
-                    s += other.value
+                    s += int(other.value)
                     other.dependents[addr] = True
 
         return s
@@ -60,13 +41,11 @@ class MySheet:
         if value:
             c.raw = value
 
-        # set value from the raw
-        if is_number(c.raw):
-            c.value = int(c.raw)
-        elif is_formula(c.raw):
-            c.value = self._eval_formula(addr, c.raw)
+        # put value from the raw
+        if c.raw.startswith("="):
+            c.value = str(self._eval_formula(addr, c.raw))
         else:
-            c.value = str(c.raw)
+            c.value = c.raw
 
         # update dependents
         for dep in c.dependents.keys():
@@ -74,7 +53,7 @@ class MySheet:
 
         self.data[addr] = c
 
-    def set(self, addr, value):
+    def put(self, addr, value):
         # get existing cell, or create one
         self._update(addr, value=value)
 
@@ -83,22 +62,36 @@ class MySheet:
         return c.value if c else ""
 
 
-sheet = MySheet()
+def _test(sheet, addr, expected, annotation=""):
+    val = sheet.get(addr)
+    msg = f"{addr} should be {expected} ({type(expected)}) is {val} ({type(expected)}) : ({annotation})"
+    if val != expected:
+        assert val == expected, msg
+    else:
+        print(f"[PASS] {msg}")
 
-sheet.set("A1", "hello")
-print("A1 should be hello:", sheet.get("A1"))
 
-sheet.set("B2", "5")
-print("B2 should be 5:", sheet.get("B2"))
+def test_part2():
+    sheet = MySheet()
 
-sheet.set("A3", "=2+2")
-print("A3 should be 4", sheet.get("A3"))
+    sheet.put("A1", "hello")
+    _test(sheet, "A1", "hello")
 
-sheet.set("C3", "=B2+2")
-print("C3 should be 7:", sheet.get("C3"))
+    sheet.put("B2", "5")
+    _test(sheet, "B2", "5")
 
-sheet.set("B2", "=10")
-print("C3 should be 12", sheet.get("C3"))
+    sheet.put("A3", "=2+2")
+    _test(sheet, "A3", "4")
 
-sheet.set("B2", "=10+10")
-print("C3 should be 22:", sheet.get("C3"))
+    sheet.put("C3", "=B2+2")
+    _test(sheet, "C3", "7")
+
+    sheet.put("B2", "=10")
+    _test(sheet, "C3", "12", "updated formula reference")
+
+    sheet.put("B2", "=10+10")
+    _test(sheet, "C3", "22", "nested formulas")
+
+
+if __name__ == "__main__":
+    test_part2()
