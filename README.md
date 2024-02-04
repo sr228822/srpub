@@ -22,5 +22,5 @@ wget https://repo.continuum.io/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh;
 bash Miniconda3-py38_4.12.0-Linux-x86_64.sh -p ~/miniconda3 -b
 
 ## Create environment from yaml
-conda env create -f environment.yml
+conda env create -f environment.yml --use-index-cache --solver libmamba 
 

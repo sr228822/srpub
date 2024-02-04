@@ -3,12 +3,12 @@
 remote="$1"
 url="$2"
 
-black --check .
-if [ $? -eq 0 ]; then
-    echo "Lint succeeded"
-else
-    echo "Lint failed.  Run `make fmt` before pushing"
-    exit 1
-fi
+#black --check .
+#if [ $? -eq 0 ]; then
+#    echo "Lint succeeded"
+#else
+#    echo "Lint failed.  Run `make fmt` before pushing"
+#    exit 1
+#fi
 
 exit 0

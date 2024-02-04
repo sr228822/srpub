@@ -2,9 +2,15 @@
 
 from __future__ import print_function
 
-import datetime, math, re, subprocess, sys, time
-
+import boto3
+import datetime
+import math
 import os
+import re
+import subprocess
+import sys
+import time
+
 
 os_name = os.name
 is_windows = sys.platform.lower().startswith("win")
@@ -537,3 +543,48 @@ def increment_fbglobal(name, amt=1):
     f.write("x")
     f.close()
     return get_fbglobal(name)
+
+
+#################################################################
+# AWS stuff
+#################################################################
+
+_boto_client_cache = {}
+
+
+def cached_boto_client(x, region="us-east-1"):
+    global _boto_client_cache
+    if x in _boto_client_cache:
+        return _boto_client_cache[x]
+    c = boto3.client(x, region_name=region)
+    _boto_client_cache[x] = c
+    return c
+
+
+def send_email(source, to, subject, body):
+    # Requires IAM user
+    identity = cached_boto_client("sts").get_caller_identity().get("Arn")
+    assert identity.endswith(
+        "user/sam"
+    ), f"Must sign in to IAM user to send SES email: {identity}"
+    client = cached_boto_client("ses")
+    response = client.send_email(
+        Source=source,
+        Destination={
+            "ToAddresses": [
+                to,
+            ],
+            "CcAddresses": [],
+            "BccAddresses": [],
+        },
+        Message={
+            "Subject": {"Data": subject, "Charset": "UTF-8"},
+            "Body": {
+                "Text": {"Data": body, "Charset": "UTF-8"},
+                #'Html': {
+                #    'Data': 'string',
+                #    'Charset': 'UTF-8'
+                # }
+            },
+        },
+    )
