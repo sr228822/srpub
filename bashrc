@@ -691,6 +691,7 @@ headdiff() {
         echo "no source control"
     fi
 }
+
 mine() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
