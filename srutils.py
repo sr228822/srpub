@@ -51,7 +51,7 @@ def noisy_sleep(duration, tag=""):
         hrs = int(left / 3600)
         mins = int((left / 60) % 60)
         secs = left % 60
-        flushprint(+f"{tag} {int(hrs):02}:{int(mins):02}:{int(secs):02}")
+        flushprint(f"{tag} {int(hrs):02}:{int(mins):02}:{int(secs):02}")
         if int(secs) % 10 == 0:
             try:
                 import alice
