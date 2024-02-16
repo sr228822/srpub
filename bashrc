@@ -141,7 +141,11 @@ search_or() {
 }
 
 function duf {
-du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
+    du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
+}
+function dufa {
+    # ls -A includes dot-folders
+    duf `ls -A`
 }
 loc() {
     find . -iname "*$1*" 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
@@ -348,7 +352,7 @@ percent_free_swap() {
     free | grep 'Swap' | awk '{t = $2; f = $4; print (f/t)}'
 }
 
-alias author_of_past_500='git log HEAD~500...HEAD | grep AUthor | hist_common.py'
+alias author_of_past_500='git log HEAD~500...HEAD | grep Author | hist_common.py'
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
 alias notests='antigrep "/tests/" | antigrep "/script/" | antigrep "build/lib.linux" | antigrep "_test.go" | antigrep "/mocks/" | antigrep ".gen" | antigrep "env_docs" | antigrep "./go-build/" | antigrep /_build/ | antigrep /.tmp/ '
@@ -500,6 +504,11 @@ gittrackmaster() {
 gittrackself() {
     b=`git branch | grep "*" | last_word`
     gittrack origin/$b
+}
+
+git_cleanup() {
+  # https://gitbetter.substack.com/p/how-to-clean-up-the-git-repo-and
+  git remote prune origin && git repack && git prune-packed && git reflog expire --expire=1.month.ago && git gc --aggressive
 }
 
 
