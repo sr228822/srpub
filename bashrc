@@ -73,7 +73,7 @@ tmptmp() {
 
 
 color_code_files() {
-    GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|ipynb|html):'
+    GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):'
 }
 
 shere() {
@@ -83,10 +83,10 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
-    search "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
+    search "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
 }
 sch() {
-    shere "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,ipynb,html} | color_code_files
+    shere "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}

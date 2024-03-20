@@ -20,7 +20,10 @@ class MySheet:
         self.data: [str, Cell] = {}
 
     def _eval_formula(self, addr, v) -> int:
+        # Could use re.finditer("[^\+^ ^=]+", v) here for better
+        # mem-efficiency than split
         terms = v.lstrip("=").split("+")
+
         s = 0
         for term in terms:
             if term.isnumeric():
