@@ -54,7 +54,6 @@ alias less='less -R'
 alias grep='grep --line-buffered --exclude=\*svn\* --color=auto'
 alias igrep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
 alias jq='jq --unbuffered'
-alias antigrep='grep --color=never -v'
 alias rebash='source ~/.bashrc'
 alias addheretopath='export PATH=$PATH:`pwd`'
 alias sparse="sed -n '0~10p'"
@@ -101,7 +100,7 @@ search_struct () {
     search "$1" | antigrep "//" | grep struct
 }
 search_func () {
-    search $1 | antigrep "=" | antigrep ";" | antigrep "//" | antigrep "if" | antigrep "||" | antigrep "@" | antigrep "\.py" | grep -i $1
+    search $1 | antigrep "=" ";" "//" "if" "||" "@" "\.py" | grep -i $1
 }
 
 alias search_source='grep --exclude=\*svn\* --exclude="*.h" --exclude="g_*" --exclude="*.pl" -iIr * -e'
@@ -109,6 +108,9 @@ alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
 
 search_and() {
     grep -E -iIr * -e "$1.*$2|$2.*$1"
+}
+antigrep() {
+    local IFS="|"; grep -i -E -v -e "$*";
 }
 grep_or() {
     local IFS="|"; grep -i -E -e "$*";
@@ -147,14 +149,18 @@ function dufa {
     # ls -A includes dot-folders
     duf `ls -A`
 }
+
+alias notests='antigrep "/tests/" "/script/" "build/lib.linux" "_test.go" "/mocks/" ".gen" "env_docs" "./go-build/" "/_build/" "/.tmp/" '
+alias nobuildcache='antigrep "\.pyc" "\./vendor/"  "\./go-build/\.go/" "./node_modules/" '
+
 loc() {
-    find . -iname "*$1*" 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+    find . -iname "*$1*" 2>/dev/null | nobuildcache | highlight $1
 }
 shallowloc() {
-    find . -iname "*$1*" -maxdepth 3 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+    find . -iname "*$1*" -maxdepth 3 2>/dev/null | nobuildcache | highlight $1
 }
 deeploc() {
-    find . -iname "*$1*" -maxdepth 6 2>/dev/null | antigrep "\.pyc" | antigrep "\./vendor/" | antigrep "\./go-build/\.go/" | antigrep "./node_modules/" | highlight $1
+    find . -iname "*$1*" -maxdepth 6 2>/dev/null | nobuildcache | highlight $1
 }
 
 watch () {
@@ -253,7 +259,7 @@ peek () {
            *.tar.gz)    tar -ztvf $1     ;;
            *.tar)       tar -tvf $1     ;;
            *.zip)       unzip -l $1       ;;
-           *)           echo "don't know how to list '$1'..." ;;
+           *)           echo "don't know how to peek '$1'..." ;;
        esac
    else
        echo "'$1' is not a valid file!"
@@ -355,7 +361,6 @@ percent_free_swap() {
 alias author_of_past_500='git log HEAD~500...HEAD | grep Author | hist_common.py'
 alias author_of_all_time='git log | grep Author | hist_common.py'
 
-alias notests='antigrep "/tests/" | antigrep "/script/" | antigrep "build/lib.linux" | antigrep "_test.go" | antigrep "/mocks/" | antigrep ".gen" | antigrep "env_docs" | antigrep "./go-build/" | antigrep /_build/ | antigrep /.tmp/ '
 nolonglines() {
     awk 'length($0)<5000 {print $0}'
 }
