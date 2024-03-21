@@ -167,7 +167,7 @@ watch () {
     for i in `seq 99999`; do $1 $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.5; done 
 }
 
-repeat () {
+crepeat() {
     if [ "$1" == "forever" ]
     then
         for i in `seq 99999`; do $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.1; done 
@@ -772,6 +772,11 @@ show_arch=''
 if [[ $processor == *Apple* ]]; then
     echo "Apple processor detected: $processor"
     show_arch="($cur_arch) "
+fi
+
+shell=`echo $SHELL`
+if [[ $shell == *zsh* ]]; then
+    echo "Currently in zsh , some things may not work as expected"
 fi
 
 get_term_label() {

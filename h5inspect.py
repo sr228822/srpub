@@ -9,6 +9,7 @@ from colorstrings import *
 
 tab = "  "
 
+
 def show_time(thing, tabs):
     first = thing[0]
     last = thing[-1]
@@ -16,10 +17,11 @@ def show_time(thing, tabs):
     msg = tab * tabs + f"[{first} - {last}] ({dur}s)"
     print(msg)
 
+
 def show(name, thing, tabs, full=False):
     if "Group" not in str(type(thing)):
         print(red_str(tab * tabs + name + ": ") + str(thing))
-        if 'time' in name:
+        if "time" in name:
             show_time(thing, tabs)
         # if full:
         #    for k in thing:
