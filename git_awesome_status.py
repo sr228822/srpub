@@ -11,6 +11,7 @@ from operator import itemgetter
 
 from srutils import *
 
+
 ###########################################################
 #     Helper classes & functions
 ###########################################################
@@ -41,6 +42,23 @@ def clean_up_decorate(lines):
     return res
 
 
+git_config_defaults = {
+    "user.email": my_email,
+    "user.name": name_aliases[0],
+    "core.editor": "vim",
+}
+
+
+def check_config():
+    print(f"1st run checking git config:")
+    for k, v in git_config_defaults.items():
+        cur_v = cmd(f"git config --global --get {k}")
+        print(f"\tgit config {k} : {cur_v}")
+        if not cur_v:
+            if yes_or_no(f"git config --global {k} not set! Set it to {v} now?"):
+                cmd(f"git config --global {k} {v}")
+
+
 def git_op_colored(c):
     if is_windows:
         # straight_through allows colors to work
@@ -49,7 +67,7 @@ def git_op_colored(c):
         return cmd(c)
 
     res = clean_up_decorate(cmd(c))
-    for alias in me_aliases:
+    for alias in name_aliases:
         res = res.replace(alias, blue_str(alias))
     print(res)
     return res
@@ -78,7 +96,7 @@ def show_sha_grey(sha):
         return
 
     res = cmd(c)
-    for alias in me_aliases:
+    for alias in name_aliases:
         res = res.replace(alias, blue_str(alias))
         if alias in res:
             parts = res.split(alias)
@@ -98,7 +116,7 @@ def show_sha_magenta(sha):
 
     res = cmd(c)
     res = res.replace(sha, magenta_str(sha))
-    for alias in me_aliases:
+    for alias in name_aliases:
         res = res.replace(alias, blue_str(alias))
     print(res)
     print("")
@@ -158,6 +176,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--all", action="store_true", help="Show all missing commits from master"
     )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Verbose debug logs"
+    )
     args = parser.parse_args()
 
     ###########################################################
@@ -170,25 +191,19 @@ if __name__ == "__main__":
 
     # Read cache file
     home = os.path.expanduser("~")
-    # TODO templatize by project
-    cachef = os.path.join(home, f".git_awesome_status_{repo_name}")
-    cache = {}
+    cache = DiskCache(f"git_status_{repo_name}", verbose=args.verbose)
 
-    if os.path.isfile(cachef):
-        with open(cachef, "r") as f:
-            dat = f.read()
-            cache = json.loads(dat)
-
-    archived_branches = cache.get("archived_branches", [])
+    if not cache.get("config_checked"):
+        check_config()
+        cache.set("config_checked", True)
 
     ###########################################################
     #     Archive branches
     ###########################################################
+    archived_branches = cache.get("archived_branches", [])
     if args.archive:
         archived_branches.append(args.archive)
-        cache["archived_branches"] = archived_branches
-        with open(cachef, "w") as f:
-            f.write(json.dumps(cache))
+        cache.set("archived_branches", archived_branches)
         sys.exit(0)
 
     ###########################################################
@@ -389,5 +404,5 @@ if __name__ == "__main__":
     ###########################################################
     #     print my last merged commit if not in the above
     ###########################################################
-    if not any(alias in originz for alias in me_aliases):
+    if not any(alias in originz for alias in name_aliases):
         show_my_most_recent(fb)

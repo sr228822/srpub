@@ -10,12 +10,17 @@ import re
 import subprocess
 import sys
 import time
+import codecs
+import json
 
 
 os_name = os.name
 is_windows = sys.platform.lower().startswith("win")
+basedir, _ = os.path.split(__file__)
 
-me_aliases = ["Samuel Russell", "Sam Russell"]
+
+my_email = codecs.decode(b"737232323838323240676d61696c2e636f6d", "hex").decode()
+name_aliases = ["Samuel Russell", "Sam Russell"]
 
 if __name__ == "__main__":
     print("nope")
@@ -134,6 +139,28 @@ def str_hash(obj):
     return hashlib.sha1(bytes(strv, "utf-8")).hexdigest()[-10:]
 
 
+def yes_or_no(question):
+    """Prompt for yes-no input, and parse into bool True-False"""
+    while True:
+        reply = str(input(question + "  [y/n]: ")).lower().strip()
+        if not reply:
+            continue
+        if reply[0] == "y":
+            return True
+        if reply[0] == "n":
+            return False
+
+
+def confirm_or_exception(warning=None):
+    """Given a warning, prompt the user if they'd like to proceed or exit"""
+    print()
+    msg = f"{warning}.  " if warning else ""
+    msg += "Do you wish to proceed?"
+    proceed = yes_or_no(msg)
+    if not proceed:
+        raise Exception(warning or "Aborted by user")
+
+
 #################################################################
 # Internet Reading
 #################################################################
@@ -153,6 +180,45 @@ def html_read_timeout(url, to):
 
 def html_read(url):
     return html_read_timeout(url, 20)
+
+
+
+#################################################################
+# Simple file based cache
+#################################################################
+
+class DiskCache:
+    def __init__(self, cache_name=None, verbose=False):
+        self.verbose = verbose
+
+        self.cache_name = cache_name or "global"
+        cachedir = os.path.join(basedir, ".caches")
+        os.makedirs(cachedir, exist_ok=True)
+        self.cachef = os.path.join(cachedir, cache_name)
+        self.vprint(f"[DiskCache {cache_name}] Initializing cache  at {self.cachef}")
+
+        self._cache = {}
+        if os.path.isfile(self.cachef):
+            with open(self.cachef, "r") as f:
+                dat = f.read()
+                self._cache = json.loads(dat)
+
+    def vprint(self, txt):
+        if self.verbose:
+            print(txt)
+
+    def get(self, k, default=None):
+        v = self._cache.get(k, default)
+        self.vprint(f"[DiskCache {self.cache_name}] get {k} val {v}")
+        return v
+
+    def set(self, k, v):
+        self.vprint(f"[DiskCache {self.cache_name}] get {k} val {v}")
+        self._cache[k] = v
+        # TODO optimize writes using exit handler or something
+        with open(self.cachef, "w") as f:
+            self.vprint(f"writing {self.cache_name} to disk")
+            f.write(json.dumps(self._cache))
 
 
 #################################################################

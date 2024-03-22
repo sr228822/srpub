@@ -8,6 +8,7 @@ import threading
 import time
 from queue import Queue
 
+
 # called by each thread
 def get_url(q, url):
     delay = 4 + int(random.random() * 3)

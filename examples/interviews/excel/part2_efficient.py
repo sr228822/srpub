@@ -3,7 +3,6 @@ This solution is more complicated, but efficient
 because it will not re-do computation on get calls
 """
 
-
 import re
 from dataclasses import dataclass, field
 
