@@ -182,10 +182,26 @@ def html_read(url):
     return html_read_timeout(url, 20)
 
 
+#################################################################
+# Simple logging infra
+#################################################################
+_verbose = False
+
+
+def set_verbose(v):
+    global _verbose
+    _verbose = v
+
+
+def vprint(txt):
+    if _verbose:
+        print(f"[{now_str()}] {txt}")
+
 
 #################################################################
 # Simple file based cache
 #################################################################
+
 
 class DiskCache:
     def __init__(self, cache_name=None, verbose=False):
@@ -250,15 +266,19 @@ def save_pickle(obj, fname):
 
 
 def date_to_str(d):
-    return d.strftime("%Y.%m.%d.%H.%M.%S")
+    return d.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def str_to_date(s):
-    return datetime.datetime.strptime(s, "%Y.%m.%d.%H.%M.%S")
+    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")
 
 
 def get_now():
     return datetime.datetime.now()
+
+
+def now_str():
+    return date_to_str(get_now())
 
 
 def seconds_between(da, db):
@@ -429,6 +449,7 @@ def cmd(c, wait=True, noisy=False, straight_through=False):
     # this seems to be much faster for the simple case
     # if wait and not noisy:
     #    return commands.getoutput(c)
+    vprint(f"cmd: {c}")
 
     if straight_through:
         process = subprocess.Popen(

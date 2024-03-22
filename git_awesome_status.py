@@ -8,6 +8,7 @@ import os
 import re
 import sys
 from operator import itemgetter
+import concurrent.futures
 
 from srutils import *
 
@@ -176,10 +177,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--all", action="store_true", help="Show all missing commits from master"
     )
-    parser.add_argument(
-        "--verbose", action="store_true", help="Verbose debug logs"
-    )
+    parser.add_argument("--verbose", action="store_true", help="Verbose debug logs")
     args = parser.parse_args()
+
+    if args.verbose:
+        set_verbose(True)
 
     ###########################################################
     #     Init and argv stuff
@@ -303,8 +305,8 @@ if __name__ == "__main__":
         print(magenta_str(bold_str("%30s" % "~~ HEAD detached ~~")))
     else:
         print(blue_str(bold_str("%30s" % current_branch)))
-    branch_data = []
-    for branch in other_branches:
+
+    def get_branch_age(branch):
         try:
             stats = cmd(
                 'git log -n 1 --pretty=format:"%ci %cr" ' + branch + " -- | head -n 1"
@@ -316,7 +318,15 @@ if __name__ == "__main__":
         except:
             dt = datetime.datetime.now()
             age = ""
-        branch_data.append((branch, dt, age))
+        return (branch, dt, age)
+
+    branch_data = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for branch in other_branches:
+            futures.append(executor.submit(get_branch_age, branch=branch))
+        for future in concurrent.futures.as_completed(futures):
+            branch_data.append(future.result())
 
     for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
         branch, dt, age = dat
