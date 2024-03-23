@@ -15,16 +15,43 @@ export PYTHONUNBUFFERED="nope"
 # git initialization
 git config --global core.editor "vim"
 git config --global user.name "Samuel Russell"
-#git config --global user.email "sr228822@gmail.com"
+#git config --global user.email "foobar@foobar.foo"
 
 export KUBE_EDITOR='vim'
+
+
+############################################################
+#     ZSH stuff
+############################################################
+shell=`echo $SHELL`
+if [[ $shell == *zsh* ]]; then
+    echo "Currently in zsh , some things may not work as expected"
+    setopt NO_CASE_GLOB
+    setopt AUTO_CD
+
+    # history
+    setopt EXTENDED_HISTORY
+    export HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
+    export SAVEHIST=5000
+    # share history across multiple zsh sessions
+    setopt SHARE_HISTORY
+    # append to history
+    setopt APPEND_HISTORY
+    # Write history as typed not at exit
+    setopt INC_APPEND_HISTORY
+    # dont save space-prefixed commands into hist
+    setopt HIST_IGNORE_SPACE
+
+fi
+
+
 
 ############################################################
 #     History
 ############################################################
 # Use prompt command to log all bash to files in .logs
 mkdir -p ~/.logs/
-export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
+export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history | tail -n 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
 alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
 hist() {
     fullhistory | grep_and $@ | tail -n 30
@@ -54,7 +81,14 @@ alias less='less -R'
 alias grep='grep --line-buffered --exclude=\*svn\* --color=auto'
 alias igrep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
 alias jq='jq --unbuffered'
-alias rebash='source ~/.bashrc'
+rebash() {
+  if [[ $shell == *zsh* ]]; then
+    echo "Currently in zsh"
+    source ~/.zshrc
+  else
+    source ~/.bashrc
+  fi
+}
 alias addheretopath='export PATH=$PATH:`pwd`'
 alias sparse="sed -n '0~10p'"
 lsr() {
@@ -72,7 +106,7 @@ tmptmp() {
 
 
 color_code_files() {
-    GREP_COLOR=95 grep --color=always -E '.*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):'
+    GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):"
 }
 
 shere() {
@@ -82,10 +116,10 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
-    search "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
+    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
 }
 sch() {
-    shere "$1" ${@:2} --include=*.{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
+    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}
@@ -774,16 +808,18 @@ if [[ $processor == *Apple* ]]; then
     show_arch="($cur_arch) "
 fi
 
-shell=`echo $SHELL`
-if [[ $shell == *zsh* ]]; then
-    echo "Currently in zsh , some things may not work as expected"
-fi
-
 get_term_label() {
     echo "${PSEXTRA}"
 }
 
 set_ps1() {
+    if [[ $shell == *zsh* ]]; then
+        echo "Currently in zsh"
+        setopt PROMPT_SUBST
+        PROMPT='%2~ %# $(eval "$PROMPT_COMMAND")'
+        return
+    fi
+
     if [[ $box_id_str == *prod* ]]; then
         # production is red (and named)
         PS1="\w \[\033[1;91m\]\h $\[\033[0m\] "
