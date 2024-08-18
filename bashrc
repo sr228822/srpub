@@ -51,7 +51,23 @@ fi
 ############################################################
 # Use prompt command to log all bash to files in .logs
 mkdir -p ~/.logs/
-export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(history | tail -n 1)" >> ~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log; fi'
+prompt_command () {
+  if [ "$(id -u)" -ne 0 ]; then
+    NEWLINE=$(history -1)
+    LOGNAME=~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log
+    if [[ -e $LOGNAME ]]; then
+      LASTLINE=$(tail -n 1 $LOGNAME)
+    else
+      LASTLINE=''
+    fi
+    if [[ $LASTLINE =~ $NEWLINE ]]; then
+      # dup
+    else
+      echo "$(date "+%Y-%m-%d.%H:%M:%S") $NEWLINE" >> $LOGNAME
+    fi
+  fi
+}
+export PROMPT_COMMAND='prompt_command'
 alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
 hist() {
     fullhistory | grep_and $@ | tail -n 30
