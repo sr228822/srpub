@@ -831,8 +831,9 @@ get_term_label() {
 set_ps1() {
     if [[ $shell == *zsh* ]]; then
         echo "Currently in zsh"
+        autoload -U colors && colors
         setopt PROMPT_SUBST
-        PROMPT='%2~ %# $(eval "$PROMPT_COMMAND")'
+        PROMPT='%{$fg[yellow]%}%2~ %#%{$reset_color%} $(eval "$PROMPT_COMMAND")'
         return
     fi
 
