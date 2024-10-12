@@ -4,6 +4,7 @@ import socket
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import requests
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
@@ -34,6 +35,17 @@ def myip():
     ip = str(s.getsockname()[0])
     s.close()
     return ip
+
+def try_report_ip():
+    ip = myip()
+    print(f"IP is {ip}")
+    url = 'http://ec3.sfflux.com/djoli/postip'
+    myobj = {'ip': str(ip)}
+    try:
+        x = requests.post(url, json = myobj, timeout=5)
+    except Exeption as ex:
+        print("Failed to report ip: {ex}")
+        return
 
 
 def _serve_file(fid):
@@ -208,7 +220,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    print(f"IP is {myip()}")
+    try_report_ip()
 
     # run once immediately on init
     background_job()
