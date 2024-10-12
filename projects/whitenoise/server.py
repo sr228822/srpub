@@ -43,6 +43,7 @@ def try_report_ip():
     myobj = {'ip': str(ip)}
     try:
         x = requests.post(url, json = myobj, timeout=5)
+        print(f"Reported IP result {x}")
     except Exeption as ex:
         print("Failed to report ip: {ex}")
         return
@@ -204,6 +205,8 @@ def background_job():
     global _g
 
     _g.v.update()
+
+    try_report_ip()
 
 
 if __name__ == "__main__":
