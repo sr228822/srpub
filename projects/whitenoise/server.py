@@ -36,13 +36,14 @@ def myip():
     s.close()
     return ip
 
+
 def try_report_ip():
     ip = myip()
     print(f"IP is {ip}")
-    url = 'http://ec3.sfflux.com/djoli/postip'
-    myobj = {'ip': str(ip)}
+    url = "http://ec3.sfflux.com/djoli/postip"
+    myobj = {"ip": str(ip)}
     try:
-        x = requests.post(url, json = myobj, timeout=5)
+        x = requests.post(url, json=myobj, timeout=5)
         print(f"Reported IP result {x}")
     except Exeption as ex:
         print("Failed to report ip: {ex}")

@@ -3,7 +3,7 @@
 import random, time
 from contextlib import closing
 
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 # called by each thread
@@ -18,9 +18,9 @@ def get_url(url):
 theurls = ["http://google.com", "http://yahoo.com", "http://nytimes.com"]
 
 if __name__ == "__main__":
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor() as executor:
         futures = []
         for url in theurls:
             futures.append(executor.submit(get_url, url=url))
-        for future in concurrent.futures.as_completed(futures):
+        for future in as_completed(futures):
             print(future.result())

@@ -93,9 +93,20 @@ def find_best_route_dfs(flights, origin, destination):
 
 
 from heapq import heappush, heappop
+
+
 def find_best_route_dijkstras(flights, origin, destination):
-    """A more efficient graph search using Dijkstra's """
-    allflights = [Flight(row[0], row[1], datetime.fromisoformat(row[2]), datetime.fromisoformat(row[3]), row[4]) for row in flights]
+    """A more efficient graph search using Dijkstra's"""
+    allflights = [
+        Flight(
+            row[0],
+            row[1],
+            datetime.fromisoformat(row[2]),
+            datetime.fromisoformat(row[3]),
+            row[4],
+        )
+        for row in flights
+    ]
     graph = defaultdict(list)
 
     for flight in allflights:
@@ -107,12 +118,14 @@ def find_best_route_dijkstras(flights, origin, destination):
     _debug_print(f"find_best_route_dijkstras {origin} -> {destination}")
     while min_heap:
         cur_cost, cur_city, cur_time = heappop(min_heap)
-        _debug_print(f"Heap iter cur_cost={cur_cost} cur_city={cur_city} cur_time={cur_time}")
+        _debug_print(
+            f"Heap iter cur_cost={cur_cost} cur_city={cur_city} cur_time={cur_time}"
+        )
 
         if cur_city == destination:
             return cur_cost
 
-        if (cur_city in visited and visited[cur_city] <= cur_cost):
+        if cur_city in visited and visited[cur_city] <= cur_cost:
             continue
         visited[cur_city] = cur_cost
 
@@ -122,6 +135,7 @@ def find_best_route_dijkstras(flights, origin, destination):
                 heappush(min_heap, (total_cost, flight.destination, flight.end))
 
     return None
+
 
 def find_best_route(flights, origin, destination):
     # return find_best_route_dfs(flights, origin, destination)
