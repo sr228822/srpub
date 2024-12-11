@@ -8,7 +8,6 @@
 
 ################################
 #  Dataclass
-
 Common strategies:
   - iterate in reverse
   - iterate on the alternate variable

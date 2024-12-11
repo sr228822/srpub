@@ -1,46 +1,39 @@
 #!/usr/bin/env python3
-
-# from __future__ import print_function
-
 import argparse
+import concurrent.futures
+import datetime
 import json
 import os
 import re
 import sys
 from operator import itemgetter
-import concurrent.futures
 
-from srutils import *
+from srutils import (
+    my_email,
+    name_aliases,
+    is_windows,
+    get_term_size,
+    cmd,
+    yes_or_no,
+    blue_str,
+    grey_str,
+    magenta_str,
+    red_str,
+    bold_str,
+    DiskCache,
+    set_verbose,
+)
 
 
 ###########################################################
-#     Helper classes & functions
+#     Helper Classes & Data
 ###########################################################
 class Commit:
-    def __init__(self, sha, title):
+    """Represents a single commit with a SHA and title."""
+
+    def __init__(self, sha: str, title: str):
         self.sha = sha
         self.title = title
-
-
-def clean_up_decorate(lines):
-    res = ""
-    for line in lines.split("\n"):
-        m = re.search(r"\((.+?)\)", line)
-        if m:
-            decorate = m.group(1)
-            tags = decorate.split(",")
-            tags = [
-                t.strip()
-                for t in tags
-                if not t.strip().startswith("deploy_build")
-                and not t.strip().startswith("deployed")
-            ]
-            if not tags:
-                line = line.replace("(" + decorate + ")", "")
-            else:
-                line = line.replace(decorate, ", ".join(tags))
-        res += line + "\n"
-    return res
 
 
 git_config_defaults = {
@@ -50,72 +43,127 @@ git_config_defaults = {
 }
 
 
+###########################################################
+#     Helper Functions
+###########################################################
+def clean_up_decorate(lines: str) -> str:
+    """
+    Cleans up parentheses decorations from git log lines, removing tags related to deployments.
+    """
+    result_lines = []
+    for line in lines.split("\n"):
+        match = re.search(r"\((.+?)\)", line)
+        if match:
+            decorate = match.group(1)
+            tags = [t.strip() for t in decorate.split(",")]
+            filtered_tags = [
+                t
+                for t in tags
+                if not t.startswith("deploy_build") and not t.startswith("deployed")
+            ]
+            if not filtered_tags:
+                line = line.replace(f"({decorate})", "")
+            else:
+                line = line.replace(decorate, ", ".join(filtered_tags))
+        result_lines.append(line)
+    return "\n".join(result_lines) + "\n"
+
+
 def check_config():
-    print(f"1st run checking git config:")
-    for k, v in git_config_defaults.items():
-        cur_v = cmd(f"git config --global --get {k}")
-        print(f"\tgit config {k} : {cur_v}")
-        if not cur_v:
-            if yes_or_no(f"git config --global {k} not set! Set it to {v} now?"):
-                cmd(f"git config --global {k} {v}")
+    """
+    Check if global git config is set for user email, user name, etc.
+    If not, prompt the user to set it.
+    """
+    print("1st run checking git config:")
+    for key, value in git_config_defaults.items():
+        current_val = cmd(f"git config --global --get {key}")
+        print(f"\tgit config {key} : {current_val}")
+        if not current_val:
+            if yes_or_no(f"git config --global {key} not set! Set it to {value} now?"):
+                cmd(f"git config --global {key} {value}")
 
 
-def git_op_colored(c):
+def git_op_colored(command: str) -> str:
+    """
+    Run a git command, clean up decorated lines, highlight aliases, and print the result.
+    On Windows, run with straight_through once for colors, then return normal output.
+    """
     if is_windows:
-        # straight_through allows colors to work
-        cmd(c, straight_through=True)
-        # then return back re-execution
-        return cmd(c)
+        cmd(command, straight_through=True)
+        return cmd(command)
 
-    res = clean_up_decorate(cmd(c))
+    raw = cmd(command)
+    cleaned = clean_up_decorate(raw)
     for alias in name_aliases:
-        res = res.replace(alias, blue_str(alias))
-    print(res)
-    return res
+        cleaned = cleaned.replace(alias, blue_str(alias))
+    print(cleaned)
+    return cleaned
 
 
-def show_sha(sha):
-    c = f'git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 {sha}'
-    return git_op_colored(c)
+def show_sha(sha: str):
+    """
+    Show details of a single commit (with colors) by SHA.
+    """
+    command = (
+        f'git --no-pager log --color=always --pretty=format:"%Cgreen%H%Creset   %an '
+        f'%C(yellow)%d%Creset%n   %s%n" -1 {sha}'
+    )
+    return git_op_colored(command)
 
 
-def show_shas(sha_first, sha_last, nmax=100):
-    c = f'git --no-pager log -n {nmax} --color=always --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" {sha_first}...{sha_last}'
-    return git_op_colored(c)
+def show_shas(sha_first: str, sha_last: str, nmax: int = 100) -> str:
+    """
+    Show details of a range of commits between sha_first and sha_last.
+    """
+    command = (
+        f"git --no-pager log -n {nmax} --color=always "
+        f'--pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" '
+        f"{sha_first}...{sha_last}"
+    )
+    return git_op_colored(command)
 
 
-def show_my_most_recent(fb):
-    print("               ....\n")
-    c = f'git --no-pager log --color=always --author=Russell --pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 {fb}'
-    return git_op_colored(c)
+def show_my_most_recent(fb: str):
+    """
+    Show the most recent commit by the author Russell on the given branch.
+    """
+    command = (
+        f"git --no-pager log --color=always --author=Russell "
+        f'--pretty=format:"%Cgreen%H%Creset   %an %C(yellow)%d%Creset%n   %s%n" -1 {fb}'
+    )
+    return git_op_colored(command)
 
 
-def show_sha_grey(sha):
-    c = f'git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 {sha}'
+def show_sha_grey(sha: str):
+    """
+    Show a commit with a grey-style highlight.
+    """
+    command = f'git --no-pager log --pretty=format:"%H   %an%n   %s%n%Creset" -1 {sha}'
     if is_windows:
-        cmd(c, straight_through=True)
+        cmd(command, straight_through=True)
         return
 
-    res = cmd(c)
+    res = cmd(command)
     for alias in name_aliases:
-        res = res.replace(alias, blue_str(alias))
         if alias in res:
             parts = res.split(alias)
             res = grey_str(parts[0]) + blue_str(alias) + grey_str(parts[1])
         else:
-            res = grey_str(alias)
+            res = grey_str(res)
     print(res)
     print("")
 
 
-def show_sha_magenta(sha):
-    c = f'git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 {sha}'
-
+def show_sha_magenta(sha: str):
+    """
+    Show a commit with a magenta-style highlight.
+    """
+    command = f'git --no-pager log --pretty=format:"%C(magenta)%H%Creset   %an%n   %s%n" -1 {sha}'
     if is_windows:
-        cmd(c, straight_through=True)
+        cmd(command, straight_through=True)
         return
 
-    res = cmd(c)
+    res = cmd(command)
     res = res.replace(sha, magenta_str(sha))
     for alias in name_aliases:
         res = res.replace(alias, blue_str(alias))
@@ -123,122 +171,132 @@ def show_sha_magenta(sha):
     print("")
 
 
-def fetch_commits_for_branch(branch, n):
-    raw = cmd("git log " + branch + " --format=oneline -n " + str(n))
+def fetch_commits_for_branch(branch: str, n: int) -> list:
+    """
+    Fetch up to n commits (sha and title) for the given branch.
+    If the branch doesn't exist or we're not in a repo, exit gracefully.
+    """
+    raw = cmd(f"git log {branch} --format=oneline -n {n}")
     if "not a git repository" in raw.lower():
         print(red_str("Not a git repository"))
         sys.exit(1)
     if "unknown revision or path not in the working tree" in raw:
         return []
-    res = []
-    for l in raw.rstrip().split("\n"):
-        if l.startswith("warning"):
+
+    commits = []
+    for line in raw.rstrip().split("\n"):
+        if line.startswith("warning"):
             continue
-        ls = l.split()
-        sha = ls[0]
-        title = " ".join(ls[1:])
+        parts = line.split()
+        sha = parts[0]
+        title = " ".join(parts[1:])
+        # Adjust title if it matches a known pattern
         if "These files were automatically checked in" in title:
             title = sha
-        c = Commit(sha, title)
-        res.append(c)
-    return res
+        commits.append(Commit(sha, title))
+    return commits
 
 
-def fb_alternate():
-    # print('trying alernate')
+def fb_alternate() -> str:
+    """
+    Try to find a fallback remote branch if not directly known.
+    """
     branches_raw = cmd("git branch -vv").rstrip()
-    branches = branches_raw.split("\n")
-    for branch in branches:
-        if branch.startswith("*"):
-            m = re.search(r"\[(.*?)\]", branch)
-            if m:
-                return m.group(1)
-            m = re.search(r"HEAD detached at (.+?)\)", branch)
-            if m:
-                # print("found deatched head", m.group(1))
-                return m.group(1)
-    # as a fallback, look if any of our local branches track an origin
+    for branch_line in branches_raw.split("\n"):
+        if branch_line.startswith("*"):
+            # Try to extract something from brackets [remote/branch]
+            match = re.search(r"\[(.*?)\]", branch_line)
+            if match:
+                return match.group(1)
+            # Or HEAD detached scenario
+            match = re.search(r"HEAD detached at (.+?)\)", branch_line)
+            if match:
+                return match.group(1)
     if "origin" in branches_raw:
         return "origin"
     return "master"
 
 
-if __name__ == "__main__":
-    ###########################################################
-    #     Parse args
-    ###########################################################
+def get_branch_age(branch: str):
+    """
+    Return a tuple of (branch, datetime, age_str).
+    """
+    try:
+        stats = (
+            cmd(f'git log -n 1 --pretty=format:"%ci %cr" {branch} -- | head -n 1')
+            .strip()
+            .split(" ")
+        )
+        dt = datetime.datetime.strptime(stats[0] + " " + stats[1], "%Y-%m-%d %H:%M:%S")
+        age = stats[3] + " " + stats[4] if len(stats) > 4 else ""
+    except Exception:
+        dt = datetime.datetime.now()
+        age = ""
+    return branch, dt, age
+
+
+###########################################################
+#     Main Logic
+###########################################################
+def main():
+    # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--archive", type=str, required=False, help="Archive the specified branch"
     )
-    parser.add_argument(
-        "--master", action="store_true", help="Force remote branch to master"
-    )
-    parser.add_argument(
-        "--all", action="store_true", help="Show all missing commits from master"
-    )
+    parser.add_argument("--master", action="store_true", help="Use origin/master as fb")
+    parser.add_argument("--all", action="store_true", help="Show all missing commits")
     parser.add_argument("--verbose", action="store_true", help="Verbose debug logs")
     args = parser.parse_args()
 
     if args.verbose:
         set_verbose(True)
 
-    ###########################################################
-    #     Init and argv stuff
-    ###########################################################
     showall = args.all
     rows, cols = get_term_size()
     root = cmd("git rev-parse --show-toplevel")
-    repo_name = root.split("/")[-1]
+    repo_name = root.strip().split("/")[-1]
 
-    # Read cache file
+    # Initialize cache
     home = os.path.expanduser("~")
     cache = DiskCache(f"git_status_{repo_name}", verbose=args.verbose)
 
+    # Check git config if not done before
     if not cache.get("config_checked"):
         check_config()
         cache.set("config_checked", True)
 
-    ###########################################################
-    #     Archive branches
-    ###########################################################
+    # Handle archive action
     archived_branches = cache.get("archived_branches", [])
     if args.archive:
         archived_branches.append(args.archive)
         cache.set("archived_branches", archived_branches)
         sys.exit(0)
 
-    ###########################################################
-    #     Fetch info about the branch and remote branch
-    ###########################################################
-
-    # Print a new line..... seems to help windows reset its coloring
+    # Print a new line to help reset coloring on Windows
     print("")
-
     status = cmd("git status -bs").rstrip().split("\n")
-    if not status or len(status) == 0 or not status[0]:
+    if not status or not status[0]:
         print(red_str("Not a git repo"))
         sys.exit(1)
+
     branchline = status[0] + " "
-    m = re.search(r"\.\.\.(.*?) ", branchline)
-    if m:
-        fb = m.group(1)
+    match = re.search(r"\.\.\.(.*?) ", branchline)
+    if match:
+        fb = match.group(1)
         branchline = branchline.replace("...", " ")
         current_branch = branchline.split()[1]
     else:
         current_branch = branchline.split()[1]
         fb = fb_alternate()
+
     if fb is None:
         raise Exception("Failed to detect forward-branch")
 
-    master = args.master
-    if master:
+    if args.master:
         fb = "origin/master"
 
-    ###########################################################
-    #     Fetch the log info about local HEAD and remote branch
-    ###########################################################
-
+    # Try to determine alignment with origin
     second_try = False
     tot_n = 100
     origin_n = 200
@@ -249,8 +307,8 @@ if __name__ == "__main__":
         tottitle = [c.title for c in tot]
 
         if not fb:
-            # not a remote-tracking branch
-            for c in tot[0:6]:
+            # Not a remote-tracking branch
+            for c in tot[:6]:
                 show_sha(c.sha)
             sys.exit(1)
 
@@ -258,132 +316,103 @@ if __name__ == "__main__":
         originsha = [c.sha for c in origin]
         origintitle = [c.title for c in origin]
 
-        # How many commits in each category
-        made = [c for c in tot[0:50] if c.title not in origintitle]
+        made = [c for c in tot[:50] if c.title not in origintitle]
         made_merged = [
-            c for c in tot[0:50] if c.title in origintitle and c.sha not in originsha
+            c for c in tot[:50] if (c.title in origintitle and c.sha not in originsha)
         ]
         missing = [
             c
-            for c in origin[0 : (tot_n - len(made))]
+            for c in origin[: (tot_n - len(made))]
             if c.sha not in totsha and c.title not in tottitle
         ]
-        common = [c for c in origin if c.sha in totsha and c.title in tottitle]
+        common = [c for c in origin if (c.sha in totsha and c.title in tottitle)]
 
         if len(made) + len(made_merged) < 15:
             break
         else:
             if second_try:
-                # something is wierd
+                # Something is weird, break anyway
                 break
             else:
                 tot_n = 1000
                 origin_n = 1200
                 second_try = True
 
-    ## Uncomment this line to run a fetch before very call, slower but shows a more accurate state #######
-    # cmd('git fetch')
-
-    ###########################################################
-    #     print branch info
-    ###########################################################
+    # Show branches
     other_branches = cmd("git branch").strip().split("\n")
     other_branches = [x.strip() for x in other_branches if not x.startswith("*")]
-    branches_n = len(other_branches)
     if args.all:
         archived_branches = []
     other_branches = [x for x in other_branches if x not in archived_branches]
-    archived_n = len(other_branches) - branches_n
 
-    # max_len = max([len(x) for x in other_branches]) + 10
     max_len = 50
-    branch_cols = min(3, int(cols / max_len))
+    branch_cols = min(3, max(1, int(cols / max_len)))
 
-    print
+    print()
     print("*" * (cols - 10))
     if current_branch == "HEAD":
         print(magenta_str(bold_str("%30s" % "~~ HEAD detached ~~")))
     else:
         print(blue_str(bold_str("%30s" % current_branch)))
 
-    def get_branch_age(branch):
-        try:
-            stats = cmd(
-                'git log -n 1 --pretty=format:"%ci %cr" ' + branch + " -- | head -n 1"
-            ).split(" ")
-            dt = datetime.datetime.strptime(
-                stats[0] + " " + stats[1], "%Y-%m-%d %H:%M:%S"
-            )
-            age = stats[3] + " " + stats[4]
-        except:
-            dt = datetime.datetime.now()
-            age = ""
-        return (branch, dt, age)
-
+    # Retrieve branch ages concurrently
     branch_data = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        for branch in other_branches:
-            futures.append(executor.submit(get_branch_age, branch=branch))
+        futures = [executor.submit(get_branch_age, b) for b in other_branches]
         for future in concurrent.futures.as_completed(futures):
             branch_data.append(future.result())
 
-    for idx, dat in enumerate(sorted(branch_data, key=itemgetter(1), reverse=True)):
-        branch, dt, age = dat
+    branch_data_sorted = sorted(branch_data, key=itemgetter(1), reverse=True)
+    for idx, (branch, dt, age) in enumerate(branch_data_sorted):
+        # If age is in hours/minutes, optionally skip showing it.
         if "minutes" in age or "hours" in age:
             age = ""
         print("%30s " % branch + grey_str("%-10s" % age), end="")
         if (idx + 1) % branch_cols == 0 or idx == len(branch_data) - 1:
             print("")
+
     if archived_branches:
         print(grey_str("%30s" % f"{len(archived_branches)} archived branches"))
+
     print("*" * (cols - 10))
 
-    ###########################################################
-    #     print local status diffs
-    ###########################################################
-    untracked = []
-    for l in status[1:]:
-        if "??" in l:
-            untracked.append(l)
-        else:
-            print(magenta_str(l))
+    # Print local status diffs
+    untracked = [l for l in status[1:] if "??" in l]
+    tracked = [l for l in status[1:] if "??" not in l]
+    for line in tracked:
+        print(magenta_str(line))
 
     if len(untracked) > 3:
-        print(red_str(str(len(untracked)) + " Untracked files ??"))
+        print(red_str(f"{len(untracked)} Untracked files ??"))
     else:
         for u in untracked:
             print(red_str(u))
     print("")
 
-    ###########################################################
-    #     print commits cherry picked on top
-    ###########################################################
+    # Print commits cherry-picked on top
     done = 0
     cp_but_merged = 0
 
     if len(made) + len(made_merged) > 20:
-        # something is wierd
+        # Something is weird
         if len(origin) == 0:
-            # we don't generally get here, since we fallback to master
             print(grey_str("    ********** (no origin) ************"))
         else:
             print(red_str("\nUnable to determine alignment with remote\n"))
         show_shas(totsha[0], totsha[8])
         sys.exit(1)
 
-    for c in tot[0:50]:
+    for c in tot[:50]:
         if c in made:
             done += 1
             show_sha(c.sha)
         if c in made_merged:
-            # Cherry picked and merged
             done += 1
             cp_but_merged += 1
             show_sha_magenta(c.sha)
 
-    # usually happens if there is no origin
-    if len(common) == 0:
+    # Usually happens if there is no origin
+    if not common:
         sys.exit(1)
 
     if fb == "master":
@@ -391,28 +420,28 @@ if __name__ == "__main__":
     else:
         print(blue_str("    ********** " + fb + " ************"))
 
-    ###########################################################
-    #     print commits in origin missing from HEAD'
-    ###########################################################
+    # Print commits in origin missing from HEAD
     if len(missing) > 5 and not showall:
         print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
         print(grey_str("   " + str(len(missing)) + " missing commits"))
         print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
         done += 2
-    elif len(missing) > 0:
+    else:
         for c in missing:
             show_sha_grey(c.sha)
             done += 1
 
-    ###########################################################
-    #     print merged commits in origin and HEAD
-    ###########################################################
-
+    # Print merged commits
     left = min(max(1, 10 - done), len(common) - 1)
-    originz = show_shas(common[0].sha, common[left].sha, nmax=left)
+    if len(common) > 1:
+        originz = show_shas(common[0].sha, common[left].sha, nmax=left)
+    else:
+        originz = ""
 
-    ###########################################################
-    #     print my last merged commit if not in the above
-    ###########################################################
+    # Print last merged commit by me if not already shown
     if not any(alias in originz for alias in name_aliases):
         show_my_most_recent(fb)
+
+
+if __name__ == "__main__":
+    main()
