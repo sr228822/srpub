@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from operator import itemgetter
+from pathlib import Path
 
 from srutils import (
     my_email,
@@ -254,11 +255,11 @@ def main():
 
     showall = args.all
     rows, cols = get_term_size()
-    root = cmd("git rev-parse --show-toplevel")
-    repo_name = root.strip().split("/")[-1]
+    root = Path(cmd("git rev-parse --show-toplevel").strip())
+    repo_name = root.name
 
     # Initialize cache
-    home = os.path.expanduser("~")
+    home = Path.home()
     cache = DiskCache(f"git_status_{repo_name}", verbose=args.verbose)
 
     # Check git config if not done before

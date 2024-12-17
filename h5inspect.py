@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 import h5py
 
@@ -57,6 +58,9 @@ if __name__ == "__main__":
         help="dont truncate strings",
     )
     args = parser.parse_args()
+    if not Path(args.path).exists():
+        print("File not found")
+        sys.exit(1)
     f = h5py.File(args.path, "r")
 
     print(f)
