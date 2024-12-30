@@ -102,6 +102,32 @@ def vol_max():
     return _cmd_resp("vol_max")
 
 
+####################################################
+# Audio Playing
+####################################################
+import time
+
+
+def play_audio(filename):
+    import pygame
+
+    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=4096)
+    sound = pygame.mixer.Sound(filename)
+
+    while True:
+        pygame.mixer.Sound.play(sound)
+        time.sleep(sound.get_length())
+
+
+def play_brownnoise(filename):
+    import multiprocessing
+
+    process = multiprocessing.Process(target=play_audio, args=(filename,), daemon=True)
+    print(f"Statrting proces {process}")
+    process.start()
+    return process
+
+
 ##################################################
 # Ramps
 ##################################################
@@ -222,6 +248,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Run in debug mode, where flask auto-restarts on code-changes",
     )
+    parser.add_argument(
+        "--play-audio",
+        dest="play_audio",
+        action="store_true",
+        help="Play audio (Experimental)",
+    )
     args = parser.parse_args()
 
     try_report_ip()
@@ -234,5 +266,24 @@ if __name__ == "__main__":
     job = _g.scheduler.add_job(background_job, "interval", minutes=5)
     _g.scheduler.start()
 
+    audio_process = None
+    if args.play_audio:
+        print("Playing audio process")
+        audio_process = play_brownnoise("brownnoise-longtrim.mp3")
+
+    def _cleanup():
+        if audio_process:
+            print("Terminating audio process")
+            audio_process.terminate()
+
     # app.run(debug=args.debug_mode, host="127.0.0.1", port=80)
-    app.run(debug=args.debug_mode, host="0.0.0.0", port=8080)
+    try:
+        app.run(debug=args.debug_mode, host="0.0.0.0", port=8080)
+    except KeyboardInterrupt as ex:
+        print(f"Keyboard Interrupt {ex}")
+        _cleanup()
+        raise
+    except Exception:
+        print(f"Exception {ex}")
+        _cleanup()
+        raise
