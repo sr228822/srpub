@@ -1,20 +1,26 @@
+import multiprocessing
 import pygame
+import time
 
 
-def smooth_play(file_path):
-    pygame.mixer.init(buffer=2048)  # Increase buffer size
-    pygame.mixer.music.load(file_path)
-    pygame.mixer.music.play(-1, fade_ms=400)  # Add slight crossfade
+def play_audio(filename):
+   pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=4096)
+   sound = pygame.mixer.Sound(filename)
+   
+   while True:
+       pygame.mixer.Sound.play(sound)
+       time.sleep(sound.get_length())
+
+if __name__ == "__main__":
+    filename = "brownnoise-longtrim.mp3"
+    process = multiprocessing.Process(
+        target=play_audio, args=(filename,), daemon=True
+    )
+    process.start()
 
     try:
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+        while True:
+            time.sleep(5)
+            print('other thing')
     except KeyboardInterrupt:
-        pygame.mixer.music.stop()
-    finally:
-        pygame.mixer.quit()
-
-
-# Usage
-filename = "brownnoise.mp3"
-smooth_play(filename)
+        process.terminate()
