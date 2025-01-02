@@ -451,11 +451,20 @@ alias grh='git reset --hard'
 alias gcp='git cherry-pick'
 alias gc='git commit'
 alias gitlastdiff='git diff HEAD^ HEAD'
-alias githeaddiff='git diff origin/master...HEAD'
-alias gitbranchdiff='git diff origin/master HEAD'
+
+git_main_branch() {
+    git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+}
+git_main_origin() {
+    echo "origin/$(git_main_branch)"
+}
+githeaddiff() {
+    git diff $(git_main_origin)...HEAD
+}
+alias gitbranchdiff='git diff $(git_main_origin) HEAD'
 
 squashhead() {
-    merge=`git merge-base HEAD origin/master`
+    merge=`git merge-base HEAD $(git_main_origin)`
     git reset --soft ${merge}
     git commit -a
 }
@@ -524,7 +533,7 @@ gitqpush() {
 gnb() {
     if [ -z "$2" ]
     then
-        gco -b $1 origin/master
+        gco -b $1 $(git_main_origin)
     else
         gco -b $1 $2
     fi
@@ -554,7 +563,7 @@ gittrack() {
     git branch --set-upstream-to $1
 }
 gittrackmaster() {
-    gittrack origin/master
+    gittrack $(git_main_origin)
 }
 gittrackself() {
     b=`git branch | grep "*" | last_word`
@@ -626,9 +635,25 @@ hgbd() {
 export DEFAULTENV=base
 act() {
   conda deactivate;
+
+  # If no argument provided, check for environment.yml
+  if [ -z "$1" ] && [ -f "environment.yml" ]; then
+      local env=$(grep "^name:" environment.yml | cut -d: -f2 | tr -d '[:space:]')
+      if [ -n "$env" ]; then
+          echo "Found environment.yml, activating: $env"
+          conda activate "$env"
+          return
+      fi
+  fi
+
   local env="${1:-$DEFAULTENV}"
-  echo "env is $env";
-  conda activate $env;
+  if [ -z "$env" ]; then
+      echo "No environment specified and DEFAULTENV not set"
+      return 1
+  fi
+
+  echo "Activating environment: $env"
+  conda activate "$env"
 }
 deact() {
   conda deactivate;

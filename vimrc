@@ -29,6 +29,10 @@ set tabstop=4
 " Make indent width also 4
 set shiftwidth=4
 
+" Tabs for makefiles
+autocmd FileType make setlocal noexpandtab
+
+
 " Make indent rounded to next full shift width
 set shiftround
 
@@ -47,3 +51,4 @@ set expandtab
 
 " And make backspace delete smartly (like in any editor. through indents, linestarts and end of lines)
 set backspace=indent,eol,start
+
