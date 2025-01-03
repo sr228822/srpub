@@ -216,7 +216,8 @@ def print_cnt_dict(title, stat, limit=args.num):
             did_me = True
 
 
-git_log_raw = cmd("git log master --format='%H,%aN,%ae,%at,%s'")
+main_branch = cmd("git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'")
+git_log_raw = cmd(f"git log {main_branch} --format='%H,%aN,%ae,%at,%s'")
 
 
 def length_score(k):

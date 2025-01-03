@@ -126,10 +126,10 @@ color_code_files() {
 }
 
 shere() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} * 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env} * 2>/dev/null -e "$1" ${@:2}
 }
 search() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache} . 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
     search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
@@ -453,7 +453,11 @@ alias gc='git commit'
 alias gitlastdiff='git diff HEAD^ HEAD'
 
 git_main_branch() {
-    git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+   if git rev-parse refs/remotes/origin/HEAD &>/dev/null; then
+       git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+   else
+       echo "main"  # Default to main if no remote HEAD found
+   fi
 }
 git_main_origin() {
     echo "origin/$(git_main_branch)"
@@ -635,6 +639,7 @@ hgbd() {
 export DEFAULTENV=base
 act() {
   conda deactivate;
+  conda deactivate;
 
   # If no argument provided, check for environment.yml
   if [ -z "$1" ] && [ -f "environment.yml" ]; then
@@ -644,6 +649,11 @@ act() {
           conda activate "$env"
           return
       fi
+  fi
+
+  if [ -z "$1" ] && [ -d ".env" ]; then
+      echo "Found venv in .env"
+      source .env/bin/activate
   fi
 
   local env="${1:-$DEFAULTENV}"
