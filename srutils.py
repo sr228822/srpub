@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import boto3
 import datetime
 import math
 import os
@@ -641,6 +640,7 @@ _boto_client_cache = {}
 
 def cached_boto_client(x, region="us-east-1"):
     global _boto_client_cache
+    import boto3
     if x in _boto_client_cache:
         return _boto_client_cache[x]
     c = boto3.client(x, region_name=region)
