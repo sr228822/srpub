@@ -485,7 +485,7 @@ squashn() {
 gco() {
     git checkout $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1`
+        substr=`git branch | grep $1 | xargs`
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git checkout $substr
@@ -545,7 +545,7 @@ gnb() {
 gbd() {
     git branch -D $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1 | grep -v "*"`
+        substr=`git branch | grep $1 | grep -v "*" | xargs`
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git branch -D $substr
@@ -654,6 +654,7 @@ act() {
   if [ -z "$1" ] && [ -d ".env" ]; then
       echo "Found venv in .env"
       source .env/bin/activate
+      return
   fi
 
   local env="${1:-$DEFAULTENV}"
