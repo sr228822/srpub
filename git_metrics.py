@@ -216,7 +216,8 @@ def print_cnt_dict(title, stat, limit=args.num):
             did_me = True
 
 
-main_branch = cmd("git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'")
+branches = cmd("git branch")
+main_branch = "main" if "main" in branches else "master"
 git_log_raw = cmd(f"git log {main_branch} --format='%H,%aN,%ae,%at,%s'")
 
 

@@ -2,6 +2,8 @@
 
 from srutils import *
 import operator, re, sys
+from pathlib import Path
+from typing import Iterator
 
 
 def title_from_sha(sha):
@@ -13,13 +15,43 @@ def title_from_sha(sha):
     return res
 
 
+IGNORE_PATTERNS = {'.env', '__pycache__', 'pyc', 'build'}
+def should_ignore(path: Path) -> bool:
+    return any(pattern in path.parts for pattern in IGNORE_PATTERNS)
+
+def args_to_files() -> Iterator[Path]:
+    """
+    Generate Path objects for all Python files from command line arguments.
+    Recursively processes directories and includes direct file arguments.
+    
+    Returns:
+        Iterator of Path objects for Python files
+    """
+    for arg in sys.argv[1:]:
+        path = Path(arg)
+        if not path.exists():
+            print(f"Path does not exist: {path}")
+            continue
+
+        if path.is_file():
+            if path.suffix == '.py' and not should_ignore(path):
+                 yield path
+        else:
+            yield from (
+                 p for p in path.rglob('*.py') 
+                 if not should_ignore(p)
+            )            
+
+
 cnts = dict()
 auths = dict()
 auth_lines = dict()
 auth_commits = dict()
 lc = 0
-for a in sys.argv[1:]:
-    for l in cmd("git blame " + a).split("\n"):
+
+all_files = list(args_to_files())
+for a in all_files:
+    for l in cmd(f"git blame {a}").split("\n"):
         m = re.search(r"\((.*?)\)", l)
         if m:
             auth = " ".join(m.group(1).split()[0:-4])
@@ -54,9 +86,9 @@ for sha, cnt in sorted_cnts:
 
 # Print the original author, by file
 print("\n---- Original File Creator -----\n")
-for a in sys.argv[1:]:
+for a in all_files:
     auth = None
-    for l in cmd("git log --format=short " + a).split("\n"):
+    for l in cmd(f"git log --format=short {a}").split("\n"):
         m = re.search(r"Author\:(.*?)$", l)
         if m:
             auth = m.group(1)

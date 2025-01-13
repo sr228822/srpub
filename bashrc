@@ -494,7 +494,7 @@ gco() {
 }
 
 git_push_as_me() {
-    git push https://sr228822@github.com/sr228822/srpub master:master
+    git push https://sr228822@github.com/sr228822/srpub main:main
 }
 
 git_pre_push() {
@@ -503,9 +503,9 @@ git_pre_push() {
 
 gitpush() {
     b=`git branch | grep "*" | last_word`
-    if [[ "$b" == *"master"* ]];
+    if [[ "$b" == *"master"* || "$b" == *"main"* ]];
     then
-        echo "cannot push master";
+        echo "cannot push master/main";
         return 1;
     fi
 
@@ -515,9 +515,9 @@ gitpush() {
 }
 gitqpush() {
     b=`git branch | grep "*" | last_word`
-    if [[ "$b" == *"master"* ]];
+    if [[ "$b" == *"master"* || "$b" == *"main"* ]];
     then
-        echo "cannot push master";
+        echo "cannot push master/main";
         return 1;
     fi
     if [[ "$b" == *"main"* ]];
@@ -566,9 +566,10 @@ gittrack() {
     fi
     git branch --set-upstream-to $1
 }
-gittrackmaster() {
+gittrackmain() {
     gittrack $(git_main_origin)
 }
+alias gtm="gittrackmain"
 gittrackself() {
     b=`git branch | grep "*" | last_word`
     gittrack origin/$b
@@ -804,10 +805,10 @@ mine() {
 
 }
 
-rebasemaster() {
+rebasemain() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        git fetch && git rebase origin/master
+        git fetch && git rebase origin/main
     elif [[ $typ = $HG_ENUM ]]; then
         hgrebasewarm
     else
@@ -866,7 +867,6 @@ get_term_label() {
 
 set_ps1() {
     if [[ $shell == *zsh* ]]; then
-        echo "Currently in zsh"
         autoload -U colors && colors
         setopt PROMPT_SUBST
         PROMPT='%{$fg[yellow]%}%2~ %#%{$reset_color%} $(eval "$PROMPT_COMMAND")'
