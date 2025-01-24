@@ -658,6 +658,12 @@ act() {
       return
   fi
 
+  if [ -z "$1" ] && [ -d "../.env" ]; then
+      echo "Found venv in .env"
+      source ../.env/bin/activate
+      return
+  fi
+
   local env="${1:-$DEFAULTENV}"
   if [ -z "$env" ]; then
       echo "No environment specified and DEFAULTENV not set"
