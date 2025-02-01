@@ -168,23 +168,28 @@ grep_or() {
 #join () {
 #    local IFS="$1"; shift; echo "$*";
 #}
+
 grep_and() {
-    #local IFS="$1"; echo "$*";
-    c="awk '/$1/"
-    args=("$@") 
-    for ((i=1; i<${#args[@]}; i++))
-    do
-        c="$c && /${args[i]}/"
+    if [ $# -eq 0 ]; then
+        cat
+        return
+    fi
+
+    # Start building the awk command with first pattern
+    cmd="awk '/$1/"
+    shift
+
+    # Add remaining patterns with && between each
+    while [ $# -gt 0 ]; do
+        cmd="$cmd && /$1/"
+        shift
     done
-    c="$c'"
-    #for var in "$@"
-    #do
-    #    #c="$c /$var/"
-    #    c="$c | grep -i $var"
-    #done
-    #echo $c
-    eval $c
-    #awk '/word1/ && /word2/'
+
+    # Close the awk command
+    cmd="$cmd'"
+
+    # Execute the built command
+    eval "$cmd"
 }
 
 search_or() {
