@@ -444,6 +444,15 @@ gtv() {
     go test -v 2>&1 | highlightlinered "\<FAIL\>" | highlightlinered "panic" | highlightgreen "\<PASS\>" | highlightline "Unexpected Call" | highlightline "missing call"
 }
 
+docker_lightprune() {
+    docker rmi $(docker images -f "dangling=true" -q)
+    docker system prune
+}
+
+docker_fullprune() {
+    docker system prune -a --volumes
+}
+
 
 #######################################################
 # Git stuff

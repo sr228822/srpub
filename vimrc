@@ -52,3 +52,5 @@ set expandtab
 " And make backspace delete smartly (like in any editor. through indents, linestarts and end of lines)
 set backspace=indent,eol,start
 
+" Increase save buffer
+set viminfo='100,<5000,s500,h
