@@ -15,15 +15,18 @@ def title_from_sha(sha):
     return res
 
 
-IGNORE_PATTERNS = {'.env', '__pycache__', 'pyc', 'build'}
+IGNORE_PATTERNS = {".env", "__pycache__", "pyc", "build"}
+
+
 def should_ignore(path: Path) -> bool:
     return any(pattern in path.parts for pattern in IGNORE_PATTERNS)
+
 
 def args_to_files() -> Iterator[Path]:
     """
     Generate Path objects for all Python files from command line arguments.
     Recursively processes directories and includes direct file arguments.
-    
+
     Returns:
         Iterator of Path objects for Python files
     """
@@ -34,13 +37,10 @@ def args_to_files() -> Iterator[Path]:
             continue
 
         if path.is_file():
-            if path.suffix == '.py' and not should_ignore(path):
-                 yield path
+            if path.suffix == ".py" and not should_ignore(path):
+                yield path
         else:
-            yield from (
-                 p for p in path.rglob('*.py') 
-                 if not should_ignore(p)
-            )            
+            yield from (p for p in path.rglob("*.py") if not should_ignore(p))
 
 
 cnts = dict()

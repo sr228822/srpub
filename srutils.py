@@ -595,6 +595,22 @@ def distance_between(lat1, long1, lat2, long2):
     return arc * 6371
 
 
+def to_metric_base(size_str):
+    units = {"Gi": 1024**3, "Mi": 1024**2, "Ki": 1024, "Bi": 1}
+    size = size_str.strip()
+    for unit, multiplier in units.items():
+        if size.endswith(unit):
+            try:
+                number = float(size[:-2])
+                return int(number * multiplier)
+            except ValueError:
+                raise ValueError(f"Invalid number format: {size}")
+
+    raise ValueError(
+        f"Unknown unit in: {size_str}. Expected one of: {', '.join(units.keys())}"
+    )
+
+
 #################################################################
 # Multiprocessing stuff
 #################################################################
@@ -641,6 +657,7 @@ _boto_client_cache = {}
 def cached_boto_client(x, region="us-east-1"):
     global _boto_client_cache
     import boto3
+
     if x in _boto_client_cache:
         return _boto_client_cache[x]
     c = boto3.client(x, region_name=region)
