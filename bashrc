@@ -53,7 +53,7 @@ fi
 mkdir -p ~/.logs/
 prompt_command () {
   if [ "$(id -u)" -ne 0 ]; then
-    if [[ $shell == *zsh* ]]; then
+    if [[ "$shell" == *zsh* ]]; then
       NEWLINE=$(history -1)
     else
       NEWLINE=$(history 1)
@@ -64,7 +64,7 @@ prompt_command () {
     else
       LASTLINE=''
     fi
-    if [[ $LASTLINE =~ $NEWLINE ]]; then
+    if [[ "$LASTLINE" == *"$NEWLINE"* ]]; then
       echo "" > /dev/null
     else
       echo "$(date "+%Y-%m-%d.%H:%M:%S") $NEWLINE" >> $LOGNAME
