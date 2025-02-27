@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from srutils import *
-import os
+from srutils import cmd, to_metric_base
 import shutil
 from dataclasses import dataclass
-from typing import Optional
 
 
+ONE_GB = 1024**3
 TEN_GB = 10368709120
 
 
@@ -68,10 +67,10 @@ if __name__ == "__main__":
     for mount in ["/"]:
         try:
             usage = get_disk_usage(mount)
+            free_percent = 100.0 - usage.percent
             print(f"{mount}:                 {percent_bar(usage.percent)}")
-            print(f"  Total: {usage.total / (1024**3):.1f} GB")
-            print(f"  Used:  {usage.used / (1024**3):.1f} GB")
-            print(f"  Free:  {usage.free / (1024**3):.1f} GB")
-            print(f"  Usage: {usage.percent:.1f}%")
+            print(f"  Total: {usage.total / ONE_GB:.1f} GB")
+            print(f"  Used:  {usage.used / ONE_GB:.1f} GB  {usage.percent:.1f}%")
+            print(f"  Free:  {usage.free / ONE_GB:.1f} GB  {free_percent:.1f}%")
         except (PermissionError, OSError):
             continue
