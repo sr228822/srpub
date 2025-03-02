@@ -32,24 +32,44 @@ def create_bar(percent, width=30):
     return f"[{bar}] {percent:.1f}%"
 
 
+class CellConfig:
+    """Configuration for a terminal cell"""
+    
+    def __init__(self, generator: Callable, title: str, color: str = "default", row_span: int = 1, col_span: int = 1):
+        """
+        Initialize a cell configuration
+        
+        Args:
+            generator: Function that generates content for the cell
+            title: The title to display at the top of the cell
+            color: The color scheme to use
+            row_span: Number of rows the cell should span
+            col_span: Number of columns the cell should span
+        """
+        self.generator = generator
+        self.title = title
+        self.color = color
+        self.row_span = row_span
+        self.col_span = col_span
+
 class TerminalCell:
     """A single cell in the terminal grid"""
 
-    def __init__(self, title: str, content_generator: Callable, color: str = "default"):
+    def __init__(self, config: CellConfig):
         """
         Initialize a terminal cell
 
         Args:
-            title: The title to display at the top of the cell
-            content_generator: A function that generates content for the cell
-            color: The color scheme to use for this cell
+            config: The configuration for this cell
         """
-        self.title = title
-        self.content_generator = content_generator
-        self.color = color
+        self.title = config.title
+        self.content_generator = config.generator
+        self.color = config.color
         self.content_lines = []
         self.max_lines = 40  # Default for web output
         self.max_cols = 300  # Default for web output
+        self.row_span = config.row_span
+        self.col_span = config.col_span
 
     def update(self):
         """Update the content of the cell"""
@@ -62,7 +82,14 @@ class TerminalCell:
 
     def get_html_content(self) -> str:
         """Get the content of the cell as HTML"""
-        html = f'<div class="cell" style="color: {HTML_COLORS.get(self.color, "#FFFFFF")}">\n'
+        # Add grid-row and grid-column span if needed
+        grid_style = ""
+        if self.row_span > 1:
+            grid_style += f"grid-row: span {self.row_span};"
+        if self.col_span > 1:
+            grid_style += f"grid-column: span {self.col_span};"
+            
+        html = f'<div class="cell" style="color: {HTML_COLORS.get(self.color, "#FFFFFF")};{grid_style}">\n'
         html += f'<div class="cell-title">{self.title}</div>\n'
         html += '<div class="cell-content">\n'
 
@@ -101,18 +128,32 @@ class GridScreensaver:
         """
         # Create cells
         self.cells = []
+        self.cell_map = {}  # Track which positions are filled due to spanning cells
+        
         for i in range(rows):
             row_cells = []
             for j in range(cols):
-                # Choose a content generator and color for this cell
-                generator, title, color = self.get_cell_configuration(i, j)
+                # Skip positions that are already filled by spanning cells
+                if self.cell_map.get((i, j)):
+                    row_cells.append(None)
+                    continue
+                    
+                # Get cell configuration
+                config = self.get_cell_configuration(i, j)
 
                 # Create the cell
-                cell = TerminalCell(title, generator, color)
+                cell = TerminalCell(config)
                 row_cells.append(cell)
+                
+                # Mark positions this cell spans as filled
+                for r in range(i, min(i + config.row_span, rows)):
+                    for c in range(j, min(j + config.col_span, cols)):
+                        if (r > i or c > j):  # Don't mark the cell's own position
+                            self.cell_map[(r, c)] = True
+            
             self.cells.append(row_cells)
 
-    def get_cell_configuration(self, row: int, col: int) -> Tuple[Callable, str, str]:
+    def get_cell_configuration(self, row: int, col: int) -> CellConfig:
         """
         Get the configuration for a cell
 
@@ -121,32 +162,36 @@ class GridScreensaver:
             col: The column of the cell
 
         Returns:
-            A tuple of (content_generator, title, color)
+            A CellConfig object
         """
-        # Define some example generators
-        generators = [
-            (self.generate_system_info, "System Info", "default"),
-            (self.generate_clock, "Clock", "default"),
-            (self.gen_systemstats, "System Stats", "default"),
-            (self.generate_subway, "Subway", "default"),
-            (self.generate_network_stats, "Network", "default"),
-            (self.generate_cpu_stats, "CPU", "default"),
-            (self.generate_memory_stats, "Memory", "default"),
-            (self.generate_disk_stats, "Disk", "default"),
-            (self.generate_processes, "Processes", "default"),
-            (self.generate_weather, "Weather", "default"),
-            (self.generate_quotes, "Quotes", "default"),
-            (self.generate_calendar, "Calendar", "default"),
-            (self.generate_file_system, "Files", "default"),
-            (self.generate_ip_info, "IP Info", "default"),
-            (self.generate_battery_status, "Battery", "default"),
+        # Define cell configurations with their properties
+        configs = [
+            CellConfig(self.generate_system_info, "System Info", "default"),
+            CellConfig(self.generate_clock, "Clock", "default"),
+            CellConfig(self.gen_systemstats, "System Stats", "default"),
+            # Make subway span 2 rows
+            CellConfig(self.generate_subway, "Subway", "default", row_span=2),
+            CellConfig(self.generate_network_stats, "Network", "default"),
+            CellConfig(self.generate_cpu_stats, "CPU", "default"),
+            CellConfig(self.generate_memory_stats, "Memory", "default"),
+            CellConfig(self.generate_disk_stats, "Disk", "default"),
+            CellConfig(self.generate_processes, "Processes", "default"),
+            CellConfig(self.generate_weather, "Weather", "default"),
+            CellConfig(self.generate_quotes, "Quotes", "default"),
+            CellConfig(self.generate_calendar, "Calendar", "default"),
+            CellConfig(self.generate_file_system, "Files", "default"),
+            CellConfig(self.generate_ip_info, "IP Info", "default"),
+            CellConfig(self.generate_battery_status, "Battery", "default"),
         ]
 
         # Calculate index based on row and col
         index = row * self.cols + col
-
-        # Return generator, title, and color
-        return generators[index]
+        
+        # If the index exceeds the number of configurations, use the first one
+        if index >= len(configs):
+            return configs[0]
+            
+        return configs[index]
 
     def generate_system_info(self) -> List[str]:
         """Generate system information"""
@@ -322,7 +367,8 @@ class GridScreensaver:
         """Update all cells"""
         for row in self.cells:
             for cell in row:
-                cell.update()
+                if cell:  # Skip None cells (those filled by spanning cells)
+                    cell.update()
 
     def generate_html_output(self):
         """Generate HTML output for the grid"""
@@ -338,6 +384,7 @@ class GridScreensaver:
             background-color: black;
             color: #33ff33;
             font-family: 'Courier New', monospace;
+            font-size: 14px;
         }
         #content {
             display: grid;
@@ -345,6 +392,7 @@ class GridScreensaver:
             grid-template-rows: repeat(%ROWS%, 1fr);
             width: 100vw;
             height: 100vh;
+            gap: 5px;
         }
         .cell {
             border: 1px solid #444;
@@ -377,7 +425,8 @@ class GridScreensaver:
         # Add each cell's content
         for row in self.cells:
             for cell in row:
-                html += cell.get_html_content()
+                if cell:  # Skip None cells (those filled by spanning cells)
+                    html += cell.get_html_content()
 
         # Close the HTML
         html += """    </div>
