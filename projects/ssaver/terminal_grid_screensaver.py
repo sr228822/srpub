@@ -156,7 +156,7 @@ class GridScreensaver:
         generators = [
             (self.generate_system_info, "System Info", "green"),
             (self.generate_clock, "Clock", "blue"),
-            (self.generate_matrix_effect, "Matrix", "green"),
+            #(self.generate_matrix_effect, "Matrix", "green"),
             (self.generate_network_stats, "Network", "cyan"),
             (self.generate_cpu_stats, "CPU", "red"),
             (self.generate_memory_stats, "Memory", "magenta"),
@@ -165,9 +165,9 @@ class GridScreensaver:
             (self.generate_weather, "Weather", "cyan"),
             (self.generate_quotes, "Quotes", "default"),
             (self.generate_calendar, "Calendar", "blue"),
-            (self.generate_ascii_art, "ASCII Art", "green"),
+            #(self.generate_ascii_art, "ASCII Art", "green"),
             (self.generate_file_system, "Files", "yellow"),
-            (self.generate_random_numbers, "Random", "magenta"),
+            #(self.generate_random_numbers, "Random", "magenta"),
             (self.generate_ip_info, "IP Info", "cyan"),
             (self.generate_battery_status, "Battery", "yellow"),
         ]
@@ -374,28 +374,36 @@ class GridScreensaver:
             for cell in row:
                 cell.update()
 
-    def run(self):
+    def run(self, rows=4, cols=4, interval=5):
         """Run the screensaver"""
         # Hide the cursor
         curses.curs_set(0)
 
         # Create the grid
-        self.create_grid(4, 4)
+        self.create_grid(rows=rows, cols=cols)
 
         # Main loop
+        first = True
         while self.running:
             try:
+                t0 = time.time()
+
                 # Update all cells
                 self.update_cells()
 
                 # Check for key press
                 self.stdscr.timeout(100)
                 key = self.stdscr.getch()
-                if key != -1:
-                    self.running = False
+                #if key != -1:
+                #    self.running = False
 
                 # Sleep for a bit
-                time.sleep(0.1)
+                duration = time.time() - t0
+                sleep_for = max(0.1, interval-duration)
+                #print(f"Sleeping for {sleep_for}")
+                if not first:
+                    time.sleep(sleep_for)
+                first=False
             except KeyboardInterrupt:
                 self.running = False
 
@@ -403,12 +411,13 @@ class GridScreensaver:
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="Terminal Grid Screensaver")
-    parser.add_argument("--rows", type=int, default=4, help="Number of rows")
-    parser.add_argument("--cols", type=int, default=4, help="Number of columns")
+    parser.add_argument("--rows", type=int, default=3, help="Number of rows")
+    parser.add_argument("--cols", type=int, default=3, help="Number of columns")
+    parser.add_argument("--interval", type=int, default=5, help="Refresh interval")
     args = parser.parse_args()
 
     # Run the screensaver
-    curses.wrapper(lambda stdscr: GridScreensaver(stdscr).run())
+    curses.wrapper(lambda stdscr: GridScreensaver(stdscr).run(rows=args.rows, cols=args.cols, interval=args.interval))
 
 
 if __name__ == "__main__":
