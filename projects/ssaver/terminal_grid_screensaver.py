@@ -220,12 +220,9 @@ class GridScreensaver:
 
     def generate_subway(self) -> List[str]:
         try:
-            s = subway.status()
-            output = []
-            for line, colored_symbol in subway.nyc_subway.items():
-                line_status = "\n      ".join(s.get(line, []))
-                output.append(f"{colored_symbol} : {line_status}")
-            return output
+            # Use the HTML version for web output
+            output = subway.get_subway_status_formatted(as_html=True)
+            return output.split("\n")
         except Exception as e:
             return ["Subway status unavailable", str(e)]
 
