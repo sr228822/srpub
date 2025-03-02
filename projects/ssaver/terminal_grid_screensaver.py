@@ -12,6 +12,8 @@ import random
 import psutil
 from typing import List, Callable, Tuple
 
+import subway
+
 # HTML color codes
 HTML_COLORS = {
     "default": "#FFFFFF",
@@ -126,6 +128,7 @@ class GridScreensaver:
             (self.generate_system_info, "System Info", "default"),
             (self.generate_clock, "Clock", "default"),
             (self.gen_systemstats, "System Stats", "default"),
+            (self.generate_subway, "Subway", "default"),
             (self.generate_network_stats, "Network", "default"),
             (self.generate_cpu_stats, "CPU", "default"),
             (self.generate_memory_stats, "Memory", "default"),
@@ -152,8 +155,8 @@ class GridScreensaver:
                 ["system_profiler", "SPSoftwareDataType"], universal_newlines=True
             )
             return output.strip().split("\n")[:10]
-        except:
-            return ["System Info Unavailable"]
+        except Exception as e:
+            return ["System Info Unavailable", str(e)]
 
     def generate_clock(self) -> List[str]:
         """Generate a clock display"""
@@ -201,8 +204,8 @@ class GridScreensaver:
         try:
             output = subprocess.check_output(["netstat", "-i"], universal_newlines=True)
             return output.strip().split("\n")[:10]
-        except:
-            return ["Network Stats Unavailable"]
+        except Exception as e:
+            return ["Network Stats Unavailable", str(e)]
 
     def generate_cpu_stats(self) -> List[str]:
         """Generate CPU statistics"""
@@ -212,32 +215,44 @@ class GridScreensaver:
             )
             cpu_lines = [line for line in output.split("\n") if "CPU usage" in line]
             return ["CPU Statistics:"] + cpu_lines
-        except:
-            return ["CPU Stats Unavailable"]
+        except Exception as e:
+            return ["CPU Stats Unavailable", str(e)]
+
+    def generate_subway(self) -> List[str]:
+        try:
+            s = subway.status()
+            output = []
+            for line, colored_symbol in subway.nyc_subway.items():
+                line_status = "\n      ".join(s.get(line, []))
+                output.append(f"{colored_symbol} : {line_status}")
+            return output
+        except Exception as e:
+            return ["Subway status unavailable", str(e)]
+
 
     def generate_memory_stats(self) -> List[str]:
         """Generate memory statistics"""
         try:
             output = subprocess.check_output(["vm_stat"], universal_newlines=True)
             return output.strip().split("\n")[:10]
-        except:
-            return ["Memory Stats Unavailable"]
+        except Exception as e:
+            return ["Memory Stats Unavailable", str(e)]
 
     def generate_disk_stats(self) -> List[str]:
         """Generate disk statistics"""
         try:
             output = subprocess.check_output(["df", "-h"], universal_newlines=True)
             return output.strip().split("\n")[:10]
-        except:
-            return ["Disk Stats Unavailable"]
+        except Exception as e:
+            return ["Disk Stats Unavailable", str(e)]
 
     def generate_processes(self) -> List[str]:
         """Generate a list of processes"""
         try:
             output = subprocess.check_output(["ps", "-ef"], universal_newlines=True)
             return output.strip().split("\n")[:10]
-        except:
-            return ["Process List Unavailable"]
+        except Exception as e:
+            return ["Process List Unavailable", str(e)]
 
     def generate_weather(self) -> List[str]:
         """Generate weather information (simulated)"""
@@ -271,8 +286,8 @@ class GridScreensaver:
         try:
             output = subprocess.check_output(["cal"], universal_newlines=True)
             return output.strip().split("\n")
-        except:
-            return ["Calendar Unavailable"]
+        except Exception as e:
+            return ["Calendar Unavailable", str(e)]
 
     def generate_file_system(self) -> List[str]:
         """Generate a file system listing"""
@@ -281,8 +296,8 @@ class GridScreensaver:
                 ["ls", "-la", os.environ.get("HOME", "/")], universal_newlines=True
             )
             return output.strip().split("\n")[:10]
-        except:
-            return ["File System Unavailable"]
+        except Exception as e:
+            return ["File System Unavailable", str(e)]
 
     def generate_ip_info(self) -> List[str]:
         """Generate IP information"""
@@ -293,8 +308,8 @@ class GridScreensaver:
                 if "inet " in line and "127.0.0.1" not in line:
                     ip_lines.append(line.strip())
             return ["IP Addresses:"] + ip_lines[:10]
-        except:
-            return ["IP Info Unavailable"]
+        except Exception as e:
+            return ["IP Info Unavailable", str(e)]
 
     def generate_battery_status(self) -> List[str]:
         """Generate battery status"""
@@ -303,8 +318,8 @@ class GridScreensaver:
                 ["pmset", "-g", "batt"], universal_newlines=True
             )
             return output.strip().split("\n")
-        except:
-            return ["Battery Status Unavailable"]
+        except Exception as e:
+            return ["Battery Status Unavailable", str(e)]
 
     def update_cells(self):
         """Update all cells"""

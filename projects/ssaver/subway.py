@@ -108,8 +108,9 @@ def status():
 
     return per_line_issues
 
-s = status()
-for line, colored_symbol in nyc_subway.items():
-    line_status = "\n      ".join(s.get(line, []))
-    print(f"{colored_symbol} : {line_status}")
+if __name__ == "__main__":
+    s = status()
+    for line, colored_symbol in nyc_subway.items():
+        line_status = "\n      ".join(s.get(line, []))
+        print(f"{colored_symbol} : {line_status}")
 
