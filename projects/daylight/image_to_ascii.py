@@ -59,7 +59,7 @@ def get_ascii_char(grid, threshold=128):
     best_match = " "
     best_score = -1
     
-    print(normalized_cell)
+    #print(normalized_cell)
     for option in patterns:
         char, pattern = option
         # Calculate similarity score using dot product
@@ -76,7 +76,7 @@ def get_ascii_char(grid, threshold=128):
         if adjusted_score > best_score:
             best_score = adjusted_score
             best_match = char
-        print(f"char={char} score={adjusted_score} best={best_match} {best_score}")
+        #print(f"char={char} score={adjusted_score} best={best_match} {best_score}")
     
     return best_match
 
