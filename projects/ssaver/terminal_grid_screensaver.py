@@ -9,6 +9,7 @@ import time
 import subprocess
 import os
 import random
+import psutil
 from typing import List, Callable, Tuple
 
 # HTML color codes
@@ -21,6 +22,12 @@ HTML_COLORS = {
     "magenta": "#FF00FF",
     "yellow": "#FFFF00",
 }
+
+def create_bar(percent, width=30):
+    """Create a text-based percentage bar"""
+    filled_width = int(width * percent / 100)
+    bar = '#' * filled_width + '_' * (width - filled_width)
+    return f"[{bar}] {percent:.1f}%"
 
 
 class TerminalCell:
@@ -116,19 +123,20 @@ class GridScreensaver:
         """
         # Define some example generators
         generators = [
-            (self.generate_system_info, "System Info", "green"),
-            (self.generate_clock, "Clock", "blue"),
-            (self.generate_network_stats, "Network", "cyan"),
-            (self.generate_cpu_stats, "CPU", "red"),
-            (self.generate_memory_stats, "Memory", "magenta"),
-            (self.generate_disk_stats, "Disk", "yellow"),
+            (self.generate_system_info, "System Info", "default"),
+            (self.generate_clock, "Clock", "default"),
+            (self.gen_systemstats, "System Stats", "default"),
+            (self.generate_network_stats, "Network", "default"),
+            (self.generate_cpu_stats, "CPU", "default"),
+            (self.generate_memory_stats, "Memory", "default"),
+            (self.generate_disk_stats, "Disk", "default"),
             (self.generate_processes, "Processes", "default"),
-            (self.generate_weather, "Weather", "cyan"),
+            (self.generate_weather, "Weather", "default"),
             (self.generate_quotes, "Quotes", "default"),
-            (self.generate_calendar, "Calendar", "blue"),
-            (self.generate_file_system, "Files", "yellow"),
-            (self.generate_ip_info, "IP Info", "cyan"),
-            (self.generate_battery_status, "Battery", "yellow"),
+            (self.generate_calendar, "Calendar", "default"),
+            (self.generate_file_system, "Files", "default"),
+            (self.generate_ip_info, "IP Info", "default"),
+            (self.generate_battery_status, "Battery", "default"),
         ]
 
         # Calculate index based on row and col
@@ -162,6 +170,31 @@ class GridScreensaver:
             f"  {time_str}",
             "  " + "=" * 20,
         ]
+
+    def gen_systemstats(self):
+        output = []
+
+        # CPU usage
+        cpu_percent = psutil.cpu_percent(interval=1)
+        cpu_bar = create_bar(cpu_percent)
+        output.append(f"CPU:    {cpu_bar}")
+
+        # Memory usage
+        memory = psutil.virtual_memory()
+        memory_bar = create_bar(memory.percent)
+        output.append(f"Mem: {memory_bar} (Used: {memory.used / (1024**3):.2f}GB / {memory.total / (1024**3):.2f}GB)")
+
+        # Disk usage
+        disk = psutil.disk_usage('/')
+        disk_bar = create_bar(disk.percent)
+        output.append(f"Disk: {disk_bar} (Used: {disk.used / (1024**3):.2f}GB / {disk.total / (1024**3):.2f}GB)")
+
+        # Network stats (using a different approach since it's not a percentage)
+        net_io = psutil.net_io_counters()
+        sent_mb = net_io.bytes_sent / (1024**2)
+        recv_mb = net_io.bytes_recv / (1024**2)
+        output.append(f"Network:      ↑ {sent_mb:.2f}MB sent  ↓ {recv_mb:.2f}MB received")
+        return output
 
     def generate_network_stats(self) -> List[str]:
         """Generate network statistics"""
