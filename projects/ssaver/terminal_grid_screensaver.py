@@ -10,9 +10,15 @@ import subprocess
 import os
 import random
 import psutil
+import sys
 from typing import List, Callable, Tuple
 
+# Add parent directory to path for importing srutils and dfs
+sys.path.append(os.path.expanduser("~/srpub"))
 import subway
+import dfs
+import weather
+from srutils import to_metric_base
 
 # HTML color codes
 HTML_COLORS = {
@@ -25,20 +31,28 @@ HTML_COLORS = {
     "yellow": "#FFFF00",
 }
 
+
 def create_bar(percent, width=30):
     """Create a text-based percentage bar"""
     filled_width = int(width * percent / 100)
-    bar = '#' * filled_width + '_' * (width - filled_width)
+    bar = "#" * filled_width + "_" * (width - filled_width)
     return f"[{bar}] {percent:.1f}%"
 
 
 class CellConfig:
     """Configuration for a terminal cell"""
-    
-    def __init__(self, generator: Callable, title: str, color: str = "default", row_span: int = 1, col_span: int = 1):
+
+    def __init__(
+        self,
+        generator: Callable,
+        title: str,
+        color: str = "default",
+        row_span: int = 1,
+        col_span: int = 1,
+    ):
         """
         Initialize a cell configuration
-        
+
         Args:
             generator: Function that generates content for the cell
             title: The title to display at the top of the cell
@@ -51,6 +65,7 @@ class CellConfig:
         self.color = color
         self.row_span = row_span
         self.col_span = col_span
+
 
 class TerminalCell:
     """A single cell in the terminal grid"""
@@ -88,7 +103,7 @@ class TerminalCell:
             grid_style += f"grid-row: span {self.row_span};"
         if self.col_span > 1:
             grid_style += f"grid-column: span {self.col_span};"
-            
+
         html = f'<div class="cell" style="color: {HTML_COLORS.get(self.color, "#FFFFFF")};{grid_style}">\n'
         html += f'<div class="cell-title">{self.title}</div>\n'
         html += '<div class="cell-content">\n'
@@ -129,7 +144,7 @@ class GridScreensaver:
         # Create cells
         self.cells = []
         self.cell_map = {}  # Track which positions are filled due to spanning cells
-        
+
         for i in range(rows):
             row_cells = []
             for j in range(cols):
@@ -137,20 +152,20 @@ class GridScreensaver:
                 if self.cell_map.get((i, j)):
                     row_cells.append(None)
                     continue
-                    
+
                 # Get cell configuration
                 config = self.get_cell_configuration(i, j)
 
                 # Create the cell
                 cell = TerminalCell(config)
                 row_cells.append(cell)
-                
+
                 # Mark positions this cell spans as filled
                 for r in range(i, min(i + config.row_span, rows)):
                     for c in range(j, min(j + config.col_span, cols)):
-                        if (r > i or c > j):  # Don't mark the cell's own position
+                        if r > i or c > j:  # Don't mark the cell's own position
                             self.cell_map[(r, c)] = True
-            
+
             self.cells.append(row_cells)
 
     def get_cell_configuration(self, row: int, col: int) -> CellConfig:
@@ -171,27 +186,31 @@ class GridScreensaver:
             CellConfig(self.gen_systemstats, "System Stats", "default"),
             # Make subway span 2 rows
             CellConfig(self.generate_subway, "Subway", "default", row_span=2),
-            CellConfig(self.generate_network_stats, "Network", "default"),
-            CellConfig(self.generate_cpu_stats, "CPU", "default"),
-            CellConfig(self.generate_memory_stats, "Memory", "default"),
-            CellConfig(self.generate_disk_stats, "Disk", "default"),
+            # CellConfig(self.generate_network_stats, "Network", "default"),
+            # CellConfig(self.generate_cpu_stats, "CPU", "default"),
+            # CellConfig(self.generate_memory_stats, "Memory", "default"),
+            # CellConfig(self.generate_disk_stats, "Disk", "default"),
             CellConfig(self.generate_processes, "Processes", "default"),
             CellConfig(self.generate_weather, "Weather", "default"),
+            CellConfig(self.generate_empty, "Empty", "default"),
             CellConfig(self.generate_quotes, "Quotes", "default"),
             CellConfig(self.generate_calendar, "Calendar", "default"),
-            CellConfig(self.generate_file_system, "Files", "default"),
+            # CellConfig(self.generate_file_system, "Files", "default"),
             CellConfig(self.generate_ip_info, "IP Info", "default"),
-            CellConfig(self.generate_battery_status, "Battery", "default"),
+            # CellConfig(self.generate_battery_status, "Battery", "default"),
         ]
 
         # Calculate index based on row and col
         index = row * self.cols + col
-        
+
         # If the index exceeds the number of configurations, use the first one
         if index >= len(configs):
             return configs[0]
-            
+
         return configs[index]
+
+    def generate_empty(self) -> List[str]:
+        return [""]
 
     def generate_system_info(self) -> List[str]:
         """Generate system information"""
@@ -204,44 +223,156 @@ class GridScreensaver:
             return ["System Info Unavailable", str(e)]
 
     def generate_clock(self) -> List[str]:
-        """Generate a clock display"""
-        now = time.localtime()
-        date_str = time.strftime("%A, %B %d, %Y", now)
-        time_str = time.strftime("%H:%M:%S", now)
+        """Generate a clock display with multiple time zones"""
+        import datetime
+        import pytz
 
-        return [
-            "",
-            "  " + "=" * 20,
-            f"  {date_str}",
-            "  " + "=" * 20,
-            "",
-            f"  {time_str}",
-            "  " + "=" * 20,
+        # Define time zones we want to display (name, timezone)
+        timezones = [
+            ("Local", None),  # Use None for local timezone
+            ("SFO", "America/Los_Angeles"),
+            ("New York", "America/New_York"),
+            ("London", "Europe/London"),
+            ("UTC", "UTC"),
+            ("Tokyo", "Asia/Tokyo"),
         ]
+
+        # Get current UTC time
+        utc_now = datetime.datetime.now(datetime.timezone.utc)
+
+        # Format for local time
+        local_now = datetime.datetime.now()
+        local_date = local_now.date()
+        date_str = local_now.strftime("%A, %B %d, %Y")
+
+        output = []
+        output.append(f"Date: {date_str}")
+        output.append("")
+        output.append("Time Zones:")
+
+        # Find max length of timezone names for padding
+        max_name_length = max(len(name) for name, _ in timezones)
+
+        # Add line for each timezone
+        for name, tz_name in timezones:
+            if tz_name is None:
+                # Local time
+                current_time = local_now
+            else:
+                # Convert UTC time to the target timezone
+                try:
+                    tz = pytz.timezone(tz_name)
+                    current_time = utc_now.astimezone(tz)
+                except Exception:
+                    output.append(f"  {name.ljust(max_name_length)}: Error")
+                    continue
+
+            # Check if date is different from local date
+            different_date = current_time.date() != local_date
+            date_indicator = " *" if different_date else ""
+
+            # Format the time in both 24h and 12h formats
+            time_24h = current_time.strftime("%H:%M:%S")
+            time_12h = current_time.strftime("%I:%M %p")
+
+            # Use HTML-safe formatting with non-breaking spaces
+            padded_name = name + "&nbsp;" * (max_name_length - len(name))
+            output.append(f"  {padded_name} : {time_24h} ({time_12h}){date_indicator}")
+
+        output.append("")
+        output.append("* Different date than local")
+
+        return output
 
     def gen_systemstats(self):
         output = []
 
         # CPU usage
-        cpu_percent = psutil.cpu_percent(interval=1)
-        cpu_bar = create_bar(cpu_percent)
-        output.append(f"CPU:    {cpu_bar}")
+        try:
+            cpu_times = psutil.cpu_times_percent(interval=0.5)
+            user = cpu_times.user
+            system = cpu_times.system
+            idle = cpu_times.idle
+            output.append(
+                f"CPU usage: {user:.2f}% user, {system:.2f}% sys, {idle:.2f}% idle"
+            )
+
+            # CPU percentage bar
+            used_cpu = user + system
+            cpu_bar = create_bar(used_cpu)
+            output.append(f"  {cpu_bar}")
+        except Exception as e:
+            output.append(f"CPU stats unavailable: {str(e)}")
 
         # Memory usage
-        memory = psutil.virtual_memory()
-        memory_bar = create_bar(memory.percent)
-        output.append(f"Mem: {memory_bar} (Used: {memory.used / (1024**3):.2f}GB / {memory.total / (1024**3):.2f}GB)")
+        try:
+            memory = psutil.virtual_memory()
+            output.append(f"Memory: {memory.percent:.2f}% used")
 
-        # Disk usage
-        disk = psutil.disk_usage('/')
-        disk_bar = create_bar(disk.percent)
-        output.append(f"Disk: {disk_bar} (Used: {disk.used / (1024**3):.2f}GB / {disk.total / (1024**3):.2f}GB)")
+            # Memory percentage bar
+            memory_bar = create_bar(memory.percent)
+            output.append(f"  {memory_bar}")
+        except Exception as e:
+            output.append(f"Memory stats unavailable: {str(e)}")
 
-        # Network stats (using a different approach since it's not a percentage)
-        net_io = psutil.net_io_counters()
-        sent_mb = net_io.bytes_sent / (1024**2)
-        recv_mb = net_io.bytes_recv / (1024**2)
-        output.append(f"Network:      ↑ {sent_mb:.2f}MB sent  ↓ {recv_mb:.2f}MB received")
+        # Disk usage - using dfs module
+        try:
+            # Use the dfs module from srutils
+            usage = dfs.get_disk_usage("/")
+
+            # Convert to GB for display
+            total_gb = usage.total / (1024**3)
+            used_gb = usage.used / (1024**3)
+            free_gb = usage.free / (1024**3)
+
+            output.append(
+                f"Disk: total={total_gb:.1f}GB used={used_gb:.1f}GB free={free_gb:.1f}GB"
+            )
+
+            disk_bar = create_bar(usage.percent)
+            output.append(f"  {disk_bar}")
+        except Exception as e:
+            output.append(f"Disk stats unavailable: {str(e)}")
+
+        # Battery stats
+        try:
+            battery = psutil.sensors_battery()
+            if battery:
+                percent = battery.percent
+                power_plugged = battery.power_plugged
+                status = "Charging" if power_plugged else "Discharging"
+
+                # Format time remaining if discharging
+                if (
+                    not power_plugged
+                    and battery.secsleft != psutil.POWER_TIME_UNLIMITED
+                ):
+                    m, s = divmod(battery.secsleft, 60)
+                    h, m = divmod(m, 60)
+                    time_left = f"{h:d}:{m:02d}"
+                    output.append(
+                        f"Battery: {percent}% ({status}, {time_left} remaining)"
+                    )
+                else:
+                    output.append(f"Battery: {percent}% ({status})")
+
+                # Battery percentage bar
+                battery_bar = create_bar(percent)
+                output.append(f"  {battery_bar}")
+            else:
+                output.append("Battery: Not detected")
+        except Exception as e:
+            output.append(f"Battery stats unavailable: {str(e)}")
+
+        # Network stats
+        try:
+            net_io = psutil.net_io_counters()
+            sent_mb = net_io.bytes_sent / (1024**2)
+            recv_mb = net_io.bytes_recv / (1024**2)
+            output.append(f"Network: ↑ {sent_mb:.2f}MB sent ↓ {recv_mb:.2f}MB received")
+        except Exception as e:
+            output.append(f"Network stats unavailable: {str(e)}")
+
         return output
 
     def generate_network_stats(self) -> List[str]:
@@ -266,11 +397,10 @@ class GridScreensaver:
     def generate_subway(self) -> List[str]:
         try:
             # Use the HTML version for web output
-            output = subway.get_subway_status_formatted(as_html=True)
+            output = subway.get_subway_status_formatted(as_html=True, linelimit=1)
             return output.split("\n")
         except Exception as e:
             return ["Subway status unavailable", str(e)]
-
 
     def generate_memory_stats(self) -> List[str]:
         """Generate memory statistics"""
@@ -297,17 +427,9 @@ class GridScreensaver:
             return ["Process List Unavailable", str(e)]
 
     def generate_weather(self) -> List[str]:
-        """Generate weather information (simulated)"""
-        weather_conditions = ["Sunny", "Cloudy", "Rainy", "Snowy", "Foggy", "Windy"]
-        condition = random.choice(weather_conditions)
-        temp = random.randint(0, 30)
-        return [
-            "Weather Forecast:",
-            f"Condition: {condition}",
-            f"Temperature: {temp}°C",
-            f"Humidity: {random.randint(30, 95)}%",
-            f"Wind: {random.randint(0, 30)} km/h",
-        ]
+        """Generate real weather information using the weather module"""
+        # Use the imported weather module to get real weather data
+        return weather.get_weather()
 
     def generate_quotes(self) -> List[str]:
         """Generate random quotes"""

@@ -137,13 +137,14 @@ def status():
 
     return per_line_issues
 
-def get_subway_status_formatted(as_html=False):
+def get_subway_status_formatted(as_html=False, linelimit=3):
     subway_map = get_nyc_subway(as_html=as_html)
     s = status()
     result = []
     
     for line, colored_symbol in subway_map.items():
-        line_status = "\n      ".join(s.get(line, []))
+        line_status = s.get(line, [])[0:linelimit]
+        line_status = "\n      ".join(line_status)
         if as_html:
             result.append(f"{colored_symbol} : {line_status}")
         else:
