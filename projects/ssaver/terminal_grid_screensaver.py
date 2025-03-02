@@ -4,58 +4,43 @@ Mac Terminal Grid Screensaver
 A 4x4 grid of terminal-like displays for use as a macOS screensaver.
 """
 
-import curses
 import argparse
 import time
 import subprocess
 import os
 import random
-import threading
-from typing import List, Callable, Tuple, Dict, Any
+from typing import List, Callable, Tuple
 
-# Define color pairs
-COLOR_PAIRS = {
-    "default": (curses.COLOR_WHITE, curses.COLOR_BLACK),
-    "green": (curses.COLOR_GREEN, curses.COLOR_BLACK),
-    "blue": (curses.COLOR_BLUE, curses.COLOR_BLACK),
-    "cyan": (curses.COLOR_CYAN, curses.COLOR_BLACK),
-    "red": (curses.COLOR_RED, curses.COLOR_BLACK),
-    "magenta": (curses.COLOR_MAGENTA, curses.COLOR_BLACK),
-    "yellow": (curses.COLOR_YELLOW, curses.COLOR_BLACK),
+# HTML color codes
+HTML_COLORS = {
+    "default": "#FFFFFF",
+    "green": "#00FF00",
+    "blue": "#0000FF",
+    "cyan": "#00FFFF",
+    "red": "#FF0000",
+    "magenta": "#FF00FF",
+    "yellow": "#FFFF00",
 }
+
 
 class TerminalCell:
     """A single cell in the terminal grid"""
 
-    def __init__(self, window, title: str, content_generator: Callable, color: str = "default"):
+    def __init__(self, title: str, content_generator: Callable, color: str = "default"):
         """
         Initialize a terminal cell
 
         Args:
-            window: The curses window for this cell
             title: The title to display at the top of the cell
             content_generator: A function that generates content for the cell
             color: The color scheme to use for this cell
         """
-        self.window = window
         self.title = title
         self.content_generator = content_generator
         self.color = color
         self.content_lines = []
-        self.max_lines = 0
-        self.max_cols = 0
-        self.update_dimensions()
-
-    def update_dimensions(self):
-        """Update the dimensions of the cell"""
-        self.max_lines, self.max_cols = self.window.getmaxyx()
-
-    def render_frame(self):
-        """Render the frame of the cell"""
-        self.window.clear()
-        self.window.box()
-        # Draw the title
-        self.window.addstr(0, 2, f" {self.title} ")
+        self.max_lines = 40  # Default for web output
+        self.max_cols = 300  # Default for web output
 
     def update(self):
         """Update the content of the cell"""
@@ -66,47 +51,36 @@ class TerminalCell:
         elif isinstance(new_content, list):
             self.content_lines = new_content
 
-        # Render the frame
-        self.render_frame()
+    def get_html_content(self) -> str:
+        """Get the content of the cell as HTML"""
+        html = f'<div class="cell" style="color: {HTML_COLORS.get(self.color, "#FFFFFF")}">\n'
+        html += f'<div class="cell-title">{self.title}</div>\n'
+        html += '<div class="cell-content">\n'
 
-        # Render the content
-        for i, line in enumerate(self.content_lines):
-            if i >= self.max_lines - 2:  # Leave space for the border
-                break
-            try:
-                self.window.addstr(i + 1, 1, line[:self.max_cols-2])
-            except curses.error:
-                pass  # Ignore errors when writing to the last cell
+        for line in self.content_lines[: self.max_lines]:
+            html += f"{line}<br>\n"
 
-        self.window.refresh()
+        html += "</div>\n</div>\n"
+        return html
 
 
 class GridScreensaver:
     """Main class for the terminal grid screensaver"""
 
-    def __init__(self, stdscr):
+    def __init__(self, web_output_path=None, rows=3, cols=3):
         """
         Initialize the grid screensaver
 
         Args:
             stdscr: The main curses window
         """
-        self.stdscr = stdscr
         self.running = True
+        self.web_output_path = web_output_path
+
         self.cells = []
-        self.initialize_colors()
-
-    def initialize_colors(self):
-        """Initialize color pairs"""
-        curses.start_color()
-        for i, (name, (fg, bg)) in enumerate(COLOR_PAIRS.items(), 1):
-            curses.init_pair(i, fg, bg)
-
-    def get_color_pair(self, name: str) -> int:
-        """Get the color pair number for a named color"""
-        if name not in COLOR_PAIRS:
-            name = "default"
-        return list(COLOR_PAIRS.keys()).index(name) + 1
+        self.rows = rows
+        self.cols = cols
+        self.create_grid(rows=rows, cols=cols)
 
     def create_grid(self, rows: int, cols: int):
         """
@@ -116,28 +90,16 @@ class GridScreensaver:
             rows: Number of rows in the grid
             cols: Number of columns in the grid
         """
-        max_lines, max_cols = self.stdscr.getmaxyx()
-        cell_height = max_lines // rows
-        cell_width = max_cols // cols
-
         # Create cells
         self.cells = []
         for i in range(rows):
             row_cells = []
             for j in range(cols):
-                # Create a window for this cell
-                win = curses.newwin(
-                    cell_height,
-                    cell_width,
-                    i * cell_height,
-                    j * cell_width
-                )
-
                 # Choose a content generator and color for this cell
                 generator, title, color = self.get_cell_configuration(i, j)
 
                 # Create the cell
-                cell = TerminalCell(win, title, generator, color)
+                cell = TerminalCell(title, generator, color)
                 row_cells.append(cell)
             self.cells.append(row_cells)
 
@@ -156,7 +118,6 @@ class GridScreensaver:
         generators = [
             (self.generate_system_info, "System Info", "green"),
             (self.generate_clock, "Clock", "blue"),
-            #(self.generate_matrix_effect, "Matrix", "green"),
             (self.generate_network_stats, "Network", "cyan"),
             (self.generate_cpu_stats, "CPU", "red"),
             (self.generate_memory_stats, "Memory", "magenta"),
@@ -165,9 +126,7 @@ class GridScreensaver:
             (self.generate_weather, "Weather", "cyan"),
             (self.generate_quotes, "Quotes", "default"),
             (self.generate_calendar, "Calendar", "blue"),
-            #(self.generate_ascii_art, "ASCII Art", "green"),
             (self.generate_file_system, "Files", "yellow"),
-            #(self.generate_random_numbers, "Random", "magenta"),
             (self.generate_ip_info, "IP Info", "cyan"),
             (self.generate_battery_status, "Battery", "yellow"),
         ]
@@ -181,8 +140,9 @@ class GridScreensaver:
     def generate_system_info(self) -> List[str]:
         """Generate system information"""
         try:
-            output = subprocess.check_output(["system_profiler", "SPSoftwareDataType"],
-                                            universal_newlines=True)
+            output = subprocess.check_output(
+                ["system_profiler", "SPSoftwareDataType"], universal_newlines=True
+            )
             return output.strip().split("\n")[:10]
         except:
             return ["System Info Unavailable"]
@@ -203,19 +163,6 @@ class GridScreensaver:
             "  " + "=" * 20,
         ]
 
-    def generate_matrix_effect(self) -> List[str]:
-        """Generate a matrix-like effect"""
-        lines = []
-        for _ in range(10):
-            line = ""
-            for _ in range(20):
-                if random.random() > 0.7:
-                    line += random.choice("01")
-                else:
-                    line += " "
-            lines.append(line)
-        return lines
-
     def generate_network_stats(self) -> List[str]:
         """Generate network statistics"""
         try:
@@ -227,8 +174,9 @@ class GridScreensaver:
     def generate_cpu_stats(self) -> List[str]:
         """Generate CPU statistics"""
         try:
-            output = subprocess.check_output(["top", "-l", "1", "-n", "0"],
-                                            universal_newlines=True)
+            output = subprocess.check_output(
+                ["top", "-l", "1", "-n", "0"], universal_newlines=True
+            )
             cpu_lines = [line for line in output.split("\n") if "CPU usage" in line]
             return ["CPU Statistics:"] + cpu_lines
         except:
@@ -293,59 +241,15 @@ class GridScreensaver:
         except:
             return ["Calendar Unavailable"]
 
-    def generate_ascii_art(self) -> List[str]:
-        """Generate ASCII art"""
-        art_options = [
-            [
-                "  /\\_/\\  ",
-                " ( o.o ) ",
-                "  > ^ <  ",
-                "   Cat   "
-            ],
-            [
-                "    _    ",
-                "   / \\   ",
-                "  /   \\  ",
-                " /     \\ ",
-                "/       \\",
-                "---------",
-                "Mountain "
-            ],
-            [
-                "   ,--,  ",
-                "  (( O )) ",
-                "   `--'   ",
-                "   Apple  "
-            ],
-            [
-                " _______  ",
-                "|       | ",
-                "|  MAC  | ",
-                "|_______| ",
-                "Computer  "
-            ]
-        ]
-
-        return random.choice(art_options)
-
     def generate_file_system(self) -> List[str]:
         """Generate a file system listing"""
         try:
-            output = subprocess.check_output(["ls", "-la", os.environ.get("HOME", "/")],
-                                            universal_newlines=True)
+            output = subprocess.check_output(
+                ["ls", "-la", os.environ.get("HOME", "/")], universal_newlines=True
+            )
             return output.strip().split("\n")[:10]
         except:
             return ["File System Unavailable"]
-
-    def generate_random_numbers(self) -> List[str]:
-        """Generate random numbers"""
-        numbers = []
-        for _ in range(10):
-            line = ""
-            for _ in range(5):
-                line += f"{random.randint(1, 999):4d} "
-            numbers.append(line)
-        return numbers
 
     def generate_ip_info(self) -> List[str]:
         """Generate IP information"""
@@ -362,8 +266,9 @@ class GridScreensaver:
     def generate_battery_status(self) -> List[str]:
         """Generate battery status"""
         try:
-            output = subprocess.check_output(["pmset", "-g", "batt"],
-                                            universal_newlines=True)
+            output = subprocess.check_output(
+                ["pmset", "-g", "batt"], universal_newlines=True
+            )
             return output.strip().split("\n")
         except:
             return ["Battery Status Unavailable"]
@@ -374,13 +279,78 @@ class GridScreensaver:
             for cell in row:
                 cell.update()
 
-    def run(self, rows=4, cols=4, interval=5):
+    def generate_html_output(self):
+        """Generate HTML output for the grid"""
+        html = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal Grid Screensaver</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: #33ff33;
+            font-family: 'Courier New', monospace;
+        }
+        #content {
+            display: grid;
+            grid-template-columns: repeat(%COLS%, 1fr);
+            grid-template-rows: repeat(%ROWS%, 1fr);
+            width: 100vw;
+            height: 100vh;
+        }
+        .cell {
+            border: 1px solid #444;
+            padding: 5px;
+            overflow: hidden;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+        }
+        .cell-title {
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .cell-content {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+""".replace(
+            "%ROWS%", str(self.rows)
+        ).replace(
+            "%COLS%", str(self.cols)
+        )
+
+        # Add each cell's content
+        for row in self.cells:
+            for cell in row:
+                html += cell.get_html_content()
+
+        # Close the HTML
+        html += """    </div>
+</body>
+</html>
+"""
+
+        # Write the HTML to the output file
+        return html
+
+    def run_once_html(self, rows=3, cols=3):
+        self.update_cells()
+        html = self.generate_html_output()
+        return html
+
+    def run(self, interval=5):
         """Run the screensaver"""
         # Hide the cursor
-        curses.curs_set(0)
-
-        # Create the grid
-        self.create_grid(rows=rows, cols=cols)
 
         # Main loop
         first = True
@@ -391,19 +361,19 @@ class GridScreensaver:
                 # Update all cells
                 self.update_cells()
 
-                # Check for key press
-                self.stdscr.timeout(100)
-                key = self.stdscr.getch()
-                #if key != -1:
-                #    self.running = False
+                # Generate HTML output if needed
+                if self.web_output_path:
+                    html = self.generate_html_output()
+                    with open(self.web_output_path, "w") as f:
+                        f.write(html)
 
                 # Sleep for a bit
                 duration = time.time() - t0
-                sleep_for = max(0.1, interval-duration)
-                #print(f"Sleeping for {sleep_for}")
+                sleep_for = max(0.1, interval - duration)
+                print(f"Sleeping for {sleep_for}")
                 if not first:
                     time.sleep(sleep_for)
-                first=False
+                first = False
             except KeyboardInterrupt:
                 self.running = False
 
@@ -414,10 +384,16 @@ def main():
     parser.add_argument("--rows", type=int, default=3, help="Number of rows")
     parser.add_argument("--cols", type=int, default=3, help="Number of columns")
     parser.add_argument("--interval", type=int, default=5, help="Refresh interval")
+    parser.add_argument("--web-output", type=str, help="Path to write HTML output")
     args = parser.parse_args()
 
     # Run the screensaver
-    curses.wrapper(lambda stdscr: GridScreensaver(stdscr).run(rows=args.rows, cols=args.cols, interval=args.interval))
+    # curses.wrapper(lambda stdscr: GridScreensaver(stdscr).run(rows=args.rows, cols=args.cols, interval=args.interval))
+    # Create and run the screensaver
+    screensaver = GridScreensaver(
+        web_output_path=args.web_output, rows=args.rows, cols=args.cols
+    )
+    screensaver.run(interval=args.interval)
 
 
 if __name__ == "__main__":
