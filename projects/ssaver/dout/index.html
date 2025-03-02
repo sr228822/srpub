@@ -28,11 +28,11 @@
     </style>
 </head>
 <body>
-    
+
     <div id="content-container">
         <p>Loading content from server...</p>
     </div>
-    
+
     <div class="status">
         Last updated: <span id="last-updated">Never</span>
         <div id="error-message"></div>
@@ -42,20 +42,23 @@
         const contentContainer = document.getElementById('content-container');
         const lastUpdated = document.getElementById('last-updated');
         const errorMessage = document.getElementById('error-message');
-        
+
         // Configuration
-        const SERVER_URL = 'http://localhost:8000/content';
+        const SERVER_URL = 'http://localhost:8000';
         const REFRESH_INTERVAL = 5000; // 5 seconds
-        
+
         // Function to fetch content from the server
         async function fetchContent() {
             try {
-                const response = await fetch(SERVER_URL);
-                
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                const url = `${SERVER_URL}/content?width=${width}&height=${height}`;
+                const response = await fetch(url);
+
                 if (!response.ok) {
                     throw new Error(`Server returned ${response.status}`);
                 }
-                
+
                 const data = await response.json();
                 contentContainer.innerHTML = data.html;
                 lastUpdated.textContent = new Date().toLocaleTimeString();
@@ -67,10 +70,10 @@
                 console.error('Error fetching content:', error);
             }
         }
-        
+
         // Initial fetch
         fetchContent();
-        
+
         // Set up periodic refresh
         setInterval(fetchContent, REFRESH_INTERVAL);
     </script>

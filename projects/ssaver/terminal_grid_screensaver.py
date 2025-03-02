@@ -132,7 +132,7 @@ class GridScreensaver:
         ]
 
         # Calculate index based on row and col
-        index = row * 4 + col
+        index = row * self.cols + col
 
         # Return generator, title, and color
         return generators[index]
@@ -343,7 +343,7 @@ class GridScreensaver:
         # Write the HTML to the output file
         return html
 
-    def run_once_html(self, rows=3, cols=3):
+    def run_once_html(self, rows=3, cols=3, width=800, height=600):
         self.update_cells()
         html = self.generate_html_output()
         return html
