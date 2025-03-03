@@ -101,14 +101,46 @@ alias less='less -R'
 alias grep='grep --line-buffered --exclude=\*svn\* --color=auto'
 alias igrep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
 alias jq='jq --unbuffered'
+
 rebash() {
-  if [[ $shell == *zsh* ]]; then
-    echo "Currently in zsh"
+  # Save the current environment information
+  local current_conda_env=""
+  local current_pyenv_env=""
+
+  # Check for conda environment
+  if [[ -n $CONDA_DEFAULT_ENV ]]; then
+    current_conda_env="$CONDA_DEFAULT_ENV"
+    echo "Currently in condaenv $current_conda_env"
+  fi
+
+  # Check for pyenv environment
+  if [[ -n $VIRTUAL_ENV ]]; then
+    current_pyenv_env="$VIRTUAL_ENV"
+    echo "Currently in pyenv $current_pyenv_env"
+  fi
+
+  # Reload the appropriate shell configuration
+  if [[ $SHELL == *zsh* ]]; then
+    echo "Currently in zsh, reloading configuration..."
     source ~/.zshrc
   else
+    echo "Currently in bash, reloading configuration..."
     source ~/.bashrc
   fi
+
+  # Restore conda environment if it was active
+  if [[ -n $current_conda_env && $current_conda_env != "base" ]]; then
+    echo "Restoring conda environment: $current_conda_env"
+    conda activate "$current_conda_env"
+  fi
+
+  # Restore pyenv environment if it was active
+  if [[ -n $current_pyenv_env ]]; then
+    echo "Restoring pyenv environment: $current_pyenv_env"
+    source "${current_pyenv_env}/bin/activate"
+  fi
 }
+
 alias addheretopath='export PATH=$PATH:`pwd`'
 alias sparse="sed -n '0~10p'"
 lsr() {
