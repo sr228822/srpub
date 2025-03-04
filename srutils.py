@@ -597,6 +597,7 @@ def distance_between(lat1, long1, lat2, long2):
 
 def to_metric_base(size_str):
     units = {"Gi": 1024**3, "Mi": 1024**2, "Ki": 1024, "Bi": 1}
+    units.update({"G": 1024**3, "M": 1024**2, "K": 1024, "B": 1})
     size = size_str.strip()
     for unit, multiplier in units.items():
         if size.endswith(unit):
