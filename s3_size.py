@@ -5,14 +5,24 @@ from concurrent.futures import ThreadPoolExecutor
 from srutils import size_to_human
 
 
+def parse_s3_uri(uri: str) -> tuple[str, str]:
+    """Parse S3 URI into bucket name and key."""
+    assert uri.startswith("s3://"), f"Not a uri: {uri}"
+    uri = uri.replace("s3://", "")
+    bucket, *key_parts = uri.split("/")
+    key = "/".join(key_parts)
+    return str(bucket), str(key)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Calculate the total size of an S3 folder recursively"
     )
-    parser.add_argument("--bucket", required=True, help="S3 bucket name")
+    parser.add_argument("--bucket", required=False, help="S3 bucket name")
     parser.add_argument(
-        "--prefix", required=True, help="S3 folder prefix to sum recursively"
+        "--prefix", required=False, help="S3 folder prefix to sum recursively"
     )
+    parser.add_argument("--uri", required=False, help="S3 URI")
     parser.add_argument(
         "--threads",
         type=int,
@@ -55,10 +65,19 @@ def get_size_recursive(bucket, prefix, threads=10, verbose=False):
 
 def main():
     args = parse_args()
+    if args.uri:
+        assert not args.bucket
+        assert not args.prefix
+        bucket, prefix = parse_s3_uri(args.uri)
+    else:
+        assert args.bucket
+        assert args.prefix
+        bucket = args.bucket
+        prefix = args.prefix
 
-    print(f"Calculating total size for s3://{args.bucket}/{args.prefix}...")
+    print(f"Calculating total size for s3://{bucket}/{prefix}...")
     total_size_gb, num_objects = get_size_recursive(
-        args.bucket, args.prefix, args.threads, verbose=args.verbose
+        bucket, prefix, args.threads, verbose=args.verbose
     )
 
     print(f"\nTotal objects: {num_objects}")
