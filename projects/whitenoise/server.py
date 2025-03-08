@@ -2,7 +2,6 @@ import argparse
 import os
 import socket
 import time
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import requests
 
@@ -45,7 +44,7 @@ def try_report_ip():
     try:
         x = requests.post(url, json=myobj, timeout=5)
         print(f"Reported IP result {x}")
-    except Exeption as ex:
+    except Exception:
         print("Failed to report ip: {ex}")
         return
 
@@ -105,7 +104,6 @@ def vol_max():
 ####################################################
 # Audio Playing
 ####################################################
-import time
 
 
 def play_audio(filename):
@@ -283,7 +281,7 @@ if __name__ == "__main__":
         print(f"Keyboard Interrupt {ex}")
         _cleanup()
         raise
-    except Exception:
+    except Exception as ex:
         print(f"Exception {ex}")
         _cleanup()
         raise
