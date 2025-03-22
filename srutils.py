@@ -11,6 +11,7 @@ import sys
 import time
 import codecs
 import json
+import logging
 
 
 os_name = os.name
@@ -196,6 +197,24 @@ def vprint(txt):
     if _verbose:
         print(f"[{now_str()}] {txt}")
 
+
+def str_to_bool(value):
+    return value.lower() in ("true", "t", "yes", "y", "1")
+
+
+plain = str_to_bool(os.getenv("SR_LOGS_PLAIN", "False"))
+color = str_to_bool(os.getenv("SR_LOGS_COLOR", "True"))
+verbose = str_to_bool(os.getenv("SR_LOGS_VERBOSE", "False"))
+log_level = logging.DEBUG
+if verbose := os.getenv("SR_LOGS_VERBOSE"):
+    log_level = logging.DEBUG if str_to_bool(verbose) else logging.INFO
+
+plain_format = "%(message)s"
+verbose_format = "[%(asctime)s]-[%(levelname)s] %(message)s"
+log_format = plain_format if plain else verbose_format
+
+logging.basicConfig(format=log_format, level=log_level)
+log = logging.getLogger()
 
 #################################################################
 # Simple file based cache

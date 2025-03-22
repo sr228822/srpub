@@ -19,6 +19,8 @@ git config --global user.name "Samuel Russell"
 
 export KUBE_EDITOR='vim'
 
+export SR_LOGS_VERBOSE=false
+export SR_LOGS_PLAIN=true
 
 ############################################################
 #     ZSH stuff
