@@ -33,7 +33,7 @@ def percent_bar(percentage, width=20):
     :return: A string with a progress bar and percentage label.
     """
     filled_length = int(round(width * percentage / 100))
-    bar = "x" * filled_length + " " * (width - filled_length)
+    bar = "x" * filled_length + "_" * (width - filled_length)
     return f"[{bar}]"
 
 
@@ -68,7 +68,8 @@ if __name__ == "__main__":
         try:
             usage = get_disk_usage(mount)
             free_percent = 100.0 - usage.percent
-            print(f"{mount}:                 {percent_bar(usage.percent)}")
+            print(f"{mount}")
+            print(f"  {percent_bar(usage.percent, width=30)}\n")
             print(f"  Total: {usage.total / ONE_GB:.1f} GB")
             print(f"  Used:  {usage.used / ONE_GB:.1f} GB  {usage.percent:.1f}%")
             print(f"  Free:  {usage.free / ONE_GB:.1f} GB  {free_percent:.1f}%")
