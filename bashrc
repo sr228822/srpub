@@ -160,7 +160,11 @@ tmptmp() {
 
 
 color_code_files() {
-    GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):"
+    else
+        cat # pass-through for Linux
+    fi
 }
 
 shere() {
@@ -543,6 +547,10 @@ gco() {
             git checkout $substr
         fi
     fi
+}
+gitcleanmain() {
+    # Force reset main back to origin main
+    git branch -f main origin/main
 }
 
 git_push_as_me() {
