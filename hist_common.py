@@ -4,7 +4,7 @@ import argparse
 import operator
 import time
 
-from srutils import quick_ingest_line
+from srutils import quick_ingest_line, flushprint
 from colorstrings import grey_str
 
 # |sort | uniq -c | sort -nr
@@ -22,6 +22,7 @@ def _print_hist(
     alphabetical=False,
     dups_only=False,
     with_perc=True,
+    last=False,
 ):
 
     if alphabetical:
@@ -62,8 +63,12 @@ def _print_hist(
             lines.append(f"{int(tot):5} {gcom} {perc:5.1f} {gcom} {x[0]}")
         else:
             lines.append(f"{int(tot):5} {gcom} {x[0]}")
-    for line in lines:
-        print(line)
+
+    if last:
+        for line in lines:
+            print(line)
+    else:
+        flushprint(lines)
 
 
 def main():
@@ -97,33 +102,39 @@ def _main(args):
     lprint = time.time()
     t0 = time.time()
 
-    for line in quick_ingest_line():
-        line = line.rstrip().lstrip()
-        seen[line] = seen.get(line, 0) + 1
-        total_cnt += 1
-        if time.time() - lprint > args.interval:
-            lprint = time.time()
-            _print_hist(
-                seen,
-                total_cnt,
-                t0,
-                limit,
-                alphabetical=args.alphabetical,
-                dups_only=args.duplicates,
-                with_perc=(not args.no_percent),
-            )
-
-    print("\nSTDOUT terminated\n\n\n")
-    _print_hist(
-        seen,
-        total_cnt,
-        t0,
-        limit,
-        with_rate=(time.time() - t0 >= args.interval) and not args.no_rate,
-        alphabetical=args.alphabetical,
-        dups_only=args.duplicates,
-        with_perc=(not args.no_percent),
-    )
+    try:
+        for line in quick_ingest_line():
+            line = line.rstrip().lstrip()
+            seen[line] = seen.get(line, 0) + 1
+            total_cnt += 1
+            if time.time() - lprint > args.interval:
+                lprint = time.time()
+                _print_hist(
+                    seen,
+                    total_cnt,
+                    t0,
+                    limit,
+                    alphabetical=args.alphabetical,
+                    dups_only=args.duplicates,
+                    with_perc=(not args.no_percent),
+                    last=False,
+                )
+    except KeyboardInterrupt:
+        print("\n" * 20)
+        pass
+    finally:
+        print("\nSTDOUT terminated\n\n\n")
+        _print_hist(
+            seen,
+            total_cnt,
+            t0,
+            limit,
+            with_rate=(time.time() - t0 >= args.interval) and not args.no_rate,
+            alphabetical=args.alphabetical,
+            dups_only=args.duplicates,
+            with_perc=(not args.no_percent),
+            last=True,
+        )
 
 
 if __name__ == "__main__":

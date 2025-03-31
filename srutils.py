@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import datetime
+import shutil
 import math
 import os
 import re
@@ -69,9 +70,24 @@ def noisy_sleep(duration, tag=""):
     print("")
 
 
-def flushprint(l):
-    sys.stdout.write("\r" + str(l) + "                   ")
-    sys.stdout.flush()
+def fill_line(line, width):
+    fill_amt = max(0, width - len(line))
+    return line + "  " * fill_amt
+
+def flushprint(content):
+    width = int(shutil.get_terminal_size().columns) - 3
+    if type(content) is str:
+        sys.stdout.write("\r" + fill_line(content,  width))
+        sys.stdout.flush()
+    elif type(content) is list:
+        lines = [fill_line(line, width).strip() for line in content]
+        sys.stdout.write("\r\033[K")
+        sys.stdout.write("\n".join(lines[:-1]))
+        sys.stdout.write("\n" + lines[-1])
+        sys.stdout.write(f"\033[{len(lines)-1}A")
+        sys.stdout.flush()
+    else:
+        print(content)
 
 
 def flushprint_to_stderr(l, nobuffer=False):
