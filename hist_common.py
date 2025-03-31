@@ -3,10 +3,13 @@
 import argparse
 import operator
 
-# from srutils import *
 from srutils import get_now, quick_ingest_line, seconds_between
+from colorstrings import grey_str
 
 # |sort | uniq -c | sort -nr
+
+
+gcom = grey_str(",")
 
 
 def _print_hist(
@@ -48,15 +51,13 @@ def _print_hist(
         rate = tot / tdelt
         perc = 100.0 * tot / total_cnt
         if with_rate and with_perc:
-            print(
-                f"{int(tot):5} , " + f"{perc:5.1f} , " + f"{rate:5.1f} , " + str(x[0])
-            )
+            print(f"{int(tot):5} {gcom}{perc:5.1f} {gcom} {rate:5.1f} {gcom} {x[0]}")
         elif with_rate:
-            print(f"{int(tot):5} , " + f"{rate:5.1f} , " + str(x[0]))
+            print(f"{int(tot):5} {gcom} {rate:5.1f} {gcom} {x[0]}")
         elif with_perc:
-            print(f"{int(tot):5} , " + f"{perc:5.1f} , " + str(x[0]))
+            print(f"{int(tot):5} {gcom} {perc:5.1f} {gcom} {x[0]}")
         else:
-            print(f"{int(tot):5} , " + str(x[0]))
+            print(f"{int(tot):5} {gcom} {x[0]}")
 
 
 def main():
