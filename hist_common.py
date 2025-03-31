@@ -16,7 +16,7 @@ def _print_hist(
     with_rate=True,
     alphabetical=False,
     dups_only=False,
-    with_perc=False,
+    with_perc=True,
 ):
 
     if alphabetical:
@@ -27,12 +27,15 @@ def _print_hist(
     print(
         f"------------------------------------------ {len(sortseen)} unique, {total_cnt} total"
     )
-    if with_rate:
-        print("  cnt  rate  thing")
-        print("  ---  ----  -----")
+    if with_rate and with_perc:
+        print("  cnt      %     rate   thing")
+        print("  ---    ----    ----   -----")
+    elif with_rate:
+        print("  cnt    rate    thing")
+        print("  ---    ----    -----")
     elif with_perc:
-        print("  cnt    %   thing")
-        print("  ---  ----  -----")
+        print("  cnt      %     thing")
+        print("  ---    ----    -----")
     else:
         print("  cnt thing")
         print("  --- -----")
@@ -42,10 +45,13 @@ def _print_hist(
         if dups_only and tot == 1:
             continue
         rate = tot / tdelt
-        if with_rate:
-            print(f"{int(tot):5} , " + f"{rate:5.1f} " + str(x[0]))
+        perc = 100.0 * tot / total_cnt
+        if with_rate and with_perc:
+            print(f"{int(tot):5} , " + f"{perc:5.1f} , " + f"{rate:5.1f} , " + str(x[0]))
+        elif with_rate:
+            print(f"{int(tot):5} , " + f"{rate:5.1f} , " + str(x[0]))
         elif with_perc:
-            print(f"{int(tot):5} , " + f"{100.0 * tot / total_cnt:5.1f} " + str(x[0]))
+            print(f"{int(tot):5} , " + f"{perc:5.1f} , " + str(x[0]))
         else:
             print(f"{int(tot):5} , " + str(x[0]))
 
@@ -57,7 +63,7 @@ def main():
         action="store_true",
         help="sort alphametically, not by frequency",
     )
-    parser.add_argument("--percent", action="store_true", help="show percent")
+    parser.add_argument("--no-percent", action="store_true", help="show percent")
     parser.add_argument("--no-rate", action="store_true", help="dont show the rate")
     parser.add_argument(
         "--duplicates", action="store_true", help="only show duplciates"
@@ -95,7 +101,7 @@ def _main(args):
                 limit,
                 alphabetical=args.alphabetical,
                 dups_only=args.duplicates,
-                with_perc=args.percent,
+                with_perc=(not args.no_percent),
             )
 
     print("\nSTDOUT terminated\n\n\n")
@@ -108,7 +114,7 @@ def _main(args):
             with_rate=False,
             alphabetical=args.alphabetical,
             dups_only=args.duplicates,
-            with_perc=args.percent,
+            with_perc=(not args.no_percent),
         )
     else:
         _print_hist(
@@ -119,7 +125,7 @@ def _main(args):
             with_rate=(not args.no_rate),
             alphabetical=args.alphabetical,
             dups_only=args.duplicates,
-            with_perc=args.percent,
+            with_perc=(not args.no_percent),
         )
 
 
