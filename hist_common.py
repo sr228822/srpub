@@ -28,17 +28,17 @@ def _print_hist(
         f"------------------------------------------ {len(sortseen)} unique, {total_cnt} total"
     )
     if with_rate and with_perc:
-        print("  cnt      %     rate   thing")
-        print("  ---    ----    ----   -----")
+        print("  cnt      %     rate  thing")
+        print("  ---    ----    ----  -----")
     elif with_rate:
-        print("  cnt    rate    thing")
-        print("  ---    ----    -----")
+        print("  cnt    rate   thing")
+        print("  ---    ----   -----")
     elif with_perc:
-        print("  cnt      %     thing")
-        print("  ---    ----    -----")
+        print("  cnt      %    thing")
+        print("  ---    ----   -----")
     else:
-        print("  cnt thing")
-        print("  --- -----")
+        print("  cnt  thing")
+        print("  ---  -----")
     tdelt = seconds_between(t0, get_now())
     for x in sortseen[0:lim]:
         tot = int(x[1])
