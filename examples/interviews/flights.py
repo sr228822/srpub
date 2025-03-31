@@ -32,8 +32,9 @@ sample_flights = [
 ###########################################################
 # Solution
 
-from datetime import datetime
-from collections import namedtuple, defaultdict
+from datetime import datetime  # noqa
+from collections import namedtuple, defaultdict  # noqa
+from heapq import heappush, heappop  # noqa
 
 Flight = namedtuple("Flight", ["origin", "destination", "start", "end", "cost"])
 
@@ -71,28 +72,26 @@ def find_best_route_dfs(flights, origin, destination):
     def dfs(origin, finaldest, start, depth=0):
         """Depth first search for routes from origin to dest starting at time"""
         bestcost = None
-        _debug_print(f"{'\t'*depth} DFS {origin}->{finaldest} start={start}")
+        dbg_indent = "\t" * depth
+        _debug_print(f"{dbg_indent} DFS {origin}->{finaldest} start={start}")
         connections = [f for f in graph[origin] if f.start > start]
         for connection in connections:
-            _debug_print(f"{'\t'*depth} Connect {connection}")
+            _debug_print(f"{dbg_indent} Connect {connection}")
             if connection.destination == finaldest:
-                _debug_print(f"{'\t'*depth} FOUND DEST")
+                _debug_print(f"{dbg_indent} FOUND DEST")
                 return connection.cost
 
             remainder = dfs(
                 connection.destination, finaldest, connection.end, depth + 1
             )
-            if remainder != None:
+            if remainder is not None:
                 cost = connection.cost + remainder
-                _debug_print(f"{'\t'*depth} viable route cost={cost}")
+                _debug_print(f"{dbg_indent} viable route cost={cost}")
                 bestcost = cost if not bestcost else min(cost, bestcost)
         return bestcost
 
     cost = dfs(origin, destination, datetime.min)
     return cost
-
-
-from heapq import heappush, heappop
 
 
 def find_best_route_dijkstras(flights, origin, destination):
@@ -148,4 +147,4 @@ def test_routing():
 
 
 def test_no_route():
-    assert find_best_route(sample_flights, "ATL", "The Moon") == None
+    assert find_best_route(sample_flights, "ATL", "The Moon") is None

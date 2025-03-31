@@ -29,7 +29,7 @@ def is_number(v):
     try:
         int(v)
         return True
-    except:
+    except Exception:
         return False
 
 

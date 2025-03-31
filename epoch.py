@@ -2,7 +2,7 @@
 
 import sys
 import time
-from srutils import *
+from srutils import parse_duration, argpop
 
 if __name__ == "__main__":
     millis = argpop(sys.argv, "--millis") or argpop(sys.argv, "millis")

@@ -12,21 +12,21 @@ def womp():
 
     try:
         raise Exception("oh no")
-    except:
+    except Exception:
         # a version that includes the exception
-        as_str = traceback.format_exc()
+        as_string = traceback.format_exc()
         print(f"--asstr--\n{as_string}\n------")
 
     return 5
 
 
-def bork():
-    return 4 * womp()
+def bork(a):
+    return a * womp()
 
 
 def foo():
     a = 1
-    bork()
+    bork(a)
     return 4
 
 

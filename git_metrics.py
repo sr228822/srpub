@@ -180,7 +180,7 @@ def get_aliases(name, emails=True):
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    #total_time = stat.tim.seconds()
+    # total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
     print(
         f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total commits;  {len(stat.cnt.keys())} unique authors)"

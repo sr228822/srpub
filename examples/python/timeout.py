@@ -41,7 +41,7 @@ def long():
         time.sleep(15)
     except TimeoutError:
         raise
-    except:
+    except Exception:
         print("wopps caught")
 
 
@@ -55,7 +55,7 @@ except TimeoutError:
 # Context Manager Version
 #########################
 
-import contextlib2
+import contextlib2  # noqa
 
 
 @contextlib2.contextmanager

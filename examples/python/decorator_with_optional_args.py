@@ -2,7 +2,7 @@
 
 
 def decorator(func=None, **options):
-    if func != None:
+    if func is not None:
         # We received the function on this call, so we can define
         # and return the inner function
         def inner(*args, **kwargs):

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import contextlib2
+import time
+import random
+import signal
 
 
 class TimeoutError(Exception):
@@ -32,7 +35,7 @@ HIGH_TIMEOUT = 5.0
 PERCENT_ALLOWED_HIGH = 0.05
 
 
-def simualted_call():
+def simulated_call():
     # This simulated
     t = random.random() * 0.2
     if random.random() < 0.01:

@@ -5,7 +5,7 @@ print("here")
 try:
     res = input("Press Enter to continue...")
     print(res)
-except:
+except Exception:
     pass
 
 print("and here")

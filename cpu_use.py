@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-from srutils import *
+from srutils import cmd
 import sys
 import time
 
 
 def is_int(x):
     try:
-        i = int(x)
+        int(x)
         return True
-    except:
+    except Exception:
         return False
 
 

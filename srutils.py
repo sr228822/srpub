@@ -71,18 +71,21 @@ def noisy_sleep(duration, tag=""):
     flushprint("                                                ")
     print("")
 
+
 def term_width(buffer=3):
     return int(shutil.get_terminal_size().columns) - buffer
+
 
 def fill_line(line, width=None):
     width = width or term_width()
     fill_amt = max(0, width - len(line))
     return line + "  " * fill_amt
 
+
 def flushprint(content):
     width = term_width()
     if type(content) is str:
-        sys.stdout.write("\r" + fill_line(content,  width))
+        sys.stdout.write("\r" + fill_line(content, width))
         sys.stdout.flush()
     elif type(content) is list:
         lines = [fill_line(line, width).rstrip() for line in content]
@@ -392,8 +395,6 @@ def termcode(num):
     # if os_name == 'nt':
     #    return ''
     return f"\x1b[{num}m"
-
-
 
 
 def print_error(s, fatal=False):

@@ -88,7 +88,7 @@ def _alice_status_once(perc_done=None, message=None):
             if action in resp:
                 # Do the action?
                 action_result = alice_custom_actions[action]()
-                _alice_post_status(action, message=resp)
+                _alice_post_status(action, message=action_result)
 
     # Terminating actions
     if "action_terminate" in resp:
