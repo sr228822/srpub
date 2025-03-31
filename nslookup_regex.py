@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
+import os
 import re
 import socket
 import sys
 
 import colorstrings
-from srutils import *
+from srutils import save_pickle, load_pickle, cmd
 
 
 def whois_query(q):
     resp = cmd(f"whois {q}")
     result = ""
     d = dict()
-    for l in resp.split("\n"):
-        l = l.strip()
-        m = re.search("^(.*?)\:(.*?)$", l)
+    for line in resp.split("\n"):
+        line = line.strip()
+        m = re.search("^(.*?)\:(.*?)$", line)
         if m:
             key = m.group(1).lower()
             d[key] = d.get(key, "") + m.group(2).strip()
@@ -53,7 +54,7 @@ def ns_lookup(ip):
         return nscache[ip]
     try:
         fullhost = socket.gethostbyaddr(ip)[0]
-    except:
+    except Exception:
         nscache[ip] = None
         return None
     res = fullhost

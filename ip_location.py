@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 
 DB_DIR = "/Users/sam/misc/GeoLite2-City-CSV_20190813/"
 IP_PATH = DB_DIR + "GeoLite2-City-Blocks-IPv4.csv"

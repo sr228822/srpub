@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from srutils import *
+from srutils import cmd
 import operator
 import re
 import sys
@@ -12,7 +12,7 @@ def title_from_sha(sha):
     res = cmd("git show " + sha)
     try:
         res = res.split("\n")[4]
-    except:
+    except Exception:
         res = ""
     return res
 
@@ -53,14 +53,14 @@ lc = 0
 
 all_files = list(args_to_files())
 for a in all_files:
-    for l in cmd(f"git blame {a}").split("\n"):
-        m = re.search(r"\((.*?)\)", l)
+    for line in cmd(f"git blame {a}").split("\n"):
+        m = re.search(r"\((.*?)\)", line)
         if m:
             auth = " ".join(m.group(1).split()[0:-4])
         else:
             continue
 
-        ls = re.split(" |\(", l)
+        ls = re.split(" |\(", line)
         if len(ls) < 4:
             continue
         sha = ls[0].replace("^", " ")
@@ -90,8 +90,8 @@ for sha, cnt in sorted_cnts:
 print("\n---- Original File Creator -----\n")
 for a in all_files:
     auth = None
-    for l in cmd(f"git log --format=short {a}").split("\n"):
-        m = re.search(r"Author\:(.*?)$", l)
+    for line in cmd(f"git log --format=short {a}").split("\n"):
+        m = re.search(r"Author\:(.*?)$", line)
         if m:
             auth = m.group(1)
         else:

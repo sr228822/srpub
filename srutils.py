@@ -14,6 +14,8 @@ import codecs
 import json
 import logging
 
+from colorstrings import yellow_str, red_str
+
 
 os_name = os.name
 is_windows = sys.platform.lower().startswith("win")
@@ -64,18 +66,21 @@ def noisy_sleep(duration, tag=""):
 
                 if alice.alice_enabled():
                     alice.alice_check_status()
-            except:
+            except Exception:
                 pass
     flushprint("                                                ")
     print("")
 
+def term_width(buffer=3):
+    return int(shutil.get_terminal_size().columns) - buffer
 
-def fill_line(line, width):
+def fill_line(line, width=None):
+    width = width or term_width()
     fill_amt = max(0, width - len(line))
     return line + "  " * fill_amt
 
 def flushprint(content):
-    width = int(shutil.get_terminal_size().columns) - 3
+    width = term_width()
     if type(content) is str:
         sys.stdout.write("\r" + fill_line(content,  width))
         sys.stdout.flush()
@@ -90,11 +95,11 @@ def flushprint(content):
         print(content)
 
 
-def flushprint_to_stderr(l, nobuffer=False):
+def flushprint_to_stderr(line, nobuffer=False):
     if nobuffer:
-        sys.stderr.write("\r" + str(l))
+        sys.stderr.write("\r" + str(line))
     else:
-        sys.stderr.write("\r" + str(l) + "                   ")
+        sys.stderr.write("\r" + fill_line(line))
     sys.stderr.flush()
 
 
@@ -127,7 +132,7 @@ def is_uuid(s):
     try:
         uuid.UUID(s)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -146,7 +151,7 @@ def str_hash(obj):
     import hashlib
 
     print("Hashing", obj)
-    if type(obj) == list:
+    if type(obj) is list:
         strv = "-".join([str(x) for x in sorted(obj)])
     else:
         strv = str(obj)
@@ -189,7 +194,7 @@ def html_read_timeout(url, to):
         req = urllib2.Request(url)
         resp = urllib2.urlopen(req, timeout=to)
         return resp.read()
-    except:
+    except Exception:
         print("{url fail}")
         return ""
 
@@ -389,7 +394,6 @@ def termcode(num):
     return f"\x1b[{num}m"
 
 
-from colorstrings import *
 
 
 def print_error(s, fatal=False):
@@ -514,7 +518,7 @@ def cmd(c, wait=True, noisy=False, straight_through=False):
         output = ""
         while True:
             nextline = process.stdout.readline()
-            if nextline == "" and process.poll() != None:
+            if nextline == "" and process.poll() is not None:
                 break
             output += nextline
             sys.stdout.write(nextline)
@@ -559,16 +563,17 @@ def env_metadata():
 #################################################################
 
 
-def average(l):
-    if not l or len(l) == 0:
+def average(lst):
+    if not lst or len(lst) == 0:
         return 0.0
-    return sum(l) / len(l)
+    return sum(lst) / len(lst)
 
 
-def stddev(l):
-    avg = average(l)
-    var = map(lambda x: (x - avg) ** 2, l)
+def stddev(lst):
+    avg = average(lst)
+    var = map(lambda x: (x - avg) ** 2, lst)
     res = math.sqrt(average(var))
+    return res
 
 
 def median(lst):
@@ -588,8 +593,6 @@ def percentile(lst, n):
     import numpy
 
     return numpy.percentile(numpy.array(lst), n) if lst else 0
-    return res
-    return res
 
 
 def distance_between(lat1, long1, lat2, long2):
@@ -620,7 +623,7 @@ def distance_between(lat1, long1, lat2, long2):
 
     try:
         arc = math.acos(cos)
-    except:
+    except Exception:
         # a bad acos means we are at 0 dist i think
         return 0.0
 
@@ -668,7 +671,7 @@ def get_config_int(cname, default=0):
         f = open(cname).read().strip()
         r = int(f)
         return r
-    except:
+    except Exception:
         return default
 
 
@@ -739,3 +742,4 @@ def send_email(source, to, subject, body):
             },
         },
     )
+    print(response)

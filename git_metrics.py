@@ -2,10 +2,13 @@
 
 from __future__ import print_function
 
-from srutils import *
+from srutils import cmd, parse_duration, dur_to_human, name_aliases
 import argparse
 import datetime
 import operator
+import time
+
+from colorstrings import blue_str
 
 # A map of known aliases -> name
 kauths = {}
@@ -149,7 +152,6 @@ def put_in_known(name, email):
         return
 
     # we have neither the exact email nor exact name
-    found = False
     for other_auth in kauths.keys():
         if looks_similar(name, other_auth):
             kauths[name] = kauths[other_auth]
@@ -178,7 +180,7 @@ def get_aliases(name, emails=True):
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    total_time = stat.tim.seconds()
+    #total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
     print(
         f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total commits;  {len(stat.cnt.keys())} unique authors)"

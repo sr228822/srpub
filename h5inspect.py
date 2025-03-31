@@ -6,7 +6,7 @@ from pathlib import Path
 
 import h5py
 
-from colorstrings import *
+from colorstrings import blue_str, red_str, print_blue
 
 tab = "  "
 

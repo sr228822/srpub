@@ -14,13 +14,16 @@ from srutils import (
     get_term_size,
     cmd,
     yes_or_no,
+    DiskCache,
+    set_verbose,
+)
+
+from colorstrings import (
     blue_str,
     grey_str,
     magenta_str,
     red_str,
     bold_str,
-    DiskCache,
-    set_verbose,
 )
 
 
@@ -257,7 +260,6 @@ def main():
     repo_name = root.name
 
     # Initialize cache
-    home = Path.home()
     cache = DiskCache(f"git_status_{repo_name}", verbose=args.verbose)
 
     # Check git config if not done before
@@ -376,8 +378,8 @@ def main():
     print("*" * (cols - 10))
 
     # Print local status diffs
-    untracked = [l for l in status[1:] if "??" in l]
-    tracked = [l for l in status[1:] if "??" not in l]
+    untracked = [line for line in status[1:] if "??" in line]
+    tracked = [line for line in status[1:] if "??" not in line]
     for line in tracked:
         print(magenta_str(line))
 

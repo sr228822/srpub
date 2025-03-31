@@ -19,7 +19,7 @@ def ka():
 def as_json(s):
     try:
         return json.loads(s)
-    except:
+    except Exception:
         return None
 
 
@@ -35,7 +35,7 @@ def stream(c, verbose=False):
     while True:
         nextline = process.stdout.readline()
         proc_poll = process.poll()
-        if nextline == "" and proc_poll != None:
+        if nextline == "" and proc_poll is not None:
             if verbose:
                 print(
                     f"Process {c} extied with code {proc_poll}, waiting_to_start={waiting_to_start}"

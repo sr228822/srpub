@@ -1,7 +1,8 @@
 #!/usr/env/python
 
 import os
-from srutils import *
+import sys
+from srutils import cmd
 
 for path in sys.argv[1:]:
     for root, dir, files in os.walk(path):
