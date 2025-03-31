@@ -2,7 +2,6 @@
 
 import commands
 import multiprocessing
-import random, time
 from contextlib import closing
 
 

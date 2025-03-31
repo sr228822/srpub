@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import time, uuid
+import time
+import uuid
 
 import contextlib2
 import tornado.ioloop
 import tornado.web
-from tornado.gen import coroutine, Return, sleep
+from tornado.gen import coroutine, sleep
 
 
 @contextlib2.contextmanager

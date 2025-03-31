@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 try:
-    import math
 
     print("i imported math")
 except:
@@ -9,7 +8,6 @@ except:
 
 
 try:
-    import borkbork
 
     print("i imported borkbork")
 except:

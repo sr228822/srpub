@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import sys, traceback
+import sys
+import traceback
 
 for threadId, stack in sys._current_frames().items():
     print(f"\n# ThreadID: {threadId}")

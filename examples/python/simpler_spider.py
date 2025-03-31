@@ -5,7 +5,7 @@ import time
 import urlparse
 from datetime import timedelta
 
-from tornado import gen, httpclient, ioloop, queues
+from tornado import gen, ioloop, queues
 
 base_url = "http://www.tornadoweb.org/en/stable/"
 concurrency = 10

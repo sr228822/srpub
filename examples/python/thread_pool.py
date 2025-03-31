@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import random, time
-from contextlib import closing
+import random
+import time
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 

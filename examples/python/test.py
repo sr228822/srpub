@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import logging, random, sys, time
+import time
 
 import contextlib2
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop
 
 
@@ -52,7 +51,6 @@ def my_context():
 import errno
 import os
 import signal
-import time
 
 ######### A timeout decorator using signals
 

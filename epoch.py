@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import sys, time
+import sys
+import time
 from srutils import *
 
 if __name__ == "__main__":

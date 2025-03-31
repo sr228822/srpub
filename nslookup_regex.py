@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import pickle
-import re, socket, sys
+import re
+import socket
+import sys
 
 import colorstrings
 from srutils import *

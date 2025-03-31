@@ -6,8 +6,6 @@ from srutils import *
 import argparse
 import datetime
 import operator
-import re, sys
-from collections import namedtuple
 
 # A map of known aliases -> name
 kauths = {}

@@ -26,7 +26,7 @@ class Transformer:
         delay = 4 + int(random.random() * 3)
         print(f"starting simulated-blocking-IO sleep {delay}")
         time.sleep(delay)
-        print(f"finished simulated-blocking-IO")
+        print("finished simulated-blocking-IO")
         self.last_status = "foo-status"
         return "foo-model"
 

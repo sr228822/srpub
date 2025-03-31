@@ -9,12 +9,9 @@ import sys
 import tarfile
 
 import imageio
-import matplotlib.pyplot as plt
 import numpy as np
-from IPython.display import display, Image
 from six.moves import cPickle as pickle
 from six.moves.urllib.request import urlretrieve
-from sklearn.linear_model import LogisticRegression
 
 url = "https://commondatastorage.googleapis.com/books1000/"
 last_percent_reported = None

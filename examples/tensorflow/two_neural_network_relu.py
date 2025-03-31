@@ -5,14 +5,9 @@
 from __future__ import print_function
 
 import os
-import sys
-import tarfile
 
-import imageio
-import matplotlib.pyplot as plt
 
 import numpy as np
-from IPython.display import display, Image
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf

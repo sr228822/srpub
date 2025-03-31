@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from srutils import *
-import operator, re, sys
+import operator
+import re
+import sys
 from pathlib import Path
 from typing import Iterator
 

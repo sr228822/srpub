@@ -2,8 +2,9 @@
 
 import argparse
 import operator
-import sys
-from srutils import *
+
+# from srutils import *
+from srutils import get_now, quick_ingest_line, seconds_between
 
 # |sort | uniq -c | sort -nr
 
@@ -47,7 +48,9 @@ def _print_hist(
         rate = tot / tdelt
         perc = 100.0 * tot / total_cnt
         if with_rate and with_perc:
-            print(f"{int(tot):5} , " + f"{perc:5.1f} , " + f"{rate:5.1f} , " + str(x[0]))
+            print(
+                f"{int(tot):5} , " + f"{perc:5.1f} , " + f"{rate:5.1f} , " + str(x[0])
+            )
         elif with_rate:
             print(f"{int(tot):5} , " + f"{rate:5.1f} , " + str(x[0]))
         elif with_perc:
@@ -63,8 +66,8 @@ def main():
         action="store_true",
         help="sort alphametically, not by frequency",
     )
-    parser.add_argument("--no-percent", action="store_true", help="show percent")
-    parser.add_argument("--no-rate", action="store_true", help="dont show the rate")
+    parser.add_argument("--no-percent", action="store_true", help="dont show percent")
+    parser.add_argument("--no-rate", action="store_false", help="dont show the rate")
     parser.add_argument(
         "--duplicates", action="store_true", help="only show duplciates"
     )

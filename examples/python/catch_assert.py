@@ -5,7 +5,7 @@ import traceback
 
 try:
     assert 7 == 1
-except AssertionError as e:
+except AssertionError:
     s = traceback.format_exc()
     print(f"lol assert did fail {s}")
     print(f"lol assert message {sys.exc_info()[0]}")

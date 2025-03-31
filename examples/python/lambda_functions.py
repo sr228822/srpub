@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import datetime, time
+import datetime
+import time
 
 
 def foo(x):

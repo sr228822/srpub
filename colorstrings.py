@@ -4,7 +4,9 @@ from __future__ import print_function
 
 import os
 
-import random, re, sys
+import random
+import re
+import sys
 
 is_windows = sys.platform.lower().startswith("win")
 

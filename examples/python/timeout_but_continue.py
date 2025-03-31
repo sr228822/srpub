@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import multiprocessing
-import random, time
-from contextlib import closing
+import random
+import time
 
 
 def foo(x):

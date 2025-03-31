@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import random, time
+import random
+import time
 
 example_list = [("apple", 5), ("banana", 2), ("orange", 9), ("grape", 1)]
 

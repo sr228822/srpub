@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import multiprocessing
-import random, time
+import random
+import time
 from contextlib import closing
 
 counter = None
