@@ -2,8 +2,9 @@
 
 import argparse
 import operator
+import time
 
-from srutils import get_now, quick_ingest_line, seconds_between
+from srutils import quick_ingest_line
 from colorstrings import grey_str
 
 # |sort | uniq -c | sort -nr
@@ -28,22 +29,23 @@ def _print_hist(
     else:
         sortseen = sorted(seen.items(), key=operator.itemgetter(1), reverse=True)
 
-    print(
+    lines = []
+    lines.append(
         f"------------------------------------------ {len(sortseen)} unique, {total_cnt} total"
     )
     if with_rate and with_perc:
-        print("  cnt      %     rate  thing")
-        print("  ---    ----    ----  -----")
+        lines.append("  cnt      %     rate  thing")
+        lines.append("  ---    ----    ----  -----")
     elif with_rate:
-        print("  cnt    rate   thing")
-        print("  ---    ----   -----")
+        lines.append("  cnt    rate   thing")
+        lines.append("  ---    ----   -----")
     elif with_perc:
-        print("  cnt      %    thing")
-        print("  ---    ----   -----")
+        lines.append("  cnt      %    thing")
+        lines.append("  ---    ----   -----")
     else:
-        print("  cnt  thing")
-        print("  ---  -----")
-    tdelt = seconds_between(t0, get_now())
+        lines.append("  cnt  thing")
+        lines.append("  ---  -----")
+    tdelt = time.time() - t0
     for x in sortseen[0:lim]:
         tot = int(x[1])
         if dups_only and tot == 1:
@@ -51,13 +53,17 @@ def _print_hist(
         rate = tot / tdelt
         perc = 100.0 * tot / total_cnt
         if with_rate and with_perc:
-            print(f"{int(tot):5} {gcom}{perc:5.1f} {gcom} {rate:5.1f} {gcom} {x[0]}")
+            lines.append(
+                f"{int(tot):5} {gcom}{perc:5.1f} {gcom} {rate:5.1f} {gcom} {x[0]}"
+            )
         elif with_rate:
-            print(f"{int(tot):5} {gcom} {rate:5.1f} {gcom} {x[0]}")
+            lines.append(f"{int(tot):5} {gcom} {rate:5.1f} {gcom} {x[0]}")
         elif with_perc:
-            print(f"{int(tot):5} {gcom} {perc:5.1f} {gcom} {x[0]}")
+            lines.append(f"{int(tot):5} {gcom} {perc:5.1f} {gcom} {x[0]}")
         else:
-            print(f"{int(tot):5} {gcom} {x[0]}")
+            lines.append(f"{int(tot):5} {gcom} {x[0]}")
+    for line in lines:
+        print(line)
 
 
 def main():
@@ -67,6 +73,7 @@ def main():
         action="store_true",
         help="sort alphametically, not by frequency",
     )
+    parser.add_argument("--interval", type=int, default=3, help="refresh interval")
     parser.add_argument("--no-percent", action="store_true", help="dont show percent")
     parser.add_argument("--no-rate", action="store_false", help="dont show the rate")
     parser.add_argument(
@@ -84,20 +91,18 @@ def main():
 
 
 def _main(args):
-    limit = args.limit
-    if args.all:
-        limit = 10000000
+    limit = 10000000 if args.all else args.limit
     seen = dict()
     total_cnt = 0
-    lprint = get_now()
-    t0 = get_now()
+    lprint = time.time()
+    t0 = time.time()
 
     for line in quick_ingest_line():
         line = line.rstrip().lstrip()
         seen[line] = seen.get(line, 0) + 1
         total_cnt += 1
-        if seconds_between(lprint, get_now()) > 3:
-            lprint = get_now()
+        if time.time() - lprint > args.interval:
+            lprint = time.time()
             _print_hist(
                 seen,
                 total_cnt,
@@ -109,28 +114,16 @@ def _main(args):
             )
 
     print("\nSTDOUT terminated\n\n\n")
-    if seconds_between(t0, get_now()) < 3:
-        _print_hist(
-            seen,
-            total_cnt,
-            t0,
-            limit,
-            with_rate=False,
-            alphabetical=args.alphabetical,
-            dups_only=args.duplicates,
-            with_perc=(not args.no_percent),
-        )
-    else:
-        _print_hist(
-            seen,
-            total_cnt,
-            t0,
-            limit,
-            with_rate=(not args.no_rate),
-            alphabetical=args.alphabetical,
-            dups_only=args.duplicates,
-            with_perc=(not args.no_percent),
-        )
+    _print_hist(
+        seen,
+        total_cnt,
+        t0,
+        limit,
+        with_rate=(time.time() - t0 >= args.interval) and not args.no_rate,
+        alphabetical=args.alphabetical,
+        dups_only=args.duplicates,
+        with_perc=(not args.no_percent),
+    )
 
 
 if __name__ == "__main__":
