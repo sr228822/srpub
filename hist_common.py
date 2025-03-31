@@ -31,9 +31,13 @@ def _print_hist(
         sortseen = sorted(seen.items(), key=operator.itemgetter(1), reverse=True)
 
     lines = []
-    lines.append(
-        f"------------------------------------------ {len(sortseen)} unique, {total_cnt} total"
+    line = (
+        f"--------------------------------- {len(sortseen)} unique, {total_cnt} total"
     )
+    if with_rate:
+        overall_rate = total_cnt / (time.time() - t0)
+        line += f", {overall_rate:.1f}/s"
+    lines.append(line)
     if with_rate and with_perc:
         lines.append("  cnt      %     rate  thing")
         lines.append("  ---    ----    ----  -----")
@@ -63,6 +67,7 @@ def _print_hist(
             lines.append(f"{int(tot):5} {gcom} {perc:5.1f} {gcom} {x[0]}")
         else:
             lines.append(f"{int(tot):5} {gcom} {x[0]}")
+    lines.append("")
 
     if last:
         for line in lines:
@@ -120,9 +125,9 @@ def _main(args):
                     last=False,
                 )
     except KeyboardInterrupt:
-        print("\n" * 20)
         pass
     finally:
+        print("\n" * (args.limit + 10))
         print("\nSTDOUT terminated\n\n\n")
         _print_hist(
             seen,

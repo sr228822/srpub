@@ -80,7 +80,7 @@ def flushprint(content):
         sys.stdout.write("\r" + fill_line(content,  width))
         sys.stdout.flush()
     elif type(content) is list:
-        lines = [fill_line(line, width).strip() for line in content]
+        lines = [fill_line(line, width).rstrip() for line in content]
         sys.stdout.write("\r\033[K")
         sys.stdout.write("\n".join(lines[:-1]))
         sys.stdout.write("\n" + lines[-1])
