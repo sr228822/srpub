@@ -7,8 +7,7 @@
 6. writes tests
 
 ################################
-#  Dataclass
-Common strategies:
+# Strategies
   - iterate in reverse
   - iterate on the alternate variable
   - use a dictionary vs an array
