@@ -9,9 +9,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
 
 from schedule_vol import get_now, Volumizer
+from srutils import cmd
 
 app = Flask(__name__)
 scheduler = None
+
+# To autoplay Privacy and security > Site Settings > Additional Content Settings > Sites can play sound > Allowed to play sound > Add [*].mynoise.net
+brown_noise_url = "https://mynoise.net/NoiseMachines/whiteNoiseGenerator.php?l=72818175533616000000&title=White%20Noise%20&%20Co"
 
 
 class Globals:
@@ -58,6 +62,35 @@ def _serve_file(fid):
         mode = "rb"
     with open(pth, mode) as f:
         return f.read()
+
+
+def open_url(url):
+    """Util to always open links in a specific chrome profile"""
+    chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    if not os.path.exists(chrome_path):
+        import webbrowser
+
+        webbrowser.open(url)
+        return
+
+    profile = os.getenv("CHROME_PROFILE", "Default")
+    try:
+        resp = cmd(f'"{chrome_path}" --profile-directory=\'{profile}\' "{url}"')
+    except Exception as e:
+        print(f"Error opening Chrome: {e}")
+        resp = webbrowser.open(url)
+    return resp
+
+
+def kill_chrome():
+    return cmd("pkill -9 Chrome")
+
+
+def restart_noise_browser():
+    resp = kill_chrome()
+    time.sleep(3)
+    resp += open_url(brown_noise_url)
+    return resp
 
 
 ####################################################
@@ -191,6 +224,12 @@ def vol_unset():
     _g.v.apply_boost(b_abs=0.0)
     print("vol boost unset")
     return _cmd_resp("vol_unset")
+
+
+@app.route("/reset")
+def reset():
+    resp = restart_noise_browser()
+    return {"status": "OK", "now": get_now(), "resp": str(resp)}
 
 
 @app.route("/status")
