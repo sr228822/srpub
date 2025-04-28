@@ -699,15 +699,28 @@ hgbd() {
 
 export DEFAULTENV=base
 act() {
-  conda deactivate;
-  conda deactivate;
+  # Check if conda is installed
+  if command -v conda &> /dev/null; then
+    conda deactivate 2>/dev/null
+    conda deactivate 2>/dev/null
+    
+    # If no argument provided, check for environment.yml
+    if [ -z "$1" ] && [ -f "environment.yml" ]; then
+        local env=$(grep "^name:" environment.yml | cut -d: -f2 | tr -d '[:space:]')
+        if [ -n "$env" ]; then
+            echo "Found environment.yml, activating: $env"
+            conda activate "$env"
+            return
+        fi
+    fi
+  fi
 
-  # If no argument provided, check for environment.yml
-  if [ -z "$1" ] && [ -f "environment.yml" ]; then
-      local env=$(grep "^name:" environment.yml | cut -d: -f2 | tr -d '[:space:]')
-      if [ -n "$env" ]; then
-          echo "Found environment.yml, activating: $env"
-          conda activate "$env"
+  if [ -z "$1" ] && [ -d "bazel-venvs" ]; then
+      echo "Found venv in bazel-venvs"
+      local venv=$(ls -1 bazel-venvs | head -1)
+      if [ -n "$venv" ] && [ -f "bazel-venvs/$venv/bin/activate" ]; then
+          echo "Activating venv: $venv"
+          source "bazel-venvs/$venv/bin/activate"
           return
       fi
   fi
@@ -734,7 +747,13 @@ act() {
   conda activate "$env"
 }
 deact() {
-  conda deactivate;
+  if command -v conda &> /dev/null; then
+    conda deactivate 2>/dev/null
+  elif [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+  else
+    echo "No active environment to deactivate"
+  fi
 }
 
 #######################################################

@@ -215,9 +215,15 @@ def print_cnt_dict(title, stat, limit=args.num):
         if is_me:
             did_me = True
 
+def find_main_branch():
+    branches = cmd("git branch")
+    for b in ["main", "master", "develop"]:
+        if b in branches:
+            return b
+    return "master"
 
-branches = cmd("git branch")
-main_branch = "main" if "main" in branches else "master"
+
+main_branch = find_main_branch()
 git_log_raw = cmd(f"git log {main_branch} --format='%H,%aN,%ae,%at,%s'")
 
 
