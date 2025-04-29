@@ -54,3 +54,6 @@ set backspace=indent,eol,start
 
 " Increase save buffer
 set viminfo='100,<5000,s500,h
+
+" Disable syntax highlighting specifically for TypeScript files
+autocmd BufRead,BufNewFile *.ts setlocal syntax=off
