@@ -168,10 +168,10 @@ color_code_files() {
 }
 
 shere() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env} * 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs} * 2>/dev/null -e "$1" ${@:2}
 }
 search() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env} . 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
     search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
@@ -519,7 +519,7 @@ git_main_origin() {
     echo "origin/$(git_main_branch)"
 }
 githeaddiff() {
-    git diff $(git_main_origin)...HEAD
+    git diff $(git_main_origin)...HEAD $@
 }
 alias gitbranchdiff='git diff $(git_main_origin) HEAD'
 
@@ -847,7 +847,7 @@ qpush() {
 gd() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        git diff
+        git diff $@
     elif [[ $typ = $HG_ENUM ]]; then
         hg diff
     else
@@ -858,7 +858,7 @@ gd() {
 lastdiff() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        gitlastdiff
+        gitlastdiff $@
     elif [[ $typ = $HG_ENUM ]]; then
         hglastdiff
     else
@@ -870,7 +870,7 @@ lastdiff() {
 headdiff() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        githeaddiff
+        githeaddiff $@
     elif [[ $typ = $HG_ENUM ]]; then
         hgheaddiff
     else
