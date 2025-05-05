@@ -56,4 +56,6 @@ set backspace=indent,eol,start
 set viminfo='100,<5000,s500,h
 
 " Disable syntax highlighting specifically for TypeScript files
-autocmd BufRead,BufNewFile *.ts setlocal syntax=off
+" autocmd BufRead,BufNewFile *.ts setlocal syntax=off
+" Update syntax highlighting to newest version
+set re=0

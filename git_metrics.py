@@ -6,6 +6,7 @@ from srutils import cmd, parse_duration, dur_to_human, name_aliases
 import argparse
 import datetime
 import operator
+import re
 import time
 
 from colorstrings import blue_str
@@ -36,6 +37,9 @@ parser.add_argument(
     help="The number of users to show per leaderboard",
 )
 parser.add_argument("--overall", action="store_true", help="Show overall")
+parser.add_argument(
+    "--only-prs", action="store_true", help="Only count PR commits in metrics"
+)
 args = parser.parse_args()
 
 
@@ -182,8 +186,9 @@ def print_cnt_dict(title, stat, limit=args.num):
     did_me = False
     # total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
+    description = "PRs" if args.only_prs else "commits"
     print(
-        f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total commits;  {len(stat.cnt.keys())} unique authors)"
+        f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total {description};  {len(stat.cnt.keys())} unique authors)"
     )
     print(f"{'':3}   {'cnt ':5}   %   /week name")
     print(f"{'':3}   {'--- ':5} ----- ----- ----")
@@ -215,6 +220,7 @@ def print_cnt_dict(title, stat, limit=args.num):
         if is_me:
             did_me = True
 
+
 def find_main_branch():
     branches = cmd("git branch")
     for b in ["main", "master", "develop"]:
@@ -224,7 +230,8 @@ def find_main_branch():
 
 
 main_branch = find_main_branch()
-git_log_raw = cmd(f"git log {main_branch} --format='%H,%aN,%ae,%at,%s'")
+git_log_format = "%H,%aN,%ae,%at,%s"
+git_log_raw = cmd(f"git log {main_branch} --format='{git_log_format}'")
 
 
 def length_score(k):
@@ -235,9 +242,26 @@ def length_score(k):
     return s
 
 
+def is_pr_commit(subject):
+    """
+    Determine if a commit is a PR commit based on its subject and body.
+    Looks for patterns like "Merge pull request #9719" or "(#9687)" in the text.
+    """
+    if "Merge pull request #" in subject:
+        return True
+    if "(#" in subject and ")" in subject:
+        return True
+
+    return False
+
+
 dt_now = int(time.time())
 seen_me = False
 commits = git_log_raw.split("\n")
+
+# Track PR commits to avoid counting them multiple times
+processed_pr_commits = {}
+
 for i, c in enumerate(reversed(commits)):
     cs = c.strip().split(",")
     if len(cs) < 5:
@@ -251,15 +275,42 @@ for i, c in enumerate(reversed(commits)):
         cs.pop(2)
 
     email = cs[2].strip().lower()
-    dt = int(cs[3].strip())
+    try:
+        dt = int(cs[3].strip())
+    except ValueError:
+        print(f"Bad commit: {c}, skipping")
+        continue
     subj = ",".join(cs[4:])
 
-    # Skip merge commits
-    if subj.startswith("Merge "):
+    # Skip merge commits if not counting PRs
+    if not args.only_prs and subj.startswith("Merge "):
         continue
 
     # Skip revert commits
     if subj.startswith("Revert"):
+        continue
+
+    # Check if this is a PR commit
+    is_pr = is_pr_commit(subj)
+    pr_number = None
+
+    if is_pr:
+        # Extract the PR number
+        pr_match = None
+        if "(#" in subj and ")" in subj:
+            pr_match = re.search(r"\(#(\d+)\)", subj)
+        elif "Merge pull request #" in subj:
+            pr_match = re.search(r"Merge pull request #(\d+)", subj)
+
+        if pr_match:
+            pr_number = pr_match.group(1)
+            if pr_number in processed_pr_commits:
+                # Skip this PR commit since we've already counted it
+                continue
+            processed_pr_commits[pr_number] = True
+
+    # Skip non-PR commits if --only-prs is specified
+    if args.only_prs and not is_pr:
         continue
 
     is_mine = looks_similar(name, args.user)
