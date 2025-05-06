@@ -161,7 +161,7 @@ tmptmp() {
 
 color_code_files() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh):"
+        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh|tf):"
     else
         cat # pass-through for Linux
     fi
@@ -174,10 +174,10 @@ search() {
     grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
-    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
+    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf} | color_code_files
 }
 sch() {
-    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh} | color_code_files
+    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf} | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}
@@ -703,7 +703,7 @@ act() {
   if command -v conda &> /dev/null; then
     conda deactivate 2>/dev/null
     conda deactivate 2>/dev/null
-    
+
     # If no argument provided, check for environment.yml
     if [ -z "$1" ] && [ -f "environment.yml" ]; then
         local env=$(grep "^name:" environment.yml | cut -d: -f2 | tr -d '[:space:]')
@@ -715,26 +715,40 @@ act() {
     fi
   fi
 
-  if [ -z "$1" ] && [ -d "bazel-venvs" ]; then
-      echo "Found venv in bazel-venvs"
-      local venv=$(ls -1 bazel-venvs | head -1)
-      if [ -n "$venv" ] && [ -f "bazel-venvs/$venv/bin/activate" ]; then
-          echo "Activating venv: $venv"
-          source "bazel-venvs/$venv/bin/activate"
-          return
-      fi
-  fi
+  if [ -z "$1" ]; then
+    # Start from current directory and move up through parents
+    local dir=$(pwd)
+    while [ "$dir" != "/" ]; do
+        # echo "act checking $dir"
+        if [ -d "$dir/.env" ]; then
+            echo "Found venv in $dir/.env"
+            source "$dir/.env/bin/activate"
+            return 0
+        fi
 
-  if [ -z "$1" ] && [ -d ".env" ]; then
-      echo "Found venv in .env"
-      source .env/bin/activate
-      return
-  fi
+        if [ -d "$dir/bazel-venvs" ]; then
+            echo "Found bazel-venvs in $dir/bazel-venvs"
+            local venv=$(ls -1 "$dir/bazel-venvs" | head -1)
+            if [ -n "$venv" ] && [ -f "$dir/bazel-venvs/$venv/bin/activate" ]; then
+                echo "Activating venv: $venv"
+                source "$dir/bazel-venvs/$venv/bin/activate"
+                return
+            fi
+            return 0
+        fi
 
-  if [ -z "$1" ] && [ -d "../.env" ]; then
-      echo "Found venv in .env"
-      source ../.env/bin/activate
-      return
+        if [ -f "$dir/environment.yml" ]; then
+            local env=$(grep "^name:" "$dir/environment.yml" | cut -d: -f2 | tr -d '[:space:]')
+            if [ -n "$env" ]; then
+                echo "Found $dir/environment.yml, activating: $env"
+                conda activate "$env"
+                return
+            fi
+        fi
+
+        # Move up to parent directory
+        dir=$(dirname "$dir")
+    done
   fi
 
   local env="${1:-$DEFAULTENV}"
