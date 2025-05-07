@@ -35,8 +35,6 @@ if [[ $shell == *zsh* ]]; then
     setopt EXTENDED_HISTORY
     export HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
     export SAVEHIST=5000
-    # share history across multiple zsh sessions
-    setopt SHARE_HISTORY
     # append to history
     setopt APPEND_HISTORY
     # Write history as typed not at exit
@@ -44,6 +42,7 @@ if [[ $shell == *zsh* ]]; then
     # dont save space-prefixed commands into hist
     setopt HIST_IGNORE_SPACE
 
+    export CLICOLOR=1
 fi
 
 
