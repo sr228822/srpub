@@ -298,7 +298,7 @@ for i, c in enumerate(reversed(commits)):
         # Extract the PR number
         pr_match = None
         if "(#" in subj and ")" in subj:
-            pr_match = re.search(r"\(#(\d+)\)", subj)
+            pr_match = re.search(r"\(#(\d+)\)", subj) or re.search(r"#\d{2,}", subj)
         elif "Merge pull request #" in subj:
             pr_match = re.search(r"Merge pull request #(\d+)", subj)
 

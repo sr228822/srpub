@@ -50,6 +50,20 @@ fi
 ############################################################
 #     History
 ############################################################
+# Generate unique 6-character session ID
+if [[ -z "$SESSION_ID" ]]; then
+  export SESSION_ID=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 4)
+fi
+
+# Set terminal tab name to session ID
+if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+  printf "\e]1;%s\a" "[$SESSION_ID]"
+elif [[ -n "$TMUX" ]]; then
+  tmux rename-window "[$SESSION_ID]" 2>/dev/null
+else
+  printf "\e]0;%s\a" "[$SESSION_ID]"
+fi
+
 # Use prompt command to log all bash to files in .logs
 mkdir -p ~/.logs/
 prompt_command () {
@@ -68,7 +82,19 @@ prompt_command () {
     if [[ "$LASTLINE" == *"$NEWLINE"* ]]; then
       echo "" > /dev/null
     else
-      echo "$(date "+%Y-%m-%d.%H:%M:%S") $NEWLINE" >> $LOGNAME
+      echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $NEWLINE" >> $LOGNAME
+      
+      # Extract just the command part and truncate if too long
+      COMMAND_PART=$(echo "$NEWLINE" | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | cut -c1-20)
+      
+      # Update terminal tab name with session ID and last command
+      if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+        printf "\e]1;%s\a" "[$SESSION_ID] $COMMAND_PART"
+      elif [[ -n "$TMUX" ]]; then
+        tmux rename-window "[$SESSION_ID] $COMMAND_PART" 2>/dev/null
+      else
+        printf "\e]0;%s\a" "[$SESSION_ID] $COMMAND_PART"
+      fi
     fi
   fi
 }
@@ -101,7 +127,7 @@ alias ............="cd ../../../../../../../../../../.."
 alias less='less -R'
 alias grep='grep --line-buffered --exclude=\*svn\* --color=auto'
 alias igrep='grep -i --line-buffered --exclude=\*svn\* --color=auto'
-alias jq='jq --unbuffered'
+#alias jq='jq --unbuffered'
 
 rebash() {
   # Save the current environment information
@@ -160,23 +186,23 @@ tmptmp() {
 
 color_code_files() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh|tf):"
+        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh|tf|css|jsx):"
     else
         cat # pass-through for Linux
     fi
 }
 
 shere() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs} * 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} * 2>/dev/null -e "$1" ${@:2}
 }
 search() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs} . 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
-    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf} | color_code_files
+    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx} | color_code_files
 }
 sch() {
-    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf} | color_code_files
+    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx} | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}
@@ -246,7 +272,7 @@ function dufa {
     duf `ls -A`
 }
 
-alias notests='antigrep "/tests/" "/script/" "build/lib.linux" "_test.go" "/mocks/" ".gen" "env_docs" "./go-build/" "/_build/" "/.tmp/" '
+alias notests='antigrep "/tests/" "/test/" "/script/" "build/lib.linux" "_test.go" "/mocks/" ".gen" "env_docs" "./go-build/" "/_build/" "/.tmp/" '
 alias nobuildcache='antigrep "\.pyc" "\./vendor/"  "\./go-build/\.go/" "./node_modules/" '
 
 loc() {
@@ -722,6 +748,12 @@ act() {
         if [ -d "$dir/.env" ]; then
             echo "Found venv in $dir/.env"
             source "$dir/.env/bin/activate"
+            return 0
+        fi
+
+        if [ -d "$dir/.venv" ]; then
+            echo "Found venv in $dir/.venv"
+            source "$dir/.venv/bin/activate"
             return 0
         fi
 
