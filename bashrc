@@ -954,6 +954,49 @@ s3cat() {
     aws s3 cp $1 /tmp/t.txt && cat /tmp/t.txt
 }
 
+myec2() {
+    echo "Checking instance $MY_EC2_INSTANCE_ID status..."
+
+    # Get current instance state
+    STATE=$(aws ec2 describe-instances \
+        --instance-ids $MY_EC2_INSTANCE_ID \
+        --query 'Reservations[0].Instances[0].State.Name' \
+        --output text)
+
+    echo "Current state: $STATE"
+
+
+    if [[ "$STATE" != "running" ]]; then
+        echo "Starting instance..."
+        aws ec2 start-instances --instance-ids $MY_EC2_INSTANCE_ID
+        
+        # Wait for instance to be running
+        echo "Waiting for instance to boot..."
+        aws ec2 wait instance-running --instance-ids $MY_EC2_INSTANCE_ID
+        
+        # Extra wait for SSH to be ready
+        echo "Waiting for SSH to be ready..."
+        sleep 20
+    fi
+
+    # Get public DNS name
+    PUBLIC_DNS=$(aws ec2 describe-instances \
+        --instance-ids $MY_EC2_INSTANCE_ID \
+        --query 'Reservations[0].Instances[0].PublicDnsName' \
+        --output text)
+    echo "public DNS: $PUBLIC_DNS"
+
+    if [[ -z "$PUBLIC_DNS" ]] || [[ "$PUBLIC_DNS" == "None" ]]; then
+        echo "Error: No public DNS found. Instance may not have a public IP."
+        return 1
+    fi
+
+    echo "Connecting to: $PUBLIC_DNS"
+
+    # SSH into the instance
+    ssh -i $MY_EC2_PEM_FILE $MY_EC2_USERNAME@$PUBLIC_DNS
+}
+
 #######################################################
 # MacOS Stuff
 #######################################################
