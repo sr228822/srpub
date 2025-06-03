@@ -991,7 +991,7 @@ myec2() {
         return 1
     fi
 
-    echo "Connecting to: $PUBLIC_DNS"
+    echo "Connecting to: $MY_EC2_USERNAME@$PUBLIC_DNS"
 
     # SSH into the instance
     ssh -i $MY_EC2_PEM_FILE $MY_EC2_USERNAME@$PUBLIC_DNS
