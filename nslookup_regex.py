@@ -8,6 +8,9 @@ import sys
 import colorstrings
 from srutils import save_pickle, load_pickle, cmd
 
+IGNORE_LIST = [
+    "Administered by ARIN"
+]
 
 def whois_query(q):
     resp = cmd(f"whois {q}")
@@ -15,14 +18,17 @@ def whois_query(q):
     d = dict()
     for line in resp.split("\n"):
         line = line.strip()
-        m = re.search("^(.*?)\:(.*?)$", line)
+        m = re.search(r"^(.*?)\:(.*?)$", line)
         if m:
             key = m.group(1).lower()
             d[key] = d.get(key, "") + m.group(2).strip()
     result = ""
     for k in ["organisation", "org-name", "city", "stateprov", "country"]:
         if k in d:
-            result += d.get(k, "") + ", "
+            v = d.get(k, "")
+            if v in IGNORE_LIST:
+                continue
+            result += v + ", "
     return result
 
 
@@ -62,6 +68,34 @@ def ns_lookup(ip):
     return res
 
 
+aux_lookup_dat = None
+aux_lookup_file = os.getenv("NSLOOKUP_AUX")
+if aux_lookup_file:
+    with open(aux_lookup_file, "r") as f:
+        aux_lookup_dat = list(f.readlines())
+
+def aux_lookup(ip):
+    if not aux_lookup_dat:
+        return None
+    # only return back if we match 1 line
+    matching_lines = [l for l in aux_lookup_dat if ip in l]
+    if len(matching_lines) == 1:
+        return matching_lines[0]
+
+
+def lookup_ip(ip):
+    if aux := aux_lookup(ip):
+        return aux
+    dns = ns_lookup(ip)
+    whois = whois_lookup(ip)
+    if dns and whois:
+        return f"{dns} : {whois}"
+    if dns:
+        return dns
+    if whois:
+        return whois
+
+
 def save_caches():
     global nscache
     global whoiscache
@@ -71,18 +105,19 @@ def save_caches():
 
 if __name__ == "__main__":
     for line in sys.stdin:
-        for ip in re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", line):
-            dns = ns_lookup(ip)
-            whois = whois_lookup(ip)
-            if dns or whois:
-                comb = (
-                    colorstrings.green_str(ip)
-                    + " : "
-                    + colorstrings.blue_str(f"{dns} : {whois}")
-                )
-                # print(ip + ' is ' + box)
-                line = line.replace(ip, comb)
+        hexids = list(re.findall(r"[0-9A-Fa-f]{10}", line))
+        ips = list(re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", line))
+        for hexid in hexids:
+            line = line.replace(hexid, colorstrings.red_str(hexid))
+            lookup = aux_lookup(hexid)
+            if lookup:
+                line = line.rstrip() + " " + colorstrings.blue_str(lookup.rstrip())
+        for ip in ips:
+            lookup = lookup_ip(ip)
+            if lookup:
+                comb = colorstrings.green_str(ip) + " : " + colorstrings.blue_str(lookup.rstrip())
+                line = line.replace(ip, comb, 1)
             else:
-                line = line.replace(ip, colorstrings.green_str(ip))
+                line = line.replace(ip, colorstrings.green_str(ip), 1)
         print(line.rstrip())
     save_caches()
