@@ -83,18 +83,19 @@ prompt_command () {
       echo "" > /dev/null
     else
       echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $NEWLINE" >> $LOGNAME
-      
+
+      # Writing session is causing wierd errors in pasting/char-tabbing
       # Extract just the command part and truncate if too long
-      COMMAND_PART=$(echo "$NEWLINE" | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | cut -c1-20)
-      
+      #COMMAND_PART=$(echo "$NEWLINE" | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | cut -c1-20)
+
       # Update terminal tab name with session ID and last command
-      if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-        printf "\e]1;%s\a" "[$SESSION_ID] $COMMAND_PART"
-      elif [[ -n "$TMUX" ]]; then
-        tmux rename-window "[$SESSION_ID] $COMMAND_PART" 2>/dev/null
-      else
-        printf "\e]0;%s\a" "[$SESSION_ID] $COMMAND_PART"
-      fi
+      #if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+      #  printf "\e]1;%s\a" "[$SESSION_ID]"
+      #elif [[ -n "$TMUX" ]]; then
+      #  tmux rename-window "[$SESSION_ID]" 2>/dev/null
+      #else
+      #  printf "\e]0;%s\a" "[$SESSION_ID]"
+      #fi
     fi
   fi
 }
