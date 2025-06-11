@@ -1054,10 +1054,6 @@ if [[ $processor == *Apple* ]]; then
     show_arch="($cur_arch) "
 fi
 
-get_term_label() {
-    echo "${PSEXTRA}"
-}
-
 set_ps1() {
     if [[ $shell == *zsh* ]]; then
         autoload -U colors && colors
@@ -1078,25 +1074,14 @@ set_ps1() {
         # Check if this is a Mac or Linux
         if [[ "$(uname -s)" == "Darwin" ]]; then
             # Macbooks are yellow
-            PS1="\[\033[1;93m\]\w $show_arch`get_term_label`$\[\033[0m\] "
+            PS1="\[\033[1;93m\]\w $show_arch$\[\033[0m\] "
             alias ls="ls -G"
         else
             # Linux machines are green and named
-            PS1="\[\033[1;32m\]\w $show_arch`get_term_label`$\[\033[1;91m\]\h $\[\033[0m\] "
+            PS1="\[\033[1;32m\]\h\[\033[0m\] \w $ "
             alias ls="ls -G --color=auto --hide='*.pyc'"
         fi
     fi
 }
 
 set_ps1
-
-set_term_label() {
-    #export PSEXTRA="[${1}]"
-    export PSEXTRA="[\[\033[1;91m\]${1}] "
-    set_ps1
-}
-clear_term_label() {
-    export PSEXTRA=""
-    set_ps1
-}
-
