@@ -4,12 +4,31 @@ box_id_str="$myhostname"
 cur_arch=$(arch)
 processor=$(sysctl -a 2>/dev/null | grep brand)
 
+# Dynamically find srpub directory
+if [[ -n "$BASH_SOURCE" ]]; then
+    SRPUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [[ -n "$0" && "$0" != "-bash" && "$0" != "bash" && "$0" != "-zsh" && "$0" != "zsh" ]]; then
+    SRPUB_DIR="$(cd "$(dirname "$0")" && pwd)"
+else
+    # Fallback: try to find srpub in common locations
+    if [[ -d "$HOME/srpub" ]]; then
+        SRPUB_DIR="$HOME/srpub"
+    elif [[ -d "$HOME/sam/srpub" ]]; then
+        SRPUB_DIR="$HOME/sam/srpub"
+    elif [[ -d "$(pwd)/srpub" ]]; then
+        SRPUB_DIR="$(pwd)/srpub"
+    else
+        echo "Warning: Could not determine srpub directory location"
+        SRPUB_DIR="$HOME/srpub"  # default fallback
+    fi
+fi
+
 export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
 export PATH=${PATH}:$HOME/customize
-export PATH=${PATH}:$HOME/srpub
+export PATH=${PATH}:$SRPUB_DIR
 export PYTHONPATH=${PYTHONPATH}:$HOME/customize
-export PYTHONPATH=${PYTHONPATH}:$HOME/srpub
+export PYTHONPATH=${PYTHONPATH}:$SRPUB_DIR
 export PYTHONUNBUFFERED="nope"
 
 # git initialization
@@ -343,13 +362,13 @@ highlightgray () {
 firstwordyellow() {
     GREP_COLOR=93  grep --color=always -E '.*:'
 }
-alias color='~/srpub/colorstrings.py'
-alias green='~/srpub/colorstrings.py green'
-alias blue='~/srpub/colorstrings.py blue'
-alias red='~/srpub/colorstrings.py red'
-alias yellow='~/srpub/colorstrings.py yellow'
-alias rainbow='~/srpub/colorstrings.py rainbow'
-alias blink='~/srpub/colorstrings.py blink'
+alias color='$SRPUB_DIR/colorstrings.py'
+alias green='$SRPUB_DIR/colorstrings.py green'
+alias blue='$SRPUB_DIR/colorstrings.py blue'
+alias red='$SRPUB_DIR/colorstrings.py red'
+alias yellow='$SRPUB_DIR/colorstrings.py yellow'
+alias rainbow='$SRPUB_DIR/colorstrings.py rainbow'
+alias blink='$SRPUB_DIR/colorstrings.py blink'
 alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"'
 
 alias asdf='fortune'
@@ -640,7 +659,7 @@ gbd() {
 }
 
 function gits() {
-    git_awesome_status.py $@
+    $SRPUB_DIR/git_awesome_status.py $@
 }
 alias gitmine="git log --format=short --author='Russell'"
 alias author_of_all_time='git log | grep Author | hist_common.py'
@@ -841,7 +860,7 @@ function test_is_git() {
 function gs() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        git_awesome_status.py $@
+        $SRPUB_DIR/git_awesome_status.py $@
     elif [[ $typ = $HG_ENUM ]]; then
         hgs $@
     else
