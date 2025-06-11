@@ -1075,11 +1075,16 @@ set_ps1() {
         PS1="\w \[\033[1;34m\]$\[\033[0m\] "
         alias ls="ls -G --color=auto --hide='*.pyc'"
     else
-        # Macbooks are yellow
-        # everything else is too
-        #PS1="\w \[\033[1;93m\]$\[\033[0m\] "
-        PS1="\[\033[1;93m\]\w $show_arch`get_term_label`$\[\033[0m\] "
-        alias ls="ls -G"
+        # Check if this is a Mac or Linux
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            # Macbooks are yellow
+            PS1="\[\033[1;93m\]\w $show_arch`get_term_label`$\[\033[0m\] "
+            alias ls="ls -G"
+        else
+            # Linux machines are green and named
+            PS1="\[\033[1;32m\]\w $show_arch`get_term_label`$\[\033[1;91m\]\h $\[\033[0m\] "
+            alias ls="ls -G --color=auto --hide='*.pyc'"
+        fi
     fi
 }
 
