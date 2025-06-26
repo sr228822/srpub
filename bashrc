@@ -971,7 +971,7 @@ rebasemain() {
 #######################################################
 
 s3cat() {
-    aws s3 cp $1 /tmp/t.txt && cat /tmp/t.txt
+    aws s3 cp $1 /tmp/t.txt >/dev/null && cat /tmp/t.txt
 }
 
 myec2() {
