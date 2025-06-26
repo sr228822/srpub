@@ -78,7 +78,7 @@ def aux_lookup(ip):
     if not aux_lookup_dat:
         return None
     # only return back if we match 1 line
-    matching_lines = [l for l in aux_lookup_dat if ip in l]
+    matching_lines = [line for line in aux_lookup_dat if ip in line]
     if len(matching_lines) == 1:
         return matching_lines[0]
 

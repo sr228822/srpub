@@ -857,10 +857,34 @@ function test_is_git() {
     fi
 }
 
+# Helper function to run python commands avoiding conflicts with local python files
+python_avoidbadlocals() {
+    local python_cmd="$1"
+    shift
+    local conflict_files=("types.py")
+    
+    local has_conflict=false
+    for file in "${conflict_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            has_conflict=true
+            break
+        fi
+    done
+    
+    if [[ "$has_conflict" == true ]]; then
+        local orig_dir=$(pwd)
+        cd ..
+        $python_cmd "$@"
+        cd "$orig_dir"
+    else
+        $python_cmd "$@"
+    fi
+}
+
 function gs() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        $SRPUB_DIR/git_awesome_status.py $@
+        python_avoidbadlocals "$SRPUB_DIR/git_awesome_status.py" $@
     elif [[ $typ = $HG_ENUM ]]; then
         hgs $@
     else
