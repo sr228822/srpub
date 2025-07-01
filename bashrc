@@ -305,9 +305,10 @@ deeploc() {
     find . -iname "*$1*" -maxdepth 6 2>/dev/null | nobuildcache | highlight $1
 }
 
-watch () {
-    for i in `seq 99999`; do $1 $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.5; done 
-}
+# Use brew/apt installed watch - its better
+# watch () {
+#   for i in `seq 99999`; do $1 $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.5; done 
+# }
 
 crepeat() {
     if [ "$1" == "forever" ]
