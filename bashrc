@@ -213,10 +213,10 @@ color_code_files() {
 }
 
 shere() {
-    grep --color=always -iI --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} * 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iI --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} * 2>/dev/null -e "$1" ${@:2}
 }
 search() {
-    grep --color=always -iIr --exclude-dir={vendor,node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} . 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
     search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx} | color_code_files
