@@ -26,3 +26,5 @@ bash Miniconda3-py312_24.1.2-Linux-x86_64.sh -p ~/miniconda3 -b
 ## Create environment from yaml
 conda env create -f environment.yml --use-index-cache --solver libmamba 
 
+# Other stuff 
+- https://github.com/exelban/stats
