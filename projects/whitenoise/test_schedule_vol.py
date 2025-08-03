@@ -19,7 +19,7 @@ def test_interp():
         v.update()
         if i == 30:
             print("booosting")
-            v.apply_boost(0.3)
+            v.apply_boost(3)
         time.sleep(0.1)
 
 

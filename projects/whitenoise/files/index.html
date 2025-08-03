@@ -31,7 +31,7 @@ lastResp = null;
 function pollStatus() {
   console.log("polling status");
   fetch('/status').then(resp => {return resp.json()}).then(body => {
-    var html = "Time: " + body['now'] + '<br>Boost: ' + body['boost'] + '<br>Volume: ' + body['vol'];
+    var html = "Time: " + body['now'] + '<br>Debug: ' + body['debug'] + '<br>Volume: ' + body['vol'];
     document.getElementById("status").innerHTML = html;
   });
 }

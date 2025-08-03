@@ -63,29 +63,10 @@ class Volumizer:
         self.updated_at = None
         self.last_degrade = get_now()
 
-    def degrade_boost(self):
-        if not self.updated_at:
-            return
+    def base_vol(self, t=None):
+        """Get the base/scheduled volume without boost"""
+        t = t or get_now()
 
-        now = get_now()
-        age = (now - self.updated_at).total_seconds()
-
-        # leave as is for 2 hours
-        if age < (2 * 3600):
-            return
-
-        # this can be called frequently so only degrade every 3 mins
-        if (now - self.last_degrade).total_seconds() < 3 * 60:
-            return
-        self.last_degrade = now
-
-        # then ramp back to baseline (0 boost)
-        self.boost = self.boost * 0.95
-        if abs(self.boost) < 0.1:
-            self.boost = 0.0
-            self.updated_at = None
-
-    def get_vol(self, t):
         dow = t.weekday()  # 0 is Mon, 6 is Sun
         weekend = int(dow in (5, 6))
 
@@ -97,32 +78,56 @@ class Volumizer:
         next_h = ipoints[hour + 1][weekend]
 
         vol = ((1.0 - minutes_perc) * cur_h) + (minutes_perc * next_h)
+        return vol
 
-        self.degrade_boost()
-        vol = _clamp((vol + (self.boost / 10.0)), 0.0, 10.0)
-        # print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
+    def get_vol(self, t=None, verbose=False, debug=False):
+        """Get the volume with boosting incorporated"""
+        t = t or get_now()
+
+        boost_age = ((t - self.updated_at).total_seconds()) if self.updated_at else 1000000
+
+        if boost_age < (2 * 3600):
+            boost_perc = 1.0
+        elif boost_age < (3 * 3600):
+            boost_perc = 1.0 - ((boost_age - (2 * 3600)) / 3600)
+        else:
+            self.boost = 0.0
+            self.updated_at = None
+            boost_perc = 0.0
+        assert boost_perc >= 0.0 and boost_perc <= 1.0
+        base_perc = (1.0-boost_perc)
+
+        base_vol = self.base_vol(t)
+        vol = (base_vol * base_perc) + (self.boost * boost_perc)
+        vol = _clamp(vol, 0.0, 10.0)
+        if debug or verbose:
+            #print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
+            boost_str = ""
+            if boost_perc > 0.0:
+                boost_str = f" [boost={self.boost:.2f} perc={boost_perc:.2f}]"
+            debug_str = f"[base vol={base_vol:.2f} perc={base_perc:.2f}] {boost_str}"
+            print(f"{t.strftime('%a %I:%M %p')} : vol={vol:.2f} {debug_str}")
+            if debug:
+                return vol, debug_str
+
         return vol
 
     def apply_boost(self, b_delta=None, b_abs=None):
         if b_abs is not None:
             self.boost = b_abs
         if b_delta is not None:
-            cur_level = self.get_vol(get_now())
-            self.boost += b_delta
+            print(f"Apply boost {self.get_vol()} + {b_delta}")
+            self.boost = self.get_vol() + b_delta
+        self.boost = _clamp(self.boost, 0.0, 10.0)
         self.updated_at = get_now()
         self.update()
 
-    def print_status(self, t, vol):
-        boost_str = ""
-        if self.boost != 0.0:
-            age = int((get_now() - self.updated_at).total_seconds())
-            boost_str = f" [Boost {self.boost:.2f} age {age}] "
-        print(f"{t.strftime('%a %I:%M %p')}: {boost_str}{vol:.2f}")
+    def unset_boost(self):
+        self.updated_at = None
 
     def update(self):
         t = get_now()
-        vol = self.get_vol(t)
-        self.print_status(t, vol)
+        vol = self.get_vol(t=t, verbose=True)
         set_vol(vol)
 
 

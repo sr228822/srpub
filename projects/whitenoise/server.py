@@ -221,7 +221,7 @@ def ramp_off():
 def vol_unset():
     global _g
     _g.stop_ramp = True
-    _g.v.apply_boost(b_abs=0.0)
+    _g.v.unset_boost()
     print("vol boost unset")
     return _cmd_resp("vol_unset")
 
@@ -236,10 +236,9 @@ def reset():
 def status():
     global _g
     now = get_now()
-    vol = _g.v.get_vol(now)
+    vol, debug = _g.v.get_vol(now, debug=True)
     return {
-        "boost": round(_g.v.boost, 2),
-        "updated_at": _g.v.updated_at,
+        "debug": debug,
         "vol": round(vol, 2),
         "now": now,
     }
