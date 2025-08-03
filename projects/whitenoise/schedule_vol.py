@@ -8,16 +8,16 @@ from srutils import cmd
 
 ipoints = {
     # Hour: [weekday-vol, weekend-vol]
-    0:  [4, 4],  #  12am   [xx    ]
-    1:  [4, 4],  #   1am   [xx    ]
-    2:  [3, 3],  #   2am   [x     ]
-    3:  [2, 2],  #   3am   [x     ]
-    4:  [2, 2],  #   4am   [x     ]
-    5:  [3, 3],  #   5am   [xx    ]
-    6:  [4, 4],  #   6am   [xxx   ]
-    7:  [5, 5],  #   7am   [xxxx  ]
-    8:  [5, 5],  #   8am   [xxxx  ]
-    9:  [4, 6],  #   9am   [xxx   ]
+    0: [4, 4],  #  12am   [xx    ]
+    1: [4, 4],  #   1am   [xx    ]
+    2: [3, 3],  #   2am   [x     ]
+    3: [2, 2],  #   3am   [x     ]
+    4: [2, 2],  #   4am   [x     ]
+    5: [3, 3],  #   5am   [xx    ]
+    6: [4, 4],  #   6am   [xxx   ]
+    7: [5, 5],  #   7am   [xxxx  ]
+    8: [5, 5],  #   8am   [xxxx  ]
+    9: [4, 6],  #   9am   [xxx   ]
     10: [0, 5],  # 10am   [      ]
     11: [0, 3],  # 11am   [      ]
     12: [0, 0],  # 12am   [      ]
@@ -84,7 +84,9 @@ class Volumizer:
         """Get the volume with boosting incorporated"""
         t = t or get_now()
 
-        boost_age = ((t - self.updated_at).total_seconds()) if self.updated_at else 1000000
+        boost_age = (
+            ((t - self.updated_at).total_seconds()) if self.updated_at else 1000000
+        )
 
         if boost_age < (2 * 3600):
             boost_perc = 1.0
@@ -95,13 +97,13 @@ class Volumizer:
             self.updated_at = None
             boost_perc = 0.0
         assert boost_perc >= 0.0 and boost_perc <= 1.0
-        base_perc = (1.0-boost_perc)
+        base_perc = 1.0 - boost_perc
 
         base_vol = self.base_vol(t)
         vol = (base_vol * base_perc) + (self.boost * boost_perc)
         vol = _clamp(vol, 0.0, 10.0)
         if debug or verbose:
-            #print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
+            # print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
             boost_str = ""
             if boost_perc > 0.0:
                 boost_str = f" [boost={self.boost:.2f} perc={boost_perc:.2f}]"
@@ -124,6 +126,7 @@ class Volumizer:
 
     def unset_boost(self):
         self.updated_at = None
+        self.update()
 
     def update(self):
         t = get_now()
