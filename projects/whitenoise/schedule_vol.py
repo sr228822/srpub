@@ -6,39 +6,33 @@ import time
 
 from srutils import cmd
 
-OFF = 0.0
-LOW = 0.3
-MED = 0.5
-HIGH = 0.7
-MAX = 1.0
-
 ipoints = {
     # Hour: [weekday-vol, weekend-vol]
-    0: [0.4, 0.4],  #  12am   [xx    ]
-    1: [0.4, 0.4],  #   1am   [xx    ]
-    2: [0.3, 0.3],  #   2am   [x     ]
-    3: [0.2, 0.2],  #   3am   [x     ]
-    4: [0.2, 0.2],  #   4am   [x     ]
-    5: [0.3, 0.3],  #   5am   [xx    ]
-    6: [0.4, 0.4],  #   6am   [xxx   ]
-    7: [0.5, 0.5],  #   7am   [xxxx  ]
-    8: [0.5, 0.5],  #   8am   [xxxx  ]
-    9: [0.4, 0.6],  #   9am   [xxx   ]
-    10: [OFF, 0.5],  # 10am   [      ]
-    11: [OFF, 0.3],  # 11am   [      ]
-    12: [OFF, OFF],  # 12am   [      ]
-    13: [OFF, OFF],  #  1pm   [      ]
-    14: [OFF, OFF],  #  2pm   [      ]
-    15: [OFF, OFF],  #  3pm   [      ]
-    16: [OFF, OFF],  #  4pm   [      ]
-    17: [OFF, OFF],  #  5pm   [      ]
-    18: [OFF, OFF],  #  6pm   [      ]
-    19: [OFF, OFF],  #  7pm   [      ]
-    20: [OFF, OFF],  #  8pm   [      ]
-    21: [OFF, OFF],  #  9pm   [      ]
-    22: [0.4, 0.4],  # 10pm   [xx    ]
-    23: [0.4, 0.4],  # 11pm   [xx    ]
-    24: [0.4, 0.4],  # 12am   [xx    ]
+    0:  [4, 4],  #  12am   [xx    ]
+    1:  [4, 4],  #   1am   [xx    ]
+    2:  [3, 3],  #   2am   [x     ]
+    3:  [2, 2],  #   3am   [x     ]
+    4:  [2, 2],  #   4am   [x     ]
+    5:  [3, 3],  #   5am   [xx    ]
+    6:  [4, 4],  #   6am   [xxx   ]
+    7:  [5, 5],  #   7am   [xxxx  ]
+    8:  [5, 5],  #   8am   [xxxx  ]
+    9:  [4, 6],  #   9am   [xxx   ]
+    10: [0, 5],  # 10am   [      ]
+    11: [0, 3],  # 11am   [      ]
+    12: [0, 0],  # 12am   [      ]
+    13: [0, 0],  #  1pm   [      ]
+    14: [0, 0],  #  2pm   [      ]
+    15: [0, 0],  #  3pm   [      ]
+    16: [0, 0],  #  4pm   [      ]
+    17: [0, 0],  #  5pm   [      ]
+    18: [0, 0],  #  6pm   [      ]
+    19: [0, 0],  #  7pm   [      ]
+    20: [0, 0],  #  8pm   [      ]
+    21: [0, 0],  #  9pm   [      ]
+    22: [4, 4],  # 10pm   [xx    ]
+    23: [4, 4],  # 11pm   [xx    ]
+    24: [4, 4],  # 12am   [xx    ]
 }
 
 
@@ -53,9 +47,9 @@ def set_vol(v: float):
     # 0-10, accepts floats
 
     assert v >= 0.0
-    assert v <= 1.0
+    assert v <= 10.0
 
-    vnorm = v * 10.0
+    vnorm = v
     cmd(f'osascript -e "set Volume {vnorm:.1f}"', noisy=True)
 
 
@@ -86,8 +80,8 @@ class Volumizer:
         self.last_degrade = now
 
         # then ramp back to baseline (0 boost)
-        self.boost = (self.boost - 0.02) * 0.95
-        if self.boost < 0.01:
+        self.boost = self.boost * 0.95
+        if abs(self.boost) < 0.1:
             self.boost = 0.0
             self.updated_at = None
 
@@ -105,7 +99,7 @@ class Volumizer:
         vol = ((1.0 - minutes_perc) * cur_h) + (minutes_perc * next_h)
 
         self.degrade_boost()
-        vol = _clamp((vol + (self.boost / 10.0)), 0.0, 1.0)
+        vol = _clamp((vol + (self.boost / 10.0)), 0.0, 10.0)
         # print(f"hour {hour} cur_h {cur_h} next_h {next_h} perc {minutes_perc} vol {vol}")
         return vol
 
@@ -113,6 +107,7 @@ class Volumizer:
         if b_abs is not None:
             self.boost = b_abs
         if b_delta is not None:
+            cur_level = self.get_vol(get_now())
             self.boost += b_delta
         self.updated_at = get_now()
         self.update()

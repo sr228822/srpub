@@ -182,7 +182,7 @@ def ramp_up():
     global _g
     print("ramp up")
     _g.scheduler.add_job(
-        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[1.0]
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[1]
     )
     return _cmd_resp("rampup")
 
@@ -191,7 +191,7 @@ def ramp_up():
 def ramp_down():
     global _g
     _g.scheduler.add_job(
-        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-1.0]
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-1]
     )
     print("ramp down")
     return _cmd_resp("ramp_down")
@@ -202,7 +202,7 @@ def ramp_max():
     global _g
     print("ramp_max")
     _g.scheduler.add_job(
-        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[7.0]
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[7]
     )
     return _cmd_resp("ramp_max")
 
@@ -211,7 +211,7 @@ def ramp_max():
 def ramp_off():
     global _g
     _g.scheduler.add_job(
-        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-10.0]
+        do_ramp, "date", run_date=datetime.now() + timedelta(seconds=1), args=[-10]
     )
     print("ramp off")
     return _cmd_resp("ramp_off")
