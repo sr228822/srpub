@@ -79,7 +79,7 @@ def check_config():
     # Skip config check on Linux
     if sys.platform.lower().startswith("linux"):
         return
-    
+
     print("1st run checking git config:")
     for key, value in git_config_defaults.items():
         current_val = cmd(f"git config --global --get {key}")

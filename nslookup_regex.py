@@ -8,9 +8,8 @@ import sys
 import colorstrings
 from srutils import save_pickle, load_pickle, cmd
 
-IGNORE_LIST = [
-    "Administered by ARIN"
-]
+IGNORE_LIST = ["Administered by ARIN"]
+
 
 def whois_query(q):
     resp = cmd(f"whois {q}")
@@ -74,6 +73,7 @@ if aux_lookup_file:
     with open(aux_lookup_file, "r") as f:
         aux_lookup_dat = list(f.readlines())
 
+
 def aux_lookup(ip):
     if not aux_lookup_dat:
         return None
@@ -115,7 +115,11 @@ if __name__ == "__main__":
         for ip in ips:
             lookup = lookup_ip(ip)
             if lookup:
-                comb = colorstrings.green_str(ip) + " : " + colorstrings.blue_str(lookup.rstrip())
+                comb = (
+                    colorstrings.green_str(ip)
+                    + " : "
+                    + colorstrings.blue_str(lookup.rstrip())
+                )
                 line = line.replace(ip, comb, 1)
             else:
                 line = line.replace(ip, colorstrings.green_str(ip), 1)
