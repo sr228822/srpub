@@ -159,6 +159,27 @@ def play_brownnoise(filename):
     return process
 
 
+def play_shush_loop():
+    import pygame
+    import threading
+
+    def shush_thread():
+        pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=4096)
+        sound = pygame.mixer.Sound("files/shush.wav")
+
+        start_time = time.time()
+        duration = 5 * 60  # 5 minutes in seconds
+
+        while time.time() - start_time < duration:
+            pygame.mixer.Sound.play(sound)
+            time.sleep(sound.get_length())
+            time.sleep(1)  # 1 second delay between plays
+
+    thread = threading.Thread(target=shush_thread, daemon=True)
+    thread.start()
+    return thread
+
+
 ##################################################
 # Ramps
 ##################################################
@@ -230,6 +251,17 @@ def vol_unset():
 def reset():
     resp = restart_noise_browser()
     return {"status": "OK", "now": get_now(), "resp": str(resp)}
+
+
+@app.route("/shush")
+def shush():
+    print("Starting shush audio loop for 5 minutes")
+    thread = play_shush_loop()
+    return {
+        "status": "OK",
+        "now": get_now(),
+        "message": "Shush audio started for 5 minutes",
+    }
 
 
 @app.route("/status")
