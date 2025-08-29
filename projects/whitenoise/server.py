@@ -23,6 +23,8 @@ class Globals:
         self.v = Volumizer()
         self.scheduler = None
         self.stop_ramp = False
+        self.shush_end_time = None
+        self.shush_thread = None
 
 
 _g = Globals()
@@ -163,20 +165,24 @@ def play_shush_loop():
     import pygame
     import threading
 
+    global _g
+
     def shush_thread():
         pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=4096)
         sound = pygame.mixer.Sound("files/shush.wav")
 
-        start_time = time.time()
-        duration = 5 * 60  # 5 minutes in seconds
-
-        while time.time() - start_time < duration:
+        while _g.shush_end_time and time.time() < _g.shush_end_time:
             pygame.mixer.Sound.play(sound)
             time.sleep(sound.get_length())
             time.sleep(1)  # 1 second delay between plays
 
+        # Reset when done
+        _g.shush_end_time = None
+        _g.shush_thread = None
+
     thread = threading.Thread(target=shush_thread, daemon=True)
     thread.start()
+    _g.shush_thread = thread
     return thread
 
 
@@ -255,13 +261,33 @@ def reset():
 
 @app.route("/shush")
 def shush():
-    print("Starting shush audio loop for 5 minutes")
-    thread = play_shush_loop()
-    return {
-        "status": "OK",
-        "now": get_now(),
-        "message": "Shush audio started for 5 minutes",
-    }
+    global _g
+    current_time = time.time()
+
+    if _g.shush_end_time and current_time < _g.shush_end_time:
+        # Extend existing shush by 5 minutes
+        _g.shush_end_time += 5 * 60
+        remaining_minutes = int((_g.shush_end_time - current_time) / 60)
+        print(
+            f"Extending shush by 5 minutes, now {remaining_minutes} minutes remaining"
+        )
+        return {
+            "status": "OK",
+            "now": get_now(),
+            "message": f"Shush extended by 5 minutes, now {remaining_minutes} minutes remaining",
+            "shush_end_time": _g.shush_end_time,
+        }
+    else:
+        # Start new shush session
+        _g.shush_end_time = current_time + (5 * 60)  # 5 minutes from now
+        print("Starting shush audio loop for 5 minutes")
+        thread = play_shush_loop()
+        return {
+            "status": "OK",
+            "now": get_now(),
+            "message": "Shush audio started for 5 minutes",
+            "shush_end_time": _g.shush_end_time,
+        }
 
 
 @app.route("/status")
@@ -269,10 +295,16 @@ def status():
     global _g
     now = get_now()
     vol, debug = _g.v.get_vol(now, debug=True)
+
+    shush_remaining = 0
+    if _g.shush_end_time and time.time() < _g.shush_end_time:
+        shush_remaining = int((_g.shush_end_time - time.time()) / 60)
+
     return {
         "debug": debug,
         "vol": round(vol, 2),
         "now": now,
+        "shush_remaining_minutes": shush_remaining,
     }
 
 

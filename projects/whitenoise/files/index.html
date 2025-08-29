@@ -32,6 +32,9 @@ function pollStatus() {
   console.log("polling status");
   fetch('/status').then(resp => {return resp.json()}).then(body => {
     var html = "Time: " + body['now'] + '<br>Debug: ' + body['debug'] + '<br>Volume: ' + body['vol'];
+    if (body['shush_remaining_minutes'] > 0) {
+      html += '<br><strong>Shush active: ' + body['shush_remaining_minutes'] + ' minutes remaining</strong>';
+    }
     document.getElementById("status").innerHTML = html;
   });
 }
