@@ -1,3 +1,4 @@
+
 myhostname=`hostname -f`
 datacenter=""
 box_id_str="$myhostname"
@@ -310,14 +311,25 @@ deeploc() {
 #   for i in `seq 99999`; do $1 $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.5; done 
 # }
 
-crepeat() {
-    if [ "$1" == "forever" ]
-    then
-        for i in `seq 99999`; do $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.1; done 
-    else
-        for i in `seq $1`; do $2 $3 $4 $5 $6 $7 $8 $9; sleep 0.1; done 
-    fi
+# Base function - run command n times
+nce() {
+    local n=$1
+    shift
+    for ((i=1; i<=n; i++)); do
+        "$@"
+    done
 }
+
+# Run command twice (uses nce)
+twice() {
+    nce 2 "$@"
+}
+
+# Run command three times (uses nce)
+thrice() {
+    nce 3 "$@"
+}
+
 
 goto () {
     find | grep -i $1
@@ -467,6 +479,16 @@ cdd() {
 #        fi
 #    fi
 #}
+
+
+# Colorized cat
+ccat() {
+    if command -v pygmentize >/dev/null 2>&1; then
+        pygmentize -O style=vim -l python "$1"
+    else
+        cat "$1"
+    fi
+}
 
 
 alias difftotest='arc diff -m "just to test" --plan-changes'
