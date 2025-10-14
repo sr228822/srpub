@@ -440,6 +440,8 @@ def main():
     left = min(max(1, 10 - done), len(common) - 1)
     if len(common) > 1:
         originz = show_shas(common[0].sha, common[left].sha, nmax=left)
+    elif len(common) == 1:
+        originz = show_sha(common[0].sha)
     else:
         originz = ""
 
