@@ -364,7 +364,9 @@ def main():
         origin = fetch_commits_for_branch(fb, min(commits_behind + 50, 200))
         originsha = [c.sha for c in origin]
         origintitle = [c.title for c in origin]
-        made_merged = [c for c in made if (c.title in origintitle and c.sha not in originsha)]
+        made_merged = [
+            c for c in made if (c.title in origintitle and c.sha not in originsha)
+        ]
         made = [c for c in made if c.title not in origintitle]
     else:
         made_merged = []

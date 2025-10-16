@@ -708,6 +708,18 @@ git_cleanup() {
   git remote prune origin && git repack && git prune-packed && git reflog expire --expire=1.month.ago && git gc --aggressive
 }
 
+git-halfway() {
+    local start=$1
+    local end=$2
+    local total=$(git rev-list --count ${start}..${end})
+    local halfway=$((total / 2))
+    
+    echo "Total commits between: $total"
+    echo "Halfway point: commit #$halfway"
+    
+    git rev-list ${start}..${end} | sed -n "${halfway}p"
+}
+
 
 #######################################################
 # HG stuff
