@@ -301,47 +301,76 @@ def main():
     if args.master:
         fb = "origin/master"
 
-    # Try to determine alignment with origin
-    second_try = False
-    tot_n = 100
-    origin_n = 200
+    # Try to determine alignment with origin using efficient git commands
+    if not fb:
+        # Not a remote-tracking branch
+        tot = fetch_commits_for_branch("", 6)
+        for c in tot[:6]:
+            show_sha(c.sha)
+        sys.exit(1)
 
-    while True:
-        tot = fetch_commits_for_branch("", tot_n)
-        totsha = [c.sha for c in tot]
-        tottitle = [c.title for c in tot]
+    # Use merge-base to efficiently find common ancestor
+    merge_base = cmd(f"git merge-base HEAD {fb}").strip()
 
-        if not fb:
-            # Not a remote-tracking branch
-            for c in tot[:6]:
-                show_sha(c.sha)
-            sys.exit(1)
+    # Early exit if merge-base fails (e.g., no common history)
+    if not merge_base or "fatal" in merge_base.lower():
+        print(red_str("Unable to find common ancestor with remote"))
+        tot = fetch_commits_for_branch("", 6)
+        for c in tot[:6]:
+            show_sha(c.sha)
+        sys.exit(1)
 
-        origin = fetch_commits_for_branch(fb, origin_n)
+    # Count commits efficiently
+    commits_ahead_raw = cmd(f"git rev-list --count {fb}..HEAD").strip()
+    commits_behind_raw = cmd(f"git rev-list --count HEAD..{fb}").strip()
+
+    try:
+        commits_ahead = int(commits_ahead_raw)
+        commits_behind = int(commits_behind_raw)
+    except ValueError:
+        # Fallback if counting fails
+        commits_ahead = 0
+        commits_behind = 0
+
+    # Fetch only the commits we need to display
+    # Get commits on current branch not in upstream (made)
+    if commits_ahead > 0:
+        made = fetch_commits_for_branch("", min(commits_ahead + 10, 50))
+        made = made[:commits_ahead]
+    else:
+        made = []
+
+    # Get commits in upstream not in current branch (missing)
+    # We don't need to fetch all missing commits, just enough to display or count
+    # git rev-list --count already told us the exact count
+    if commits_behind > 0:
+        # Only fetch commits if we're going to display them (when count is small)
+        # Otherwise we'll just show the count
+        if commits_behind <= 100:
+            missing_shas = cmd(f"git rev-list HEAD..{fb}").strip().split("\n")
+            missing = []
+            for sha in missing_shas:
+                missing.extend(fetch_commits_for_branch(sha, 1))
+        else:
+            # For large numbers, create placeholder objects with the count
+            # We'll handle display differently below
+            missing = []
+            # Just need the count, which we already have in commits_behind
+    else:
+        missing = []
+
+    # Check for cherry-picked commits (same title, different sha)
+    if made:
+        origin = fetch_commits_for_branch(fb, min(commits_behind + 50, 200))
         originsha = [c.sha for c in origin]
         origintitle = [c.title for c in origin]
+        made_merged = [c for c in made if (c.title in origintitle and c.sha not in originsha)]
+        made = [c for c in made if c.title not in origintitle]
+    else:
+        made_merged = []
 
-        made = [c for c in tot[:50] if c.title not in origintitle]
-        made_merged = [
-            c for c in tot[:50] if (c.title in origintitle and c.sha not in originsha)
-        ]
-        missing = [
-            c
-            for c in origin[: (tot_n - len(made))]
-            if c.sha not in totsha and c.title not in tottitle
-        ]
-        common = [c for c in origin if (c.sha in totsha and c.title in tottitle)]
-
-        if len(made) + len(made_merged) < 15:
-            break
-        else:
-            if second_try:
-                # Something is weird, break anyway
-                break
-            else:
-                tot_n = 1000
-                origin_n = 1200
-                second_try = True
+    # Get common commits for display (starting from merge base)
+    common = fetch_commits_for_branch(merge_base, 15)
 
     # Show branches
     other_branches = cmd("git branch").strip().split("\n")
@@ -398,23 +427,14 @@ def main():
     done = 0
     cp_but_merged = 0
 
-    if len(made) + len(made_merged) > 20:
-        # Something is weird
-        if len(origin) == 0:
-            print(grey_str("    ********** (no origin) ************"))
-        else:
-            print(red_str("\nUnable to determine alignment with remote\n"))
-        show_shas(totsha[0], totsha[8])
-        sys.exit(1)
+    for c in made:
+        done += 1
+        show_sha(c.sha)
 
-    for c in tot[:50]:
-        if c in made:
-            done += 1
-            show_sha(c.sha)
-        if c in made_merged:
-            done += 1
-            cp_but_merged += 1
-            show_sha_magenta(c.sha)
+    for c in made_merged:
+        done += 1
+        cp_but_merged += 1
+        show_sha_magenta(c.sha)
 
     # Usually happens if there is no origin
     if not common:
@@ -426,9 +446,10 @@ def main():
         print(blue_str("    ********** " + fb + " ************"))
 
     # Print commits in origin missing from HEAD
-    if len(missing) > 5 and not showall:
+    # Use the actual count from git rev-list instead of len(missing)
+    if commits_behind > 5 and not showall:
         print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
-        print(grey_str("   " + str(len(missing)) + " missing commits"))
+        print(grey_str("   " + str(commits_behind) + " missing commits"))
         print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
         done += 2
     else:
