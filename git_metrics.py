@@ -223,8 +223,10 @@ def print_cnt_dict(title, stat, limit=args.num):
 
 def find_main_branch():
     branches = cmd("git branch")
+    branch_list = [line.strip().lstrip('* ') for line in branches.split('\n') if line.strip()]
+
     for b in ["main", "master", "develop"]:
-        if b in branches:
+        if b in branch_list:
             return b
     return "master"
 
@@ -258,6 +260,7 @@ def is_pr_commit(subject):
 dt_now = int(time.time())
 seen_me = False
 commits = git_log_raw.split("\n")
+print(len(commits))
 
 # Track PR commits to avoid counting them multiple times
 processed_pr_commits = {}

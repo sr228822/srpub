@@ -709,16 +709,34 @@ git_cleanup() {
 }
 
 git-halfway() {
-    local start=$1
-    local end=$2
+    local sha1=$1
+    local sha2=$2
+    
+    # Determine which SHA is earlier in history
+    if git merge-base --is-ancestor $sha1 $sha2 2>/dev/null; then
+        local start=$sha1
+        local end=$sha2
+    elif git merge-base --is-ancestor $sha2 $sha1 2>/dev/null; then
+        local start=$sha2
+        local end=$sha1
+    else
+        echo "Error: SHAs are not on the same branch/lineage"
+        return 1
+    fi
+    
     local total=$(git rev-list --count ${start}..${end})
     local halfway=$((total / 2))
     
-    echo "Total commits between: $total"
+    echo "Commits between $start and $end: $total"
     echo "Halfway point: commit #$halfway"
+    echo ""
+
+    local halfway_sha=$(git rev-list ${start}..${end} | sed -n "${halfway}p")
+    echo "$halfway_sha"
     
-    git rev-list ${start}..${end} | sed -n "${halfway}p"
-}
+    # Show the commit info
+    git log --oneline -1 $halfway_sha
+} 
 
 
 #######################################################
