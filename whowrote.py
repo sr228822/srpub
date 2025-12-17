@@ -4,7 +4,6 @@ from srutils import cmd
 import argparse
 import operator
 import re
-import sys
 from pathlib import Path
 from typing import Iterator
 

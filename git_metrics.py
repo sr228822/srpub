@@ -223,7 +223,9 @@ def print_cnt_dict(title, stat, limit=args.num):
 
 def find_main_branch():
     branches = cmd("git branch")
-    branch_list = [line.strip().lstrip('* ') for line in branches.split('\n') if line.strip()]
+    branch_list = [
+        line.strip().lstrip("* ") for line in branches.split("\n") if line.strip()
+    ]
 
     for b in ["main", "master", "develop"]:
         if b in branch_list:

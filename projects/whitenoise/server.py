@@ -281,7 +281,7 @@ def shush():
         # Start new shush session
         _g.shush_end_time = current_time + (5 * 60)  # 5 minutes from now
         print("Starting shush audio loop for 5 minutes")
-        thread = play_shush_loop()
+        _thread = play_shush_loop()
         return {
             "status": "OK",
             "now": get_now(),
