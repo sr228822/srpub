@@ -204,6 +204,14 @@ tmptmp() {
     cd /tmp/tmp/
 }
 
+teelogs() {
+    local logname="/tmp/$(date +%Y%m%d_%H%M%S).txt"
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+    echo "Tee-ing to $logname" >&2
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+    tee "${logname}"
+}
+
 
 color_code_files() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -738,6 +746,11 @@ git-halfway() {
     git log --oneline -1 $halfway_sha
 } 
 
+gfix() {
+    vim $@;
+    git add $@
+}
+
 
 #######################################################
 # HG stuff
@@ -1120,6 +1133,15 @@ function mac_unquarantine() {
 }
 
 
+############################################################
+#     AI / LLM stuff
+############################################################
+opus() {
+    claude --model opus $@
+}
+sonet() {
+    claude --model sonet $@
+}
 
 ############################################################
 #     setup terminal coloring
