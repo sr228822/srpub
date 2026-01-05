@@ -1,4 +1,6 @@
+echo "Loading srpub/bashrc"
 source ~/srpub/bashrc
+echo "Loading secretsrc"
 source ~/.secretsrc
 
 alias ls="ls -G"
