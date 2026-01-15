@@ -106,6 +106,7 @@ def _main(args):
     total_cnt = 0
     lprint = time.time()
     t0 = time.time()
+    printed = False
 
     try:
         for line in quick_ingest_line():
@@ -114,6 +115,7 @@ def _main(args):
             total_cnt += 1
             if time.time() - lprint > args.interval:
                 lprint = time.time()
+                printed = True
                 _print_hist(
                     seen,
                     total_cnt,
@@ -127,8 +129,10 @@ def _main(args):
     except KeyboardInterrupt:
         pass
     finally:
-        print("\n" * (args.limit + 10))
-        print("\nSTDOUT terminated\n\n\n")
+        if printed:
+            # Clear the flusprinted lines
+            print("\n" * (args.limit + 10))
+            print("\nSTDOUT terminated\n\n\n")
         _print_hist(
             seen,
             total_cnt,
