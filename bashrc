@@ -474,19 +474,70 @@ cdd() {
         fi
     fi
 }
-#vim() {
-#    if [ -e "$1" ]; then
-#        /usr/bin/vim $1
-#    else
-#        substr=`ls | grep $1`
-#        if [[ ( -n "$substr" ) && ( $(grep -c . <<<"$substr") == 1 ) ]]; then
-#            echo "auto-matching file $substr" | yellow
-#            /usr/bin/vim $substr
-#        else
-#            /usr/bin/vim $1
-#        fi
-#    fi
-#}
+vim() {
+    local target="$1"
+
+    # If file exists as-is, just open it
+    if [ -e "$target" ]; then
+        command vim "$@"
+        return
+    fi
+
+    # Get current directory as an absolute path
+    local current_dir=$(pwd)
+
+    # Try to find overlap between current path and target path
+    # Split paths into arrays
+    IFS='/' read -ra current_parts <<< "$current_dir"
+    IFS='/' read -ra target_parts <<< "$target"
+
+    # Try matching suffixes of current path with prefixes of target path
+    local best_match_len=0
+    local current_len=${#current_parts[@]}
+    local target_len=${#target_parts[@]}
+
+    # Check each possible suffix of current path
+    for ((i=1; i<=$current_len; i++)); do
+        local match_len=0
+        # Check if this suffix matches the prefix of target
+        for ((j=0; j<i && j<target_len; j++)); do
+            local curr_idx=$((current_len - i + j))
+            if [[ "${current_parts[$curr_idx]}" == "${target_parts[$j]}" ]]; then
+                ((match_len++))
+            else
+                break
+            fi
+        done
+
+        # If we matched all positions we checked, this is a valid overlap
+        if [[ $match_len -gt 0 && $match_len -eq $((j)) ]]; then
+            if [[ $match_len -gt $best_match_len ]]; then
+                best_match_len=$match_len
+            fi
+        fi
+    done
+
+    # If we found an overlap, strip it from the target path
+    if [[ $best_match_len -gt 0 ]]; then
+        local new_target=""
+        for ((i=$best_match_len; i<target_len; i++)); do
+            if [[ -n "$new_target" ]]; then
+                new_target="$new_target/${target_parts[$i]}"
+            else
+                new_target="${target_parts[$i]}"
+            fi
+        done
+
+        if [[ -n "$new_target" && -e "$new_target" ]]; then
+            echo "Stripping redundant path prefix, opening: $new_target" | yellow
+            command vim "$new_target" "${@:2}"
+            return
+        fi
+    fi
+
+    # If nothing worked, just pass through to vim (might create new file or error)
+    command vim "$@"
+}
 
 
 # Colorized cat
@@ -570,6 +621,11 @@ docker_lightprune() {
 docker_fullprune() {
     docker system prune -a --volumes
 }
+
+list_all_services() {
+    systemctl list-units --type=service --no-pager
+}
+
 
 
 #######################################################
