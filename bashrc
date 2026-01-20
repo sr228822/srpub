@@ -475,6 +475,9 @@ cdd() {
     fi
 }
 vim() {
+    # Enable bash-style 0-indexed arrays in zsh if needed
+    [[ -n "$ZSH_VERSION" ]] && setopt local_options KSH_ARRAYS
+
     local target="$1"
 
     # If file exists as-is, just open it
@@ -486,10 +489,23 @@ vim() {
     # Get current directory as an absolute path
     local current_dir=$(pwd)
 
-    # Try to find overlap between current path and target path
-    # Split paths into arrays
-    IFS='/' read -ra current_parts <<< "$current_dir"
-    IFS='/' read -ra target_parts <<< "$target"
+    # Split paths into arrays (now works for both bash and zsh with KSH_ARRAYS)
+    if [[ -n "$BASH_VERSION" ]]; then
+        IFS='/' read -ra current_parts <<< "$current_dir"
+        IFS='/' read -ra target_parts <<< "$target"
+    else
+        # zsh with KSH_ARRAYS: split and filter out empty strings
+        local temp_current=("${(@s:/:)current_dir}")
+        local temp_target=("${(@s:/:)target}")
+        local current_parts=()
+        local target_parts=()
+        for part in "${temp_current[@]}"; do
+            [[ -n "$part" ]] && current_parts+=("$part")
+        done
+        for part in "${temp_target[@]}"; do
+            [[ -n "$part" ]] && target_parts+=("$part")
+        done
+    fi
 
     # Try matching suffixes of current path with prefixes of target path
     local best_match_len=0
