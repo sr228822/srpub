@@ -236,6 +236,9 @@ def get_branch_age(branch: str):
         )
         dt = datetime.datetime.strptime(stats[0] + " " + stats[1], "%Y-%m-%d %H:%M:%S")
         age = stats[3] + " " + stats[4] if len(stats) > 4 else ""
+        age = age.replace(" weeks", "w")
+        age = age.replace(" days", "d")
+        age = age.replace(" months", "m")
     except Exception:
         dt = datetime.datetime.now()
         age = ""
@@ -256,14 +259,14 @@ def get_branch_remote_status() -> dict:
         if line and "\t" in line:
             ref = line.split("\t")[1]
             if ref.startswith("refs/heads/"):
-                actual_remote.add(ref[len("refs/heads/"):])
+                actual_remote.add(ref[len("refs/heads/") :])
 
     # Get local remote-tracking refs (may be stale)
     stale_refs = set()
     for line in cmd("git branch -r 2>/dev/null").strip().split("\n"):
         line = line.strip()
         if line.startswith("origin/") and " -> " not in line:
-            stale_refs.add(line[len("origin/"):])
+            stale_refs.add(line[len("origin/") :])
 
     # Classify each local branch by same-named remote status
     status = {}
@@ -305,8 +308,9 @@ def main():
     parser.add_argument("--all", action="store_true", help="Show all missing commits")
     parser.add_argument("--verbose", action="store_true", help="Verbose debug logs")
     parser.add_argument(
-        "--no-remote-status", action="store_true",
-        help="Disable branch coloring by remote status"
+        "--no-remote-status",
+        action="store_true",
+        help="Disable branch coloring by remote status",
     )
     args = parser.parse_args()
 
@@ -439,7 +443,7 @@ def main():
     # Calculate column width based on longest branch name
     max_branch_len = max((len(b) for b in other_branches), default=20)
     max_branch_len = max(max_branch_len, len(current_branch), 20)  # at least 20
-    age_width = 11  # space + 10 char age field
+    age_width = 5  # space + 4 char age field (e.g., "7d", "2w")
     col_width = max_branch_len + age_width
     branch_cols = max(1, cols // col_width)
     # If only 1 col fits, use full width; otherwise cap at 3 columns
@@ -447,7 +451,7 @@ def main():
 
     print()
     print("*" * (cols - 10))
-    age_prefix = " " * 11  # match age column width
+    age_prefix = " " * 5  # match age column width
     if current_branch == "HEAD":
         print(age_prefix + magenta_str(bold_str("~~ HEAD detached ~~")))
     else:
@@ -472,12 +476,12 @@ def main():
         padded_branch = f"%-{max_branch_len}s" % branch
         if not args.no_remote_status:
             padded_branch = color_branch_by_remote(branch, padded_branch, remote_status)
-        print(grey_str("%10s" % age) + " " + padded_branch, end="")
+        print(grey_str("%4s" % age) + " " + padded_branch, end="")
         if (idx + 1) % branch_cols == 0 or idx == len(branch_data) - 1:
             print("")
 
     if archived_branches:
-        print(grey_str("%30s" % f"{len(archived_branches)} archived branches"))
+        print(grey_str(age_prefix + f"{len(archived_branches)} archived branches"))
 
     print("*" * (cols - 10))
 
