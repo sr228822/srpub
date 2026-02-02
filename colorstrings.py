@@ -130,6 +130,10 @@ def green_str(text):
     return color_str(text, "GREEN")
 
 
+def cyan_str(text):
+    return color_str(text, "CYAN")
+
+
 def yellow_str(text):
     return color_str(text, "YELLOW")
 

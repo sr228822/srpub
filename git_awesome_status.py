@@ -20,6 +20,7 @@ from srutils import (
 
 from colorstrings import (
     blue_str,
+    cyan_str,
     grey_str,
     magenta_str,
     red_str,
@@ -241,6 +242,56 @@ def get_branch_age(branch: str):
     return branch, dt, age
 
 
+def get_branch_remote_status() -> dict:
+    """
+    Returns a dict mapping branch name to remote status (by name match, ignoring tracking):
+    - 'local_only': no same-named remote branch
+    - 'has_remote': same-named remote branch exists
+    - 'gone': same-named remote was deleted (stale local ref exists)
+    """
+    # Get actual remote branches from server
+    ls_remote = cmd("git ls-remote --heads origin 2>/dev/null").strip()
+    actual_remote = set()
+    for line in ls_remote.split("\n"):
+        if line and "\t" in line:
+            ref = line.split("\t")[1]
+            if ref.startswith("refs/heads/"):
+                actual_remote.add(ref[len("refs/heads/"):])
+
+    # Get local remote-tracking refs (may be stale)
+    stale_refs = set()
+    for line in cmd("git branch -r 2>/dev/null").strip().split("\n"):
+        line = line.strip()
+        if line.startswith("origin/") and " -> " not in line:
+            stale_refs.add(line[len("origin/"):])
+
+    # Classify each local branch by same-named remote status
+    status = {}
+    for line in cmd("git branch").strip().split("\n"):
+        branch = line.lstrip("* ").strip()
+        if not branch:
+            continue
+        if branch in stale_refs and branch not in actual_remote:
+            status[branch] = "gone"  # had remote, now deleted
+        elif branch in actual_remote:
+            status[branch] = "has_remote"
+        else:
+            status[branch] = "local_only"
+
+    return status
+
+
+def color_branch_by_remote(branch: str, text: str, remote_status: dict) -> str:
+    """Color text based on branch's remote status."""
+    status = remote_status.get(branch, "local_only")
+    if status == "gone":
+        return red_str(text)
+    elif status == "has_remote":
+        return cyan_str(text)
+    else:  # local_only
+        return text  # white (default terminal color)
+
+
 ###########################################################
 #     Main Logic
 ###########################################################
@@ -253,6 +304,10 @@ def main():
     parser.add_argument("--master", action="store_true", help="Use origin/master as fb")
     parser.add_argument("--all", action="store_true", help="Show all missing commits")
     parser.add_argument("--verbose", action="store_true", help="Verbose debug logs")
+    parser.add_argument(
+        "--no-remote-status", action="store_true",
+        help="Disable branch coloring by remote status"
+    )
     args = parser.parse_args()
 
     if args.verbose:
@@ -381,15 +436,24 @@ def main():
         archived_branches = []
     other_branches = [x for x in other_branches if x not in archived_branches]
 
-    max_len = 50
-    branch_cols = min(3, max(1, int(cols / max_len)))
+    # Calculate column width based on longest branch name
+    max_branch_len = max((len(b) for b in other_branches), default=20)
+    max_branch_len = max(max_branch_len, len(current_branch), 20)  # at least 20
+    age_width = 11  # space + 10 char age field
+    col_width = max_branch_len + age_width
+    branch_cols = max(1, cols // col_width)
+    # If only 1 col fits, use full width; otherwise cap at 3 columns
+    branch_cols = min(3, branch_cols)
 
     print()
     print("*" * (cols - 10))
     if current_branch == "HEAD":
-        print(magenta_str(bold_str("%30s" % "~~ HEAD detached ~~")))
+        print(magenta_str(bold_str(f"%{max_branch_len}s" % "~~ HEAD detached ~~")))
     else:
-        print(blue_str(bold_str("%30s" % current_branch)))
+        print(blue_str(bold_str(f"%{max_branch_len}s" % current_branch)))
+
+    # Get remote status if flag enabled
+    remote_status = get_branch_remote_status() if not args.no_remote_status else {}
 
     # Retrieve branch ages concurrently
     branch_data = []
@@ -403,7 +467,11 @@ def main():
         # If age is in hours/minutes, optionally skip showing it.
         if "minutes" in age or "hours" in age:
             age = ""
-        print("%30s " % branch + grey_str("%-10s" % age), end="")
+        # Pad before coloring so ANSI codes don't affect alignment
+        padded_branch = f"%{max_branch_len}s" % branch
+        if not args.no_remote_status:
+            padded_branch = color_branch_by_remote(branch, padded_branch, remote_status)
+        print(padded_branch + " " + grey_str("%-10s" % age), end="")
         if (idx + 1) % branch_cols == 0 or idx == len(branch_data) - 1:
             print("")
 
