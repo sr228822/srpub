@@ -689,7 +689,7 @@ squashn() {
 gco() {
     git checkout $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1 | xargs`
+        substr=`git branch | sed 's/^[+* ]*//' | grep $1 | xargs`
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git checkout $substr
@@ -710,7 +710,7 @@ git_pre_push() {
 }
 
 gitpush() {
-    b=`git branch | grep "*" | last_word`
+    b=$(git branch --show-current)
     if [[ "$b" == *"master"* || "$b" == *"main"* ]];
     then
         echo "cannot push master/main";
@@ -722,7 +722,7 @@ gitpush() {
     git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
 }
 gitqpush() {
-    b=`git branch | grep "*" | last_word`
+    b=$(git branch --show-current)
     if [[ "$b" == *"master"* || "$b" == *"main"* ]];
     then
         echo "cannot push master/main";
@@ -753,7 +753,7 @@ gnb() {
 gbd() {
     git branch -D $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | grep $1 | grep -v "*" | xargs`
+        substr=`git branch | grep -v "^\*" | sed 's/^[+ ]*//' | grep $1 | xargs`
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git branch -D $substr
@@ -779,7 +779,7 @@ gittrackmain() {
 }
 alias gtm="gittrackmain"
 gittrackself() {
-    b=`git branch | grep "*" | last_word`
+    b=$(git branch --show-current)
     gittrack origin/$b
 }
 
