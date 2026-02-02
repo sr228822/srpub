@@ -447,10 +447,11 @@ def main():
 
     print()
     print("*" * (cols - 10))
+    age_prefix = " " * 11  # match age column width
     if current_branch == "HEAD":
-        print(magenta_str(bold_str(f"%{max_branch_len}s" % "~~ HEAD detached ~~")))
+        print(age_prefix + magenta_str(bold_str("~~ HEAD detached ~~")))
     else:
-        print(blue_str(bold_str(f"%{max_branch_len}s" % current_branch)))
+        print(age_prefix + blue_str(bold_str(current_branch)))
 
     # Get remote status if flag enabled
     remote_status = get_branch_remote_status() if not args.no_remote_status else {}
@@ -468,10 +469,10 @@ def main():
         if "minutes" in age or "hours" in age:
             age = ""
         # Pad before coloring so ANSI codes don't affect alignment
-        padded_branch = f"%{max_branch_len}s" % branch
+        padded_branch = f"%-{max_branch_len}s" % branch
         if not args.no_remote_status:
             padded_branch = color_branch_by_remote(branch, padded_branch, remote_status)
-        print(padded_branch + " " + grey_str("%-10s" % age), end="")
+        print(grey_str("%10s" % age) + " " + padded_branch, end="")
         if (idx + 1) % branch_cols == 0 or idx == len(branch_data) - 1:
             print("")
 
