@@ -68,7 +68,7 @@ class MySheet:
 
 def _test(sheet, addr, expected, annotation=""):
     val = sheet.get(addr)
-    msg = f"{addr} should be {expected} ({type(expected)}) is {val} ({type(expected)}) : ({annotation})"
+    msg = f"{addr} should be {expected}, is {val} {annotation}"
     if val != expected:
         assert val == expected, msg
     else:
