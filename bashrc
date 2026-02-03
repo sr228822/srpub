@@ -85,7 +85,8 @@ else
 fi
 
 # Use prompt command to log all bash to files in .logs
-mkdir -p ~/.logs/
+BASH_LOGS_DIR="${BASH_LOGS_DIR:-$HOME/.logs}"
+mkdir -p "$BASH_LOGS_DIR"
 prompt_command () {
   if [ "$(id -u)" -ne 0 ]; then
     if [[ "$shell" == *zsh* ]]; then
@@ -93,7 +94,7 @@ prompt_command () {
     else
       NEWLINE=$(history 1)
     fi
-    LOGNAME=~/.logs/bash-history-${myhostname}-$(date "+%Y-%m-%d").log
+    LOGNAME="$BASH_LOGS_DIR/bash-history-${myhostname}-$(date "+%Y-%m-%d").log"
     if [[ -e $LOGNAME ]]; then
       LASTLINE=$(tail -n 1 $LOGNAME)
     else
@@ -120,7 +121,7 @@ prompt_command () {
   fi
 }
 export PROMPT_COMMAND='prompt_command'
-alias fullhistory="cat ~/.logs/* | grep '^20' | sort"
+alias fullhistory="cat \"\$BASH_LOGS_DIR\"/* | grep '^20' | sort"
 hist() {
     fullhistory | grep_and $@ | tail -n 30
 }
