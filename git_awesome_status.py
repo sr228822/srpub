@@ -245,13 +245,23 @@ def get_branch_age(branch: str):
     return branch, dt, age
 
 
-def get_branch_remote_status() -> dict:
+def get_branch_remote_status(cache=None, ttl_seconds=300) -> dict:
     """
     Returns a dict mapping branch name to remote status (by name match, ignoring tracking):
     - 'local_only': no same-named remote branch
     - 'has_remote': same-named remote branch exists
     - 'gone': same-named remote was deleted (stale local ref exists)
+
+    Results are cached to disk with a TTL (default 5 minutes).
     """
+    cache_key = "branch_remote_status"
+    if cache:
+        cached = cache.get(cache_key)
+        if cached:
+            ts, data = cached.get("ts", 0), cached.get("data", {})
+            if datetime.datetime.now().timestamp() - ts < ttl_seconds:
+                return data
+
     # Get actual remote branches from server
     ls_remote = cmd("git ls-remote --heads origin 2>/dev/null").strip()
     actual_remote = set()
@@ -280,6 +290,9 @@ def get_branch_remote_status() -> dict:
             status[branch] = "has_remote"
         else:
             status[branch] = "local_only"
+
+    if cache:
+        cache.set(cache_key, {"ts": datetime.datetime.now().timestamp(), "data": status})
 
     return status
 
@@ -458,7 +471,7 @@ def main():
         print(age_prefix + blue_str(bold_str(current_branch)))
 
     # Get remote status if flag enabled
-    remote_status = get_branch_remote_status() if not args.no_remote_status else {}
+    remote_status = get_branch_remote_status(cache) if not args.no_remote_status else {}
 
     # Retrieve branch ages concurrently
     branch_data = []
