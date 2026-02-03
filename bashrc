@@ -477,7 +477,7 @@ cdd() {
 }
 vim() {
     # Enable bash-style 0-indexed arrays in zsh if needed
-    [[ -n "$ZSH_VERSION" ]] && setopt local_options KSH_ARRAYS
+    [[ -n "${ZSH_VERSION:-}" ]] && setopt local_options KSH_ARRAYS
 
     local target="$1"
 
