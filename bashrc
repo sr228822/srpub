@@ -1230,7 +1230,11 @@ set_ps1() {
     if [[ $shell == *zsh* ]]; then
         autoload -U colors && colors
         setopt PROMPT_SUBST
-        PROMPT='%{$fg[yellow]%}%2~ %#%{$reset_color%} $(eval "$PROMPT_COMMAND")'
+        if [[ -n "$SSH_CLIENT" ]]; then
+            PROMPT='%{$fg[yellow]%}%m%{$reset_color%} %2~ %# '
+        else
+            PROMPT='%{$fg[yellow]%}%2~ %#%{$reset_color%} '
+        fi
         return
     fi
 
