@@ -1245,8 +1245,12 @@ set_ps1() {
     else
         # Check if this is a Mac or Linux
         if [[ "$(uname -s)" == "Darwin" ]]; then
-            # Macbooks are yellow
-            PS1="\[\033[1;93m\]\w $show_arch$\[\033[0m\] "
+            # Macbooks are yellow, show hostname if SSHed in
+            if [[ -n "$SSH_CLIENT" ]]; then
+                PS1="\[\033[1;93m\]\h\[\033[0m\] \w $show_arch$ "
+            else
+                PS1="\[\033[1;93m\]\w $show_arch$\[\033[0m\] "
+            fi
             alias ls="ls -G"
         else
             # Linux machines are green and named
