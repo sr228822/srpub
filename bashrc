@@ -117,37 +117,27 @@ prompt_command () {
       return
     fi
 
-    # Redact any secrets before logging
+    # Redact any secrets
     local safe_line=$(redact_secrets "$NEWLINE")
-    if [[ "$safe_line" != "$NEWLINE" ]]; then
+    local was_redacted=$([[ "$safe_line" != "$NEWLINE" ]] && echo 1 || echo 0)
+
+    # Skip if already logged (compare redacted versions)
+    if [[ "$LASTLINE" == *"$safe_line"* ]]; then
+      return
+    fi
+
+    # Warn if we redacted something
+    if [[ "$was_redacted" == "1" ]]; then
       printf '\033[93m[secret redacted from history log]\033[0m\n' >&2
     fi
 
-    if [[ "$LASTLINE" == *"$safe_line"* ]]; then
-      : # already logged
-    else
-      echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $LOGNAME
-
-      # Writing session is causing wierd errors in pasting/char-tabbing
-      # Extract just the command part and truncate if too long
-      #COMMAND_PART=$(echo "$NEWLINE" | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | cut -c1-20)
-
-      # Update terminal tab name with session ID and last command
-      #if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-      #  printf "\e]1;%s\a" "[$SESSION_ID]"
-      #elif [[ -n "$TMUX" ]]; then
-      #  tmux rename-window "[$SESSION_ID]" 2>/dev/null
-      #else
-      #  printf "\e]0;%s\a" "[$SESSION_ID]"
-      #fi
-    fi
+    echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $LOGNAME
   fi
 }
 if [[ "$shell" == *zsh* ]]; then
-  # Only add if not already present
-  if [[ ! " ${precmd_functions[*]} " =~ " prompt_command " ]]; then
-    precmd_functions+=(prompt_command)
-  fi
+  # Remove any existing entries, then add once
+  precmd_functions=("${(@)precmd_functions:#prompt_command}")
+  precmd_functions+=(prompt_command)
 else
   export PROMPT_COMMAND='prompt_command'
 fi
