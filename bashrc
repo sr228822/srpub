@@ -120,7 +120,7 @@ prompt_command () {
     # Redact any secrets before logging
     local safe_line=$(redact_secrets "$NEWLINE")
     if [[ "$safe_line" != "$NEWLINE" ]]; then
-      echo "\033[93m[secret redacted from history log]\033[0m" >&2
+      printf '\033[93m[secret redacted from history log]\033[0m\n' >&2
     fi
 
     if [[ "$LASTLINE" == *"$safe_line"* ]]; then
