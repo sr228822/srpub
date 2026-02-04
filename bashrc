@@ -675,7 +675,7 @@ alias gitbranchdiff='git diff $(git_main_origin) HEAD'
 squashhead() {
     merge=`git merge-base HEAD $(git_main_origin)`
     git reset --soft ${merge}
-    git commit -a
+    git commit -a -n
 }
 squashn() {
     if [ $# -eq 0 ]
@@ -684,7 +684,7 @@ squashn() {
         return
     fi
     git reset --soft HEAD~${1}
-    git commit -a
+    git commit -a -n
 }
 
 gco() {
