@@ -483,7 +483,7 @@ def main():
     branch_data_sorted = sorted(branch_data, key=itemgetter(1), reverse=True)
     for idx, (branch, dt, age) in enumerate(branch_data_sorted):
         # If age is in hours/minutes, optionally skip showing it.
-        if "minutes" in age or "hours" in age:
+        if "seconds" in age or "minutes" in age or "hours" in age:
             age = ""
         # Pad before coloring so ANSI codes don't affect alignment
         padded_branch = f"%-{max_branch_len}s" % branch

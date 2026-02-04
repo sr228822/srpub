@@ -47,7 +47,7 @@ export SR_LOGS_PLAIN=true
 ############################################################
 shell=`echo $SHELL`
 if [[ $shell == *zsh* ]]; then
-    echo "Currently in zsh , some things may not work as expected"
+    echo "Detected shell zsh"
     setopt NO_CASE_GLOB
     setopt AUTO_CD
 
