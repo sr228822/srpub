@@ -120,8 +120,12 @@ prompt_command () {
     fi
   fi
 }
-export PROMPT_COMMAND='prompt_command'
-alias fullhistory="cat \"\$BASH_LOGS_DIR\"/* | grep '^20' | sort"
+if [[ "$shell" == *zsh* ]]; then
+  precmd_functions+=(prompt_command)
+else
+  export PROMPT_COMMAND='prompt_command'
+fi
+alias fullhistory="cat \"\${BASH_LOGS_DIR:-\$HOME/.logs}\"/* | grep '^20' | sort"
 hist() {
     fullhistory | grep_and $@ | tail -n 30
 }
