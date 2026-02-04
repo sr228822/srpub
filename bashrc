@@ -87,6 +87,17 @@ fi
 # Use prompt command to log all bash to files in .logs
 BASH_LOGS_DIR="${BASH_LOGS_DIR:-$HOME/.logs}"
 mkdir -p "$BASH_LOGS_DIR"
+
+# Redact potential secrets in commands - keeps first 4 chars of value, replaces rest with ***
+redact_secrets() {
+  local cmd="$1"
+  echo "$cmd" | sed -E \
+    -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|AUTH|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
+    -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
+    -e 's/([Bb]earer )([A-Za-z0-9._-]{4})[A-Za-z0-9._-]{8,}/\1\2****REDACTED****/g' \
+    -e 's/([^[:space:]=]{4})[0-9a-fA-F]{28,}/\1****REDACTED*****/g'
+}
+
 prompt_command () {
   if [ "$(id -u)" -ne 0 ]; then
     if [[ "$shell" == *zsh* ]]; then
@@ -106,10 +117,16 @@ prompt_command () {
       return
     fi
 
-    if [[ "$LASTLINE" == *"$NEWLINE"* ]]; then
+    # Redact any secrets before logging
+    local safe_line=$(redact_secrets "$NEWLINE")
+    if [[ "$safe_line" != "$NEWLINE" ]]; then
+      echo "\033[93m[secret redacted from history log]\033[0m" >&2
+    fi
+
+    if [[ "$LASTLINE" == *"$safe_line"* ]]; then
       : # already logged
     else
-      echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $NEWLINE" >> $LOGNAME
+      echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $LOGNAME
 
       # Writing session is causing wierd errors in pasting/char-tabbing
       # Extract just the command part and truncate if too long
@@ -127,7 +144,10 @@ prompt_command () {
   fi
 }
 if [[ "$shell" == *zsh* ]]; then
-  precmd_functions+=(prompt_command)
+  # Only add if not already present
+  if [[ ! " ${precmd_functions[*]} " =~ " prompt_command " ]]; then
+    precmd_functions+=(prompt_command)
+  fi
 else
   export PROMPT_COMMAND='prompt_command'
 fi
