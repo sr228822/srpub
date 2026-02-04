@@ -100,8 +100,14 @@ prompt_command () {
     else
       LASTLINE=''
     fi
+    # Skip space-prefixed commands (check if cmd starts with space after "123  " prefix)
+    local cmd="${NEWLINE#*[0-9]  }"
+    if [[ "$cmd" == " "* ]]; then
+      return
+    fi
+
     if [[ "$LASTLINE" == *"$NEWLINE"* ]]; then
-      echo "" > /dev/null
+      : # already logged
     else
       echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $NEWLINE" >> $LOGNAME
 
