@@ -292,7 +292,9 @@ def get_branch_remote_status(cache=None, ttl_seconds=300) -> dict:
             status[branch] = "local_only"
 
     if cache:
-        cache.set(cache_key, {"ts": datetime.datetime.now().timestamp(), "data": status})
+        cache.set(
+            cache_key, {"ts": datetime.datetime.now().timestamp(), "data": status}
+        )
 
     return status
 
