@@ -1251,7 +1251,7 @@ set_ps1() {
         autoload -U colors && colors
         setopt PROMPT_SUBST
         if [[ -n "$SSH_CLIENT" ]]; then
-            PROMPT='%{$fg[yellow]%}%m%{$reset_color%} %2~ %# '
+            PROMPT='%{$fg[green]%}%m%{$reset_color%} %2~ %# '
         else
             PROMPT='%{$fg[yellow]%}%2~ %#%{$reset_color%} '
         fi
@@ -1271,7 +1271,7 @@ set_ps1() {
         if [[ "$(uname -s)" == "Darwin" ]]; then
             # Macbooks are yellow, show hostname if SSHed in
             if [[ -n "$SSH_CLIENT" ]]; then
-                PS1="\[\033[1;93m\]\h\[\033[0m\] \w $show_arch$ "
+                PS1="\[\033[1;32m\]\h\[\033[0m\] \w $show_arch$ "
             else
                 PS1="\[\033[1;93m\]\w $show_arch$\[\033[0m\] "
             fi
