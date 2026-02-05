@@ -92,7 +92,7 @@ mkdir -p "$BASH_LOGS_DIR"
 redact_secrets() {
   local cmd="$1"
   echo "$cmd" | sed -E \
-    -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|AUTH|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
+    -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|OAUTH|AUTH_|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
     -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
     -e 's/([Bb]earer )([A-Za-z0-9._-]{4})[A-Za-z0-9._-]{8,}/\1\2****REDACTED****/g' \
     -e 's/(=[^[:space:]]{4})[0-9a-fA-F]{28,}/\1****REDACTED*****/g'
