@@ -8,18 +8,18 @@ from srutils import cmd
 
 ipoints = {
     # Hour: [weekday-vol, weekend-vol]
-    0: [4, 4],  #  12am   [x     ]
-    1: [4, 4],  #   1am   [x     ]
-    2: [3, 3],  #   2am   [x     ]
+    0: [3, 3],  #  12am   [x     ]
+    1: [2, 2],  #   1am   [x     ]
+    2: [2, 2],  #   2am   [x     ]
     3: [2, 2],  #   3am   [x     ]
     4: [2, 2],  #   4am   [xx    ]
     5: [3, 3],  #   5am   [xx    ]
     6: [4, 4],  #   6am   [xxx   ]
-    7: [5, 5],  #   7am   [xxx   ]
-    8: [5, 5],  #   8am   [xxx   ]
-    9: [4, 6],  #   9am   [xx    ]
-    10: [0, 5],  # 10am   [      ]
-    11: [0, 3],  # 11am   [      ]
+    7: [4, 4],  #   7am   [xxx   ]
+    8: [4, 4],  #   8am   [xxx   ]
+    9: [1, 1],  #   9am   [xx    ]
+    10: [0, 0],  # 10am   [      ]
+    11: [0, 0],  # 11am   [      ]
     12: [0, 0],  # 12am   [      ]
     13: [0, 0],  #  1pm   [      ]
     14: [0, 0],  #  2pm   [      ]
@@ -27,12 +27,12 @@ ipoints = {
     16: [0, 0],  #  4pm   [      ]
     17: [0, 0],  #  5pm   [      ]
     18: [0, 0],  #  6pm   [      ]
-    19: [0, 0],  #  7pm   [x     ]
-    20: [0, 0],  #  8pm   [xx    ]
-    21: [0, 0],  #  9pm   [xx    ]
+    19: [2, 2],  #  7pm   [x     ]
+    20: [4, 4],  #  8pm   [xx    ]
+    21: [4, 4],  #  9pm   [xx    ]
     22: [4, 4],  # 10pm   [xx    ]
-    23: [4, 4],  # 11pm   [xx    ]
-    24: [4, 4],  # 12am   [xx    ]
+    23: [3, 3],  # 11pm   [xx    ]
+    24: [3, 3],  # 12am   [xx    ]
 }
 
 
@@ -88,6 +88,8 @@ class Volumizer:
             ((t - self.updated_at).total_seconds()) if self.updated_at else 1000000
         )
 
+        # Keep boost constant for 2 hours
+        # from 2h-3h ramp back to schedule
         if boost_age < (2 * 3600):
             boost_perc = 1.0
         elif boost_age < (3 * 3600):
