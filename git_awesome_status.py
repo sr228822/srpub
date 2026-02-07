@@ -239,6 +239,8 @@ def get_branch_age(branch: str):
         age = age.replace(" weeks", "w")
         age = age.replace(" days", "d")
         age = age.replace(" months", "m")
+        age = age.replace(" years", "y")
+        age = age.replace(" year", "y")
     except Exception:
         dt = datetime.datetime.now()
         age = ""
