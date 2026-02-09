@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from srutils import cmd
+from srutils import cmd, GitNameMatcher
 import argparse
 import operator
 import re
 from pathlib import Path
 from typing import Iterator
-
 
 def title_from_sha(sha):
     res = cmd("git show " + sha)
@@ -19,6 +18,7 @@ def title_from_sha(sha):
 
 IGNORE_PATTERNS = {".env", "__pycache__", "pyc", "build"}
 
+name_matcher = GitNameMatcher()
 
 def should_ignore(path: Path) -> bool:
     return any(pattern in path.parts for pattern in IGNORE_PATTERNS)
@@ -67,13 +67,36 @@ def main():
     auth_lines = dict()
     auth_commits = dict()
     lc = 0
+    unique_shas = set()
 
     all_files = list(args_to_files(args.paths))
+
+    # First pass: collect all SHAs from blame
     for a in all_files:
         for line in cmd(f"git blame {a}").split("\n"):
+            ls = re.split(r" |\(", line)
+            if len(ls) < 4:
+                continue
+            sha = ls[0].replace("^", "").strip()
+            if sha:
+                unique_shas.add(sha)
+
+    # Populate name matcher with name+email from just the SHAs we found
+    for sha in unique_shas:
+        info = cmd(f"git show -s --format='%aN|%aE' {sha}")
+        if "|" in info:
+            name, email = info.rsplit("|", 1)
+            name = name.strip()
+            email = email.strip().lower()
+            name_matcher.put_in_known(name, email)
+
+    # Second pass: process blame with canonical names
+    for a in all_files:
+        for line in cmd(f"git blame -e {a}").split("\n"):
             m = re.search(r"\((.*?)\)", line)
             if m:
-                auth = " ".join(m.group(1).split()[0:-4])
+                email = " ".join(m.group(1).split()[0:-4]).strip("<>").lower()
+                auth = name_matcher.get_name(email) if email in name_matcher.kauths else email
             else:
                 print(f"failed: {line}")
                 continue
@@ -100,8 +123,9 @@ def main():
     sorted_cnts = sorted(cnts.items(), key=operator.itemgetter(1))
     sorted_cnts.reverse()
     for sha, cnt in sorted_cnts:
+        author = name_matcher.get_bestname(auths[sha])
         print(
-            f"{sha}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{auths[sha]:20}\t{title_from_sha(sha)}"
+            f"{sha}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{author:20}\t{title_from_sha(sha)}"
         )
 
     # Print the original author, by file
@@ -119,11 +143,13 @@ def main():
     # Print the aggregated git-blame coverage
     print("\n---- Current Git-Blame Modifier -----\n")
     print(f"{'author':20}\tlines\tperc\tcommits")
+    print(f"{'------':20}\t-----\t----\t-------")
     sorted_auth_lines = sorted(auth_lines.items(), key=operator.itemgetter(1))
     sorted_auth_lines.reverse()
     for auth, cnt in sorted_auth_lines:
+        author = name_matcher.get_bestname(auth)
         print(
-            f"{auth:20}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{auth_commits[auth]}"
+            f"{author:20}\t{cnt}\t{int(100.0 * float(cnt) / lc)}%\t{auth_commits[auth]}"
         )
 
 

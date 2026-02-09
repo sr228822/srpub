@@ -744,3 +744,117 @@ def send_email(source, to, subject, body):
         },
     )
     print(response)
+
+
+#################################################################
+# git stuff
+#################################################################
+
+def looks_similar(a, b):
+    """Return true if string `a` looks pretty similar to `b`
+
+    The algorithm basically comparse each coresponding word for
+    case-insensitive substring matches
+    """
+    a = a.lower().strip()
+    b = b.lower().strip()
+    if a == b:
+        return True
+    words_a = a.split(" ")
+    words_b = b.split(" ")
+    if len(words_a) != len(words_b):
+        # this is a little dubious, but if one is at least 8 characters
+        # and appears entirely in the other, count that
+        smoosh_a = "".join(words_a)
+        smoosh_b = "".join(words_b)
+        if len(smoosh_a) >= 8 and smoosh_a in smoosh_b:
+            return True
+        if len(smoosh_b) >= 8 and smoosh_b in smoosh_a:
+            return True
+
+        return False
+    for idx in range(len(words_a)):
+        if words_a[idx] in words_b[idx] or words_b[idx] in words_a[idx]:
+            continue
+        return False
+    return True
+
+
+class GitNameMatcher:
+    def __init__(self):
+        # A map of known aliases -> canonical key
+        self.kauths = {}
+        # A map of canonical key -> best display name
+        self.bestname = {}
+
+    def _name_score(self, name):
+        """Score for choosing best display name (higher is better)"""
+        score = len(name)
+        if "@" not in name:  # Prefer non-emails
+            score += 200
+        if " " in name:  # Prefer "First Last" over "username"
+            score += 100
+        return score
+
+    def _maybe_update_best(self, kname, newthing):
+        score = self._name_score(newthing)
+        if score > self._name_score(self.bestname.get(kname, "")):
+            self.bestname[kname] = newthing
+
+    def put_in_known(self, name, email):
+        assert name
+        assert email
+
+        # if we have already seen both the name and email, no addition needed
+        if name in self.kauths and email in self.kauths:
+            return
+
+        if name in self.kauths:
+            # we have seen the name, but not the email
+            kname = self.kauths[name]
+            self.kauths[email] = kname
+            self._maybe_update_best(kname, email)
+            return
+
+        if email in self.kauths:
+            # we have seen the email, but not the name
+            kname = self.kauths[email]
+            self.kauths[name] = kname
+            self._maybe_update_best(kname, name)
+            return
+
+        # we have seen neither the exact email nor exact name
+        for other_auth in self.kauths.keys():
+            if looks_similar(name, other_auth):
+                kname = self.kauths[other_auth]
+
+                self.kauths[name] = kname
+                self.kauths[email] = kname
+                self._maybe_update_best(kname, name)
+                self._maybe_update_best(kname, email)
+                return
+
+        # we did not find any similar name matches
+        # so add a new entry
+        kname = name
+
+        self.kauths[name] = kname
+        self.kauths[email] = kname
+        self._maybe_update_best(kname, name)
+        self._maybe_update_best(kname, email)
+
+    def get_name(self, name):
+        kname = self.kauths[name]
+        return kname
+
+    def get_bestname(self, name):
+        kname = self.kauths[name]
+        return self.bestname[kname]
+
+    def get_aliases(self, name, emails=True):
+        res = {}
+        for k, v in self.kauths.items():
+            if v == name:
+                if "@" in k or not emails:
+                    res[k] = True
+        return res.keys()

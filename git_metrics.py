@@ -2,7 +2,14 @@
 
 from __future__ import print_function
 
-from srutils import cmd, parse_duration, dur_to_human, name_aliases
+from srutils import (
+    cmd,
+    parse_duration,
+    dur_to_human,
+    name_aliases,
+    GitNameMatcher,
+    looks_similar,
+)
 import argparse
 import datetime
 import operator
@@ -11,11 +18,6 @@ import time
 
 from colorstrings import blue_str
 
-# A map of known aliases -> name
-kauths = {}
-
-# A map of kname to longest-name
-longname = {}
 
 MY_NAME = cmd("git config user.name") or name_aliases[0]
 
@@ -110,76 +112,7 @@ thresh_dur_stat = GitStat()
 
 user_active_tim = {}
 
-STRIP_PREFX = "ctrl"
-
-
-def looks_similar(a, b):
-    """Return true if string `a` looks pretty similar to `b`
-
-    The algorithm basically comparse each coresponding word for
-    case-insensitive substring matches
-    """
-    a = a.lower().strip()
-    b = b.lower().strip()
-    if a == b:
-        return True
-    words_a = a.split(" ")
-    words_b = b.split(" ")
-    if len(words_a) != len(words_b):
-        return False
-    for idx in range(len(words_a)):
-        if words_a[idx] in words_b[idx] or words_b[idx] in words_a[idx]:
-            continue
-        return False
-    return True
-
-
-def put_in_known(name, email):
-    global kauths
-    name = name
-    email = email
-
-    # if we have both the name and email, we're done
-    if name in kauths and email in kauths:
-        # if kauths[name] == kauths[email]:
-        #    return
-        return
-
-    if name in kauths:
-        # we have the name, but not the email
-        kauths[email] = kauths[name]
-        return
-
-    if email in kauths:
-        # we have the email, but not the name
-        kauths[name] = kauths[email]
-        return
-
-    # we have neither the exact email nor exact name
-    for other_auth in kauths.keys():
-        if looks_similar(name, other_auth):
-            kauths[name] = kauths[other_auth]
-            kauths[email] = kauths[other_auth]
-            return
-
-    # we did not find any similar name matches
-    # so add a new entry
-    fname = name
-    if name.startswith(STRIP_PREFX):
-        fname = name[len(STRIP_PREFX) :]
-    kauths[name] = fname
-    kauths[email] = fname
-
-
-def get_aliases(name, emails=True):
-    global kauths
-    res = {}
-    for k, v in kauths.items():
-        if v == name:
-            if "@" in k or not emails:
-                res[k] = True
-    return res.keys()
-
+name_matcher = GitNameMatcher()
 
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
@@ -190,12 +123,12 @@ def print_cnt_dict(title, stat, limit=args.num):
     print(
         f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total {description};  {len(stat.cnt.keys())} unique authors)"
     )
-    print(f"{'':3}   {'cnt ':5}   %   /week name")
-    print(f"{'':3}   {'--- ':5} ----- ----- ----")
+    print(f"{'':3}   {'cnt':>5} {'%':>4}  {'rate':>5} name")
+    print(f"{'':3}   {'---':>5} {'---':>4}  {'----':>5} ----")
     for i, x in enumerate(sorted_x):
         kname = x[0]
         is_me = looks_similar(kname, args.user)
-        name = longname[kname].title()
+        name = name_matcher.get_bestname(kname).title()
         if is_me:
             name = blue_str(name)
         cnt = x[1]
@@ -211,11 +144,11 @@ def print_cnt_dict(title, stat, limit=args.num):
         print(
             f"{int(i + 1):3}"
             + ". "
-            + f"{int(cnt):5}  "
-            + f"  {int(perc):2}"
-            + "%  "
-            + f"{rate:.1f} "
-            + f" {name: <25}"
+            + f"{int(cnt):>5}  "
+            + f"{int(perc):>3}%"
+            + "  "
+            + f"{rate:>5.1f} "
+            + name
         )
         if is_me:
             did_me = True
@@ -238,14 +171,6 @@ git_log_format = "%H,%aN,%ae,%at,%s"
 git_log_raw = cmd(f"git log {main_branch} --format='{git_log_format}'")
 
 
-def length_score(k):
-    s = len(k)
-    # penalize emails
-    if "@" not in k:
-        s += 20
-    return s
-
-
 def is_pr_commit(subject):
     """
     Determine if a commit is a PR commit based on its subject and body.
@@ -266,6 +191,7 @@ print(len(commits))
 
 # Track PR commits to avoid counting them multiple times
 processed_pr_commits = {}
+
 
 for i, c in enumerate(reversed(commits)):
     cs = c.strip().split(",")
@@ -322,14 +248,8 @@ for i, c in enumerate(reversed(commits)):
     if is_mine:
         seen_me = True
 
-    put_in_known(name, email)
-    kname = kauths[name]
-
-    # set the longest-name which kname maps to
-    if kname not in longname:
-        longname[kname] = kname
-    if length_score(name) > length_score(longname[kname]):
-        longname[kname] = name
+    name_matcher.put_in_known(name, email)
+    kname = name_matcher.get_name(name)
 
     # Add this commit to stat-counters it matches
     all_stat.add(kname, dt)
@@ -368,7 +288,7 @@ def print_active_rate():
         if weeks <= 2:
             continue
         is_me = looks_similar(kname, args.user)
-        name = longname[kname].title()
+        name = name_matcher.get_bestname(kname).title()
         name = f" {name: <25}"
         if is_me:
             did_me = True
@@ -393,9 +313,9 @@ def print_active_rate():
         )
 
 
-# print("\n\n== kauth map ==")
-# for k,v in kauths.items():
-#    print("%50s" % k, "   ", "%50s" % v)
+print("\n\n== kauth map ==")
+for k,v in name_matcher.kauths.items():
+   print("%50s" % k, "   ", "%50s" % v)
 
 # print("\n\n== kauth map ==")
 # for k,v in all_stat.cnt.items():
