@@ -670,7 +670,6 @@ list_all_services() {
 #######################################################
 
 alias gb='git branch'
-alias gl='git log'
 alias ggd='git diff'
 alias grh='git reset --hard'
 alias gcp='git cherry-pick'
@@ -778,6 +777,17 @@ gbd() {
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git branch -D $substr
+        fi
+    fi
+}
+
+gl() {
+    git log $@
+    if [ $? -ne 0 ] && [ -n "$1" ]; then
+        substr=`git branch | grep -v "^\*" | sed 's/^[+ ]*//' | grep $1 | xargs`
+        if [ -n "$substr" ]; then
+            echo "auto-matching branch $substr" | yellow
+            git log $substr ${@:2}
         fi
     fi
 }

@@ -114,6 +114,7 @@ user_active_tim = {}
 
 name_matcher = GitNameMatcher()
 
+
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
@@ -314,8 +315,8 @@ def print_active_rate():
 
 
 print("\n\n== kauth map ==")
-for k,v in name_matcher.kauths.items():
-   print("%50s" % k, "   ", "%50s" % v)
+for k, v in name_matcher.kauths.items():
+    print("%50s" % k, "   ", "%50s" % v)
 
 # print("\n\n== kauth map ==")
 # for k,v in all_stat.cnt.items():

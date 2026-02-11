@@ -750,6 +750,7 @@ def send_email(source, to, subject, body):
 # git stuff
 #################################################################
 
+
 def looks_similar(a, b):
     """Return true if string `a` looks pretty similar to `b`
 

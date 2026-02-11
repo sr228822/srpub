@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Iterator
 
+
 def title_from_sha(sha):
     res = cmd("git show " + sha)
     try:
@@ -19,6 +20,7 @@ def title_from_sha(sha):
 IGNORE_PATTERNS = {".env", "__pycache__", "pyc", "build"}
 
 name_matcher = GitNameMatcher()
+
 
 def should_ignore(path: Path) -> bool:
     return any(pattern in path.parts for pattern in IGNORE_PATTERNS)
@@ -96,7 +98,11 @@ def main():
             m = re.search(r"\((.*?)\)", line)
             if m:
                 email = " ".join(m.group(1).split()[0:-4]).strip("<>").lower()
-                auth = name_matcher.get_name(email) if email in name_matcher.kauths else email
+                auth = (
+                    name_matcher.get_name(email)
+                    if email in name_matcher.kauths
+                    else email
+                )
             else:
                 print(f"failed: {line}")
                 continue
