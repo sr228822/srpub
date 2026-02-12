@@ -105,9 +105,9 @@ prompt_command () {
     else
       NEWLINE=$(history 1)
     fi
-    LOGNAME="$BASH_LOGS_DIR/bash-history-${myhostname}-$(date "+%Y-%m-%d").log"
-    if [[ -e $LOGNAME ]]; then
-      LASTLINE=$(tail -n 1 $LOGNAME)
+    PCLOGNAME="$BASH_LOGS_DIR/bash-history-${myhostname}-$(date "+%Y-%m-%d").log"
+    if [[ -e $PCLOGNAME ]]; then
+      LASTLINE=$(tail -n 1 $PCLOGNAME)
     else
       LASTLINE=''
     fi
@@ -131,7 +131,7 @@ prompt_command () {
       printf '\033[93m[secret redacted from history log]\033[0m\n' >&2
     fi
 
-    echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $LOGNAME
+    echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $PCLOGNAME
   fi
 }
 if [[ "$shell" == *zsh* ]]; then
