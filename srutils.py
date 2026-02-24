@@ -641,7 +641,7 @@ def to_metric_base(size_str):
     for unit, multiplier in units.items():
         if size.endswith(unit):
             try:
-                number = float(size[:-len(unit)])
+                number = float(size[: -len(unit)])
                 return int(number * multiplier)
             except ValueError:
                 raise ValueError(f"Invalid number format: {size}")

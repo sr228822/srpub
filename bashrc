@@ -766,12 +766,29 @@ gnb() {
     fi
 }
 gbd() {
+    local branch="$1"
     git branch -D $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | grep -v "^\*" | sed 's/^[+ ]*//' | grep $1 | xargs`
-        if [ -n "$substr" ]; then
-            echo "auto-matching branch $substr" | yellow
-            git branch -D $substr
+        branch=$(git branch | grep -v "^\*" | sed 's/^[+ ]*//' | grep $1 | head -n 1 | xargs)
+        if [ -n "$branch" ]; then
+            echo "auto-matching branch $branch" | yellow
+            git branch -D $branch
+        fi
+    fi
+
+    # Kill any tmux claude session for this branch
+    if [ -n "$branch" ]; then
+        local repo=$(basename "$(git rev-parse --show-toplevel)" 2>/dev/null)
+        local session_name="${repo}/${branch}"
+        if tmux has-session -t "=$session_name" 2>/dev/null; then
+            echo "Killing tmux claude session $session_name" | yellow
+            tmux kill-session -t "=$session_name"
+        fi
+        # Clean up branch_sessions map
+        local map_file="$HOME/.claude/branch_sessions"
+        if [ -f "$map_file" ]; then
+            local key="${repo}/${branch}"
+            sed -i '' "\|^${key} |d" "$map_file"
         fi
     fi
 }
