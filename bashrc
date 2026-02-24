@@ -731,7 +731,7 @@ git_pre_push() {
 
 gitpush() {
     b=$(git branch --show-current)
-    if [[ "$b" == *"master"* || "$b" == *"main"* ]];
+    if [[ "$b" == "master" || "$b" == "main" ]];
     then
         echo "cannot push master/main";
         return 1;
@@ -743,15 +743,10 @@ gitpush() {
 }
 gitqpush() {
     b=$(git branch --show-current)
-    if [[ "$b" == *"master"* || "$b" == *"main"* ]];
+    if [[ "$b" == "master" || "$b" == "main" ]];
     then
         echo "cannot push master/main";
         return 1;
-    fi
-    if [[ "$b" == *"main"* ]];
-    then
-	    echo "cannot push main";
-	    return 1;
     fi
 
     echo "quick-pushing... $b"
