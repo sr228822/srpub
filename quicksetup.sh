@@ -47,6 +47,23 @@ else
     done
 fi
 
+# 2. Install Docker
+echo ""
+echo "--- Docker ---"
+if command -v docker &>/dev/null; then
+    echo "Docker already installed."
+else
+    echo "Installing Docker..."
+    if [ "$OS" = "Darwin" ]; then
+        brew install --cask docker
+        echo "Docker Desktop installed. You may need to open it manually to finish setup."
+    else
+        curl -fsSL https://get.docker.com | sh
+        sudo usermod -aG docker "$USER"
+        echo "Docker installed. You may need to log out and back in for group changes."
+    fi
+fi
+
 # 3. Install Miniconda
 echo ""
 echo "--- Miniconda ---"
