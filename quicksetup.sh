@@ -128,5 +128,11 @@ for pair in vimrc:.vimrc condarc:.condarc psqlrc:.psqlrc; do
     fi
 done
 
+# 7. Configure git hooks
+echo ""
+echo "--- Git hooks ---"
+git -C "$SRPUB_DIR" config core.hooksPath "$SRPUB_DIR/hooks"
+echo "Set core.hooksPath to $SRPUB_DIR/hooks"
+
 echo ""
 echo "=== Setup complete ==="
