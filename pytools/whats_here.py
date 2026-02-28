@@ -196,11 +196,11 @@ def format_size(size_bytes):
     if size_bytes < 1024:
         return f"{size_bytes} B"
     elif size_bytes < 1024 * 1024:
-        return f"{size_bytes/1024:.1f} KB"
+        return f"{size_bytes / 1024:.1f} KB"
     elif size_bytes < 1024 * 1024 * 1024:
-        return f"{size_bytes/(1024*1024):.1f} MB"
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
     else:
-        return f"{size_bytes/(1024*1024*1024):.1f} GB"
+        return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
 
 def print_stats(stats, total_files, total_lines, total_size, path, sort_by="count"):

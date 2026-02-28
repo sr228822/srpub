@@ -52,7 +52,6 @@ def get_size_recursive(bucket, prefix, threads=10, verbose=False):
         return obj["Size"]
 
     with ThreadPoolExecutor(max_workers=threads) as executor:
-
         sizes = list(executor.map(process_object, objects_to_process))
 
     total_size = sum(sizes)

@@ -54,7 +54,7 @@ def find_coverage(width, height, rectangles) -> float:
         for vi in range(len(sorted_verticals)):
             if grid[hi][vi]:
                 print(
-                    f"covered square hi: {hi} vi: {vi} {sorted_horizontals[hi+1]} {sorted_horizontals[hi]} {sorted_verticals[vi+1]} {sorted_verticals[vi]}"
+                    f"covered square hi: {hi} vi: {vi} {sorted_horizontals[hi + 1]} {sorted_horizontals[hi]} {sorted_verticals[vi + 1]} {sorted_verticals[vi]}"
                 )
                 covered += (sorted_horizontals[hi + 1] - sorted_horizontals[hi]) * (
                     sorted_verticals[vi + 1] - sorted_verticals[vi]

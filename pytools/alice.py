@@ -117,7 +117,16 @@ def _alice_status_once(perc_done=None, message=None):
 def alice_init(name=None, custom_actions=None, debug=False):
     from srutils import cmd
 
-    global alice_name, alice_uuid, alice_host, alice_status, alice_lastcheck, alice_interval, alice_fast_until, alice_custom_actions, alice_debug
+    global \
+        alice_name, \
+        alice_uuid, \
+        alice_host, \
+        alice_status, \
+        alice_lastcheck, \
+        alice_interval, \
+        alice_fast_until, \
+        alice_custom_actions, \
+        alice_debug
     alice_uuid = str(uuid.uuid4())
 
     if name:

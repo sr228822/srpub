@@ -92,7 +92,7 @@ def flushprint(content):
         sys.stdout.write("\r\033[K")
         sys.stdout.write("\n".join(lines[:-1]))
         sys.stdout.write("\n" + lines[-1])
-        sys.stdout.write(f"\033[{len(lines)-1}A")
+        sys.stdout.write(f"\033[{len(lines) - 1}A")
         sys.stdout.flush()
     else:
         print(content)
@@ -720,9 +720,9 @@ def cached_boto_client(x, region="us-east-1"):
 def send_email(source, to, subject, body):
     # Requires IAM user
     identity = cached_boto_client("sts").get_caller_identity().get("Arn")
-    assert identity.endswith(
-        "user/sam"
-    ), f"Must sign in to IAM user to send SES email: {identity}"
+    assert identity.endswith("user/sam"), (
+        f"Must sign in to IAM user to send SES email: {identity}"
+    )
     client = cached_boto_client("ses")
     response = client.send_email(
         Source=source,

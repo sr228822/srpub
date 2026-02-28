@@ -12,7 +12,7 @@ def my_context(block_description):
     yield
 
     end_time = time.time()
-    print(f"Block {block_description} too {end_time-start_time}s")
+    print(f"Block {block_description} too {end_time - start_time}s")
 
 
 with my_context("myblock"):
