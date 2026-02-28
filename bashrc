@@ -298,21 +298,17 @@ grep_and() {
         return
     fi
 
-    # Start building the awk command with first pattern
-    cmd="awk '/$1/"
+    # Chain grep calls for each pattern
+    local result
+    result=$(grep -i -e "$1")
     shift
 
-    # Add remaining patterns with && between each
     while [ $# -gt 0 ]; do
-        cmd="$cmd && /$1/"
+        result=$(echo "$result" | grep -i -e "$1")
         shift
     done
 
-    # Close the awk command
-    cmd="$cmd'"
-
-    # Execute the built command
-    eval "$cmd"
+    echo "$result"
 }
 
 search_or() {
@@ -417,7 +413,6 @@ alias red='$SRPUB_DIR/colorstrings.py red'
 alias yellow='$SRPUB_DIR/colorstrings.py yellow'
 alias rainbow='$SRPUB_DIR/colorstrings.py rainbow'
 alias blink='$SRPUB_DIR/colorstrings.py blink'
-alias stripcolors='sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"'
 
 alias asdf='fortune'
 alias frak='fortune'

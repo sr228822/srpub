@@ -110,7 +110,7 @@ def main():
             ls = re.split(r" |\(", line)
             if len(ls) < 4:
                 continue
-            sha = ls[0].replace("^", " ")
+            sha = ls[0].replace("^", "")
             auths[sha] = auth
             lc += 1
             if sha in cnts:
