@@ -41,7 +41,7 @@ def whois_lookup(ip):
         return whoiscache[ip]
     try:
         resp = whois_query(ip)
-    except:
+    except Exception:
         whoiscache[ip] = None
         raise
         return None

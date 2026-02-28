@@ -81,13 +81,13 @@ def main():
     parser.add_argument(
         "--alphabetical",
         action="store_true",
-        help="sort alphametically, not by frequency",
+        help="sort alphabetically, not by frequency",
     )
     parser.add_argument("--interval", type=int, default=3, help="refresh interval")
     parser.add_argument("--no-percent", action="store_true", help="dont show percent")
     parser.add_argument("--no-rate", action="store_false", help="dont show the rate")
     parser.add_argument(
-        "--duplicates", action="store_true", help="only show duplciates"
+        "--duplicates", action="store_true", help="only show duplicates"
     )
     parser.add_argument(
         "--limit", type=int, default=10, help="number of entries to show"
@@ -130,7 +130,7 @@ def _main(args):
         pass
     finally:
         if printed:
-            # Clear the flusprinted lines
+            # Clear the flush-printed lines
             print("\n" * (args.limit + 10))
             print("\nSTDOUT terminated\n\n\n")
         _print_hist(

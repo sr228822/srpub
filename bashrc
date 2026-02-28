@@ -45,7 +45,7 @@ export SR_LOGS_PLAIN=true
 ############################################################
 #     ZSH stuff
 ############################################################
-shell=`echo $SHELL`
+shell=$SHELL
 if [[ $shell == *zsh* ]]; then
     echo "Detected shell zsh"
     setopt NO_CASE_GLOB
@@ -488,7 +488,7 @@ allbutfirstword() {
     cut -d" " -f1 --complement
 }
 allbutlastword() {
-    sed s/'\S*$'//
+    sed 's/[^ ]*$//'
 }
 
 cdd() {
@@ -814,7 +814,6 @@ function gits() {
     $SRPUB_DIR/git_awesome_status.py $@
 }
 alias gitmine="git log --format=short --author='Russell'"
-alias author_of_all_time='git log | grep Author | hist_common.py'
 
 gittrack() {
     if [ -z "$1" ]; then

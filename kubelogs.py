@@ -38,7 +38,7 @@ def stream(c, verbose=False):
         if nextline == "" and proc_poll is not None:
             if verbose:
                 print(
-                    f"Process {c} extied with code {proc_poll}, waiting_to_start={waiting_to_start}"
+                    f"Process {c} exited with code {proc_poll}, waiting_to_start={waiting_to_start}"
                 )
             return waiting_to_start
         if nextline:

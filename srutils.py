@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 
 import datetime
 import shutil
 import math
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -484,24 +484,25 @@ def html_link(txt, link):
 #################################################################
 
 
+def _needs_shell(c):
+    """Check if a command string requires shell interpretation."""
+    return any(ch in c for ch in "|&;<>$`")
+
+
 def cmd(c, wait=True, noisy=False, straight_through=False):
-    # this seems to be much faster for the simple case
-    # if wait and not noisy:
-    #    return commands.getoutput(c)
     vprint(f"cmd: {c}")
+    use_shell = _needs_shell(c)
+    args = c if use_shell else shlex.split(c)
 
     if straight_through:
-        process = subprocess.Popen(
-            c,
-            shell=True,
-        )
+        process = subprocess.Popen(args, shell=use_shell)
         process.communicate()
         return ""
 
     if not wait:
-        process = subprocess.Popen(
-            c,
-            shell=True,
+        subprocess.Popen(
+            args,
+            shell=use_shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -510,8 +511,8 @@ def cmd(c, wait=True, noisy=False, straight_through=False):
 
     if noisy:
         process = subprocess.Popen(
-            c,
-            shell=True,
+            args,
+            shell=use_shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -527,8 +528,8 @@ def cmd(c, wait=True, noisy=False, straight_through=False):
         return output.rstrip()
     else:
         process = subprocess.Popen(
-            c,
-            shell=True,
+            args,
+            shell=use_shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,

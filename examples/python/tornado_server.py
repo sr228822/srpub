@@ -15,8 +15,8 @@ def instrument():
     start_time = time.time()
     try:
         yield
-    except:
-        print("instruemtn exception")
+    except Exception:
+        print("instrument exception")
         raise
     else:
         end_time = time.time()

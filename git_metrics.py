@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 
 from srutils import (
     cmd,
@@ -54,7 +53,9 @@ def is_int(x):
 
 
 def epoch_to_date(e):
-    return datetime.datetime.fromtimestamp(e, datetime.UTC).strftime("%Y-%m-%d")
+    return datetime.datetime.fromtimestamp(e, datetime.timezone.utc).strftime(
+        "%Y-%m-%d"
+    )
 
 
 def fmt_float(f, decimals=1, width=4):

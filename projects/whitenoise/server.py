@@ -50,8 +50,8 @@ def try_report_ip():
     try:
         x = requests.post(url, json=myobj, timeout=5)
         print(f"Reported IP result {x}")
-    except Exception:
-        print("Failed to report ip: {ex}")
+    except Exception as ex:
+        print(f"Failed to report ip: {ex}")
         return
 
 
