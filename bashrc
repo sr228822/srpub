@@ -28,8 +28,10 @@ export PATH=${PATH}:$HOME/bin
 export PATH=${PATH}:$HOME/scripts
 export PATH=${PATH}:$HOME/customize
 export PATH=${PATH}:$SRPUB_DIR
+export PATH=${PATH}:$SRPUB_DIR/pytools
 export PYTHONPATH=${PYTHONPATH}:$HOME/customize
 export PYTHONPATH=${PYTHONPATH}:$SRPUB_DIR
+export PYTHONPATH=${PYTHONPATH}:$SRPUB_DIR/pytools
 export PYTHONUNBUFFERED="nope"
 
 # git initialization
@@ -406,13 +408,13 @@ highlightgray () {
 firstwordyellow() {
     GREP_COLOR=93  grep --color=always -E '.*:'
 }
-alias color='$SRPUB_DIR/colorstrings.py'
-alias green='$SRPUB_DIR/colorstrings.py green'
-alias blue='$SRPUB_DIR/colorstrings.py blue'
-alias red='$SRPUB_DIR/colorstrings.py red'
-alias yellow='$SRPUB_DIR/colorstrings.py yellow'
-alias rainbow='$SRPUB_DIR/colorstrings.py rainbow'
-alias blink='$SRPUB_DIR/colorstrings.py blink'
+alias color='$SRPUB_DIR/pytools/colorstrings.py'
+alias green='$SRPUB_DIR/pytools/colorstrings.py green'
+alias blue='$SRPUB_DIR/pytools/colorstrings.py blue'
+alias red='$SRPUB_DIR/pytools/colorstrings.py red'
+alias yellow='$SRPUB_DIR/pytools/colorstrings.py yellow'
+alias rainbow='$SRPUB_DIR/pytools/colorstrings.py rainbow'
+alias blink='$SRPUB_DIR/pytools/colorstrings.py blink'
 
 alias asdf='fortune'
 alias frak='fortune'
@@ -806,7 +808,7 @@ gl() {
 }
 
 function gits() {
-    $SRPUB_DIR/git_awesome_status.py $@
+    $SRPUB_DIR/pytools/git_awesome_status.py $@
 }
 alias gitmine="git log --format=short --author='Russell'"
 
@@ -1065,7 +1067,7 @@ python_avoidbadlocals() {
 function gs() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        python_avoidbadlocals "$SRPUB_DIR/git_awesome_status.py" $@
+        python_avoidbadlocals "$SRPUB_DIR/pytools/git_awesome_status.py" $@
     elif [[ $typ = $HG_ENUM ]]; then
         hgs $@
     else
