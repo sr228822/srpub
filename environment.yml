@@ -11,7 +11,7 @@ dependencies:
   - requests
   - jq
   - git
-  - python==3.11.*
+  - python==3.12.*
   - termcolor
   - black==24.*
   - packaging
