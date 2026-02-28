@@ -63,7 +63,13 @@ if [[ $shell == *zsh* ]]; then
     setopt HIST_IGNORE_SPACE
 
     export CLICOLOR=1
+
+    # time: show only total elapsed time
+    TIMEFMT='%*E'
 fi
+
+# bash: show only total elapsed time
+TIMEFORMAT='%R'
 
 
 
