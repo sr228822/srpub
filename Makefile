@@ -7,8 +7,8 @@ update:
 
 fix:
 	ruff check --fix .
-	black .
+	ruff format .
 
 lint:
 	ruff check .
-	black --check .
+	ruff format --check .

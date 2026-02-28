@@ -13,6 +13,5 @@ dependencies:
   - git
   - python==3.12.*
   - termcolor
-  - black==24.*
   - packaging
   - ruff

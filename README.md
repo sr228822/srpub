@@ -12,7 +12,7 @@ bash quicksetup.sh
 Installs Homebrew/apt packages, Miniconda, conda env (`samdev`), shell config, and dotfiles. macOS and Linux. Safe to re-run.
 
 # Linting/Formatting
-Linted with pyfmt (black==24.*)
+Linted and formatted with ruff
 
 # Other stuff 
 - https://github.com/exelban/stats
