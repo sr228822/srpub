@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Bash(git log*)",
+      "Bash(find . *)"
+    ]
+  }
+}
