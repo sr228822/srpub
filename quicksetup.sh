@@ -1,6 +1,34 @@
 #!/bin/bash
 set -e
 
+AUTO_YES=false
+for arg in "$@"; do
+    case "$arg" in
+        --yes|-y) AUTO_YES=true ;;
+        --help|-h)
+            echo "Usage: quicksetup.sh [OPTIONS]"
+            echo ""
+            echo "Sets up a new machine with standard packages, tools, and configs."
+            echo ""
+            echo "Options:"
+            echo "  -y, --yes    Skip confirmation prompts and install everything"
+            echo "  -h, --help   Show this help message"
+            exit 0
+            ;;
+    esac
+done
+
+confirm() {
+    if [ "$AUTO_YES" = true ]; then
+        return 0
+    fi
+    read -r -p "$1 [y/N] " response
+    case "$response" in
+        [yY][eE][sS]|[yY]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 OS="$(uname)"
 if [ "$OS" != "Darwin" ] && [ "$OS" != "Linux" ]; then
     echo "Error: This script supports macOS and Linux only."
@@ -19,20 +47,26 @@ if [ "$OS" = "Darwin" ]; then
     if command -v brew &>/dev/null; then
         echo "Homebrew already installed."
     else
-        echo "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
-    echo "Updating and upgrading brew..."
-    brew update
-    brew upgrade
-    for pkg in "${PACKAGES[@]}"; do
-        if brew list "$pkg" &>/dev/null; then
-            echo "$pkg already installed, skipping."
-        else
-            echo "Installing $pkg..."
-            brew install "$pkg"
+        if confirm "Install Homebrew?"; then
+            echo "Installing Homebrew..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
-    done
+    fi
+    if command -v brew &>/dev/null; then
+        echo "Updating and upgrading brew..."
+        brew update
+        brew upgrade
+        for pkg in "${PACKAGES[@]}"; do
+            if brew list "$pkg" &>/dev/null; then
+                echo "$pkg already installed, skipping."
+            else
+                if confirm "Install $pkg?"; then
+                    echo "Installing $pkg..."
+                    brew install "$pkg"
+                fi
+            fi
+        done
+    fi
 else
     echo "Updating and upgrading apt packages..."
     sudo apt-get update -qq
@@ -41,8 +75,10 @@ else
         if dpkg -s "$pkg" &>/dev/null; then
             echo "$pkg already installed, skipping."
         else
-            echo "Installing $pkg..."
-            sudo apt-get install -y -qq "$pkg"
+            if confirm "Install $pkg?"; then
+                echo "Installing $pkg..."
+                sudo apt-get install -y -qq "$pkg"
+            fi
         fi
     done
 fi
@@ -53,14 +89,16 @@ echo "--- Docker ---"
 if command -v docker &>/dev/null; then
     echo "Docker already installed."
 else
-    echo "Installing Docker..."
-    if [ "$OS" = "Darwin" ]; then
-        brew install --cask docker
-        echo "Docker Desktop installed. You may need to open it manually to finish setup."
-    else
-        curl -fsSL https://get.docker.com | sh
-        sudo usermod -aG docker "$USER"
-        echo "Docker installed. You may need to log out and back in for group changes."
+    if confirm "Install Docker?"; then
+        echo "Installing Docker..."
+        if [ "$OS" = "Darwin" ]; then
+            brew install --cask docker
+            echo "Docker Desktop installed. You may need to open it manually to finish setup."
+        else
+            curl -fsSL https://get.docker.com | sh
+            sudo usermod -aG docker "$USER"
+            echo "Docker installed. You may need to log out and back in for group changes."
+        fi
     fi
 fi
 
@@ -70,35 +108,43 @@ echo "--- Miniconda ---"
 if command -v conda &>/dev/null; then
     echo "Conda already installed, skipping."
 else
-    echo "Installing Miniconda..."
-    ARCH=$(uname -m)
-    if [ "$OS" = "Darwin" ]; then
-        if [ "$ARCH" = "arm64" ]; then
-            CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh"
+    if confirm "Install Miniconda?"; then
+        echo "Installing Miniconda..."
+        ARCH=$(uname -m)
+        if [ "$OS" = "Darwin" ]; then
+            if [ "$ARCH" = "arm64" ]; then
+                CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh"
+            else
+                CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
+            fi
         else
-            CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
+            if [ "$ARCH" = "aarch64" ]; then
+                CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"
+            else
+                CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+            fi
         fi
-    else
-        if [ "$ARCH" = "aarch64" ]; then
-            CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"
-        else
-            CONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-        fi
+        curl -fsSL "$CONDA_URL" -o /tmp/miniconda.sh
+        bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
+        rm /tmp/miniconda.sh
+        eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
     fi
-    curl -fsSL "$CONDA_URL" -o /tmp/miniconda.sh
-    bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
-    rm /tmp/miniconda.sh
-    eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
 fi
 
 # 4. Create samdev conda env
 echo ""
 echo "--- Conda env: samdev ---"
-if conda env list | grep -q "^samdev "; then
-    echo "samdev env already exists, skipping."
+if command -v conda &>/dev/null; then
+    if conda env list | grep -q "^samdev "; then
+        echo "samdev env already exists, skipping."
+    else
+        if confirm "Create samdev conda env?"; then
+            echo "Creating samdev env from environment.yml..."
+            conda env create -f "$SRPUB_DIR/environment.yml"
+        fi
+    fi
 else
-    echo "Creating samdev env from environment.yml..."
-    conda env create -f "$SRPUB_DIR/environment.yml"
+    echo "Conda not installed, skipping samdev env."
 fi
 
 # 5. Set up shell rc file
@@ -150,6 +196,20 @@ echo ""
 echo "--- Git hooks ---"
 git -C "$SRPUB_DIR" config core.hooksPath "$SRPUB_DIR/hooks"
 echo "Set core.hooksPath to $SRPUB_DIR/hooks"
+
+# 8. Install Claude Code (macOS only)
+if [ "$OS" = "Darwin" ]; then
+    echo ""
+    echo "--- Claude Code ---"
+    if command -v claude &>/dev/null; then
+        echo "Claude Code already installed."
+    else
+        if confirm "Install Claude Code?"; then
+            echo "Installing Claude Code..."
+            npm install -g @anthropic-ai/claude-code
+        fi
+    fi
+fi
 
 echo ""
 echo "=== Setup complete ==="
