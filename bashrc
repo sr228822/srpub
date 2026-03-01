@@ -1260,6 +1260,37 @@ sonet() {
     claude --model sonet $@
 }
 
+# Start claude, resuming session if it exists, otherwise start new.
+# Stores the session mapping in ~/.claude/branch_sessions.
+# Usage: claude_resume_or_new <key>
+claude_resume_or_new() {
+    local key="$1"
+    local map_file="$HOME/.claude/branch_sessions"
+    mkdir -p "$HOME/.claude"
+
+    local claude_sid=""
+    if [ -f "$map_file" ]; then
+        claude_sid=$(grep "^${key} " "$map_file" | head -n 1 | cut -d' ' -f2)
+    fi
+
+    if [ -n "$claude_sid" ]; then
+        echo "Resuming claude session $claude_sid for $key" | yellow
+        claude --resume "$claude_sid"
+        if [ $? -ne 0 ]; then
+            echo "Stale session, starting fresh..." | red
+            sed -i '' "\|^${key} |d" "$map_file"
+            claude_sid=""
+        fi
+    fi
+
+    if [ -z "$claude_sid" ]; then
+        claude_sid=$(uuidgen | tr '[:upper:]' '[:lower:]')
+        echo "Starting new claude session $claude_sid for $key" | yellow
+        echo "${key} ${claude_sid}" >> "$map_file"
+        claude --session-id "$claude_sid"
+    fi
+}
+
 ct() {
     local branch="${1:-$(git branch --show-current)}"
     local repo
@@ -1290,26 +1321,9 @@ ct() {
         return
     fi
 
-    # Look up or create a claude session ID for this branch
-    local map_file="$HOME/.claude/branch_sessions"
-    mkdir -p "$HOME/.claude"
     local key="${repo}/${branch}"
-    local claude_sid=""
-    if [ -f "$map_file" ]; then
-        claude_sid=$(grep "^${key} " "$map_file" | head -n 1 | cut -d' ' -f2)
-    fi
-
-    if [ -n "$claude_sid" ]; then
-        echo "Resuming claude session $claude_sid for $key" | yellow
-        sleep 0.5
-        tmux new -s "$session_name" "claude --resume '$claude_sid'"
-    else
-        claude_sid=$(uuidgen | tr '[:upper:]' '[:lower:]')
-        echo "Starting new claude session $claude_sid for $key" | yellow
-        sleep 0.5
-        echo "${key} ${claude_sid}" >> "$map_file"
-        tmux new -s "$session_name" "claude --session-id '$claude_sid'"
-    fi
+    sleep 0.5
+    tmux new -s "$session_name" "source '${SRPUB_DIR}/bashrc' && claude_resume_or_new '${key}'"
 }
 
 ############################################################
