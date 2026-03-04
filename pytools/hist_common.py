@@ -24,7 +24,6 @@ def _print_hist(
     with_perc=True,
     last=False,
 ):
-
     if alphabetical:
         sortseen = sorted(seen.items(), key=operator.itemgetter(0), reverse=False)
     else:

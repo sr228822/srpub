@@ -47,7 +47,6 @@ class Transformer:
 
 
 async def main():
-
     t = Transformer()
 
     # Poll status
