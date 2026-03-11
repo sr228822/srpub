@@ -574,10 +574,20 @@ def main():
     cp_but_merged = 0
 
     if fb != origin_main:
-        # Order: fb separator -> my commits -> main separator -> behind main -> common
+        # Split made into unpushed (ahead of fb) and pushed (on fb but not main)
+        unpushed_shas = set(cmd(f"git rev-list {fb}..{target_ref}").strip().split("\n"))
+        made_unpushed = [c for c in made if c.sha in unpushed_shas]
+        made_pushed = [c for c in made if c.sha not in unpushed_shas]
+
+        # Unpushed commits above the fb separator
+        for c in made_unpushed:
+            done += 1
+            show_sha(c.sha)
+
+        # fb separator, then pushed commits
         print(blue_str("    ********** " + fb + " ************"))
 
-        for c in made:
+        for c in made_pushed:
             done += 1
             show_sha(c.sha)
         for c in made_merged:
