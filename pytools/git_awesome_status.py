@@ -397,15 +397,14 @@ def main():
     if fb is None:
         raise Exception("Failed to detect forward-branch")
 
+    # Detect the main branch for later use
+    origin_head = cmd("git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null").strip()
+    origin_main = (
+        origin_head.replace("refs/remotes/", "") if origin_head else "origin/main"
+    )
+
     if args.main:
-        # Detect the default branch from origin
-        origin_head = cmd(
-            "git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null"
-        ).strip()
-        if origin_head:
-            fb = origin_head.replace("refs/remotes/", "")
-        else:
-            fb = "origin/main"
+        fb = origin_main
 
     # Try to determine alignment with origin using efficient git commands
     if not fb:
@@ -434,40 +433,48 @@ def main():
         commits_ahead = int(commits_ahead_raw)
         commits_behind = int(commits_behind_raw)
     except ValueError:
-        # Fallback if counting fails
         commits_ahead = 0
         commits_behind = 0
 
-    # Fetch only the commits we need to display
-    # Get commits on current branch not in upstream (made)
-    if commits_ahead > 0:
-        made = fetch_commits_for_branch(target_ref, min(commits_ahead + 10, 50))
-        made = made[:commits_ahead]
+    # When not tracking main, compute "made" relative to origin/main
+    # so our branch commits show above the separator
+    if fb != origin_main:
+        main_merge_base = cmd(f"git merge-base {target_ref} {origin_main}").strip()
+        main_ahead_raw = cmd(
+            f"git rev-list --count {origin_main}..{target_ref}"
+        ).strip()
+        try:
+            main_ahead = int(main_ahead_raw)
+        except ValueError:
+            main_ahead = 0
+        if main_ahead > 0:
+            made = fetch_commits_for_branch(target_ref, min(main_ahead + 10, 50))
+            made = made[:main_ahead]
+        else:
+            made = []
     else:
-        made = []
+        if commits_ahead > 0:
+            made = fetch_commits_for_branch(target_ref, min(commits_ahead + 10, 50))
+            made = made[:commits_ahead]
+        else:
+            made = []
 
-    # Get commits in upstream not in current branch (missing)
-    # We don't need to fetch all missing commits, just enough to display or count
-    # git rev-list --count already told us the exact count
+    # Get commits in fb not in current branch (missing)
     if commits_behind > 0:
-        # Only fetch commits if we're going to display them (when count is small)
-        # Otherwise we'll just show the count
         if commits_behind <= 100:
             missing_shas = cmd(f"git rev-list {target_ref}..{fb}").strip().split("\n")
             missing = []
             for sha in missing_shas:
                 missing.extend(fetch_commits_for_branch(sha, 1))
         else:
-            # For large numbers, create placeholder objects with the count
-            # We'll handle display differently below
             missing = []
-            # Just need the count, which we already have in commits_behind
     else:
         missing = []
 
     # Check for cherry-picked commits (same title, different sha)
+    check_base = origin_main if fb != origin_main else fb
     if made:
-        origin = fetch_commits_for_branch(fb, min(commits_behind + 50, 200))
+        origin = fetch_commits_for_branch(check_base, min(commits_behind + 50, 200))
         originsha = [c.sha for c in origin]
         origintitle = [c.title for c in origin]
         made_merged = [
@@ -477,8 +484,11 @@ def main():
     else:
         made_merged = []
 
-    # Get common commits for display (starting from merge base)
-    common = fetch_commits_for_branch(merge_base, 15)
+    # Get common commits for display
+    if fb != origin_main and main_merge_base:
+        common = fetch_commits_for_branch(main_merge_base, 15)
+    else:
+        common = fetch_commits_for_branch(merge_base, 15)
 
     # Show branches
     all_branches = cmd("git branch").strip().split("\n")
@@ -560,39 +570,70 @@ def main():
             print(red_str(u))
     print("")
 
-    # Print commits cherry-picked on top
     done = 0
     cp_but_merged = 0
 
-    for c in made:
-        done += 1
-        show_sha(c.sha)
-
-    for c in made_merged:
-        done += 1
-        cp_but_merged += 1
-        show_sha_magenta(c.sha)
-
-    # Usually happens if there is no origin
-    if not common:
-        sys.exit(1)
-
-    if fb == "master":
-        print(grey_str("    ********** " + fb + " ************"))
-    else:
+    if fb != origin_main:
+        # Order: fb separator -> my commits -> main separator -> behind main -> common
         print(blue_str("    ********** " + fb + " ************"))
 
-    # Print commits in origin missing from HEAD
-    # Use the actual count from git rev-list instead of len(missing)
-    if commits_behind > 5 and not showall:
-        print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
-        print(grey_str("   " + str(commits_behind) + " missing commits"))
-        print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
-        done += 2
-    else:
-        for c in missing:
-            show_sha_grey(c.sha)
+        for c in made:
             done += 1
+            show_sha(c.sha)
+        for c in made_merged:
+            done += 1
+            cp_but_merged += 1
+            show_sha_magenta(c.sha)
+
+        # Commits on main not yet rebased into fb
+        main_behind_raw = cmd(
+            f"git rev-list --count {target_ref}..{origin_main}"
+        ).strip()
+        try:
+            main_behind = int(main_behind_raw)
+        except ValueError:
+            main_behind = 0
+        print(grey_str("    ·········· " + origin_main + " ············"))
+        if main_behind > 0:
+            if main_behind > 5 and not showall:
+                print(
+                    grey_str(
+                        "   " + str(main_behind) + " commits behind " + origin_main
+                    )
+                )
+                done += 2
+            else:
+                main_shas = (
+                    cmd(f"git rev-list {target_ref}..{origin_main}").strip().split("\n")
+                )
+                for sha in main_shas:
+                    if sha:
+                        show_sha_grey(sha)
+                        done += 1
+    else:
+        # Tracking main: my commits -> main separator -> behind main -> common
+        for c in made:
+            done += 1
+            show_sha(c.sha)
+        for c in made_merged:
+            done += 1
+            cp_but_merged += 1
+            show_sha_magenta(c.sha)
+
+        if fb == "master":
+            print(grey_str("    ********** " + fb + " ************"))
+        else:
+            print(blue_str("    ********** " + fb + " ************"))
+
+        if commits_behind > 5 and not showall:
+            print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
+            print(grey_str("   " + str(commits_behind) + " missing commits"))
+            print(grey_str("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"))
+            done += 2
+        else:
+            for c in missing:
+                show_sha_grey(c.sha)
+                done += 1
 
     # Print merged commits
     left = min(max(1, 10 - done), len(common) - 1)
@@ -605,7 +646,7 @@ def main():
 
     # Print last merged commit by me if not already shown
     if not any(alias in originz for alias in name_aliases):
-        show_my_most_recent(fb)
+        show_my_most_recent(origin_main if fb != origin_main else fb)
 
 
 if __name__ == "__main__":
