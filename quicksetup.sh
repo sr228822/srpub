@@ -180,7 +180,7 @@ fi
 # 6. Copy configs
 echo ""
 echo "--- Config files ---"
-for pair in vimrc:.vimrc condarc:.condarc psqlrc:.psqlrc; do
+for pair in vimrc:.vimrc condarc:.condarc psqlrc:.psqlrc tmux.conf:.tmux.conf; do
     src="${pair%%:*}"
     dest="$HOME/${pair#*:}"
     if [ -f "$dest" ]; then
