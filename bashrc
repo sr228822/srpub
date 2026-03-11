@@ -742,7 +742,7 @@ gitpush() {
 
     git_pre_push || return 1
     echo "pushing... $b"
-    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
+    git push origin $b:$b 2>/dev/null || git push --force-with-lease origin $b:$b
 }
 gitqpush() {
     b=$(git branch --show-current)
@@ -753,7 +753,7 @@ gitqpush() {
     fi
 
     echo "quick-pushing... $b"
-    git push origin $b:$b 2>/dev/null || git push -f origin $b:$b
+    git push origin $b:$b 2>/dev/null || git push --force-with-lease origin $b:$b
 }
 
 #rebase_master_push() {
