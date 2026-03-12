@@ -1292,25 +1292,47 @@ claude_resume_or_new() {
 }
 
 ct() {
-    local branch="${1:-$(git branch --show-current)}"
+    local force_new=false
+    local branch_arg=""
+
+    # Parse args
+    for arg in "$@"; do
+        case "$arg" in
+            --new) force_new=true ;;
+            --help|-h)
+                echo "Usage: ct [branch] [--new]"
+                echo "  Opens a tmux+claude session for the given branch (default: current)"
+                echo "  --new   Force a fresh session, killing any existing one"
+                return 0 ;;
+            *) branch_arg="$arg" ;;
+        esac
+    done
+
+    local branch="${branch_arg:-$(git branch --show-current)}"
     local repo
     repo="$(basename "$(git rev-parse --show-toplevel)")"
     local session_name="${repo}/${branch}"
 
     # Switch branch if specified and different from current
-    if [ -n "$1" ]; then
+    if [ -n "$branch_arg" ]; then
         if ! git checkout "$branch" 2>/dev/null; then
-            local match=$(git branch | sed 's/^[+* ]*//' | grep "$1" | head -n 1 | xargs)
+            local match=$(git branch | sed 's/^[+* ]*//' | grep "$branch_arg" | head -n 1 | xargs)
             if [ -n "$match" ]; then
                 echo "auto-matching branch $match" | yellow
                 branch="$match"
                 session_name="${repo}/${branch}"
                 git checkout "$match" || return 1
             else
-                echo "No branch matching '$1'" >&2
+                echo "No branch matching '$branch_arg'" >&2
                 return 1
             fi
         fi
+    fi
+
+    # Kill existing tmux session if --new
+    if [ "$force_new" = true ] && tmux has-session -t "=$session_name" 2>/dev/null; then
+        echo "Killing existing tmux session $session_name" | yellow
+        tmux kill-session -t "=$session_name"
     fi
 
     # Attach to existing tmux session if one exists
@@ -1322,6 +1344,13 @@ ct() {
     fi
 
     local key="${repo}/${branch}"
+    local map_file="$HOME/.claude/branch_sessions"
+
+    # Clear old session mapping if --new
+    if [ "$force_new" = true ] && [ -f "$map_file" ]; then
+        sed -i '' "\|^${key} |d" "$map_file"
+    fi
+
     sleep 0.5
     tmux new -s "$session_name" "source '${SRPUB_DIR}/bashrc' && claude_resume_or_new '${key}'"
 }
