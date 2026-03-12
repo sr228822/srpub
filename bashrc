@@ -1309,6 +1309,10 @@ ct() {
     done
 
     local branch="${branch_arg:-$(git branch --show-current)}"
+    if [ -z "$branch" ]; then
+        echo "Cannot start ct from a detached HEAD. Specify a branch or checkout one first." | red
+        return 1
+    fi
     local repo
     repo="$(basename "$(git rev-parse --show-toplevel)")"
     local session_name="${repo}/${branch}"
