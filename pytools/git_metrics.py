@@ -41,6 +41,11 @@ parser.add_argument("--overall", action="store_true", help="Show overall")
 parser.add_argument(
     "--only-prs", action="store_true", help="Only count PR commits in metrics"
 )
+parser.add_argument(
+    "--all-parents",
+    action="store_true",
+    help="Include commits from all parents (default is --first-parent)",
+)
 args = parser.parse_args()
 
 
@@ -170,7 +175,8 @@ def find_main_branch():
 
 main_branch = find_main_branch()
 git_log_format = "%H,%aN,%ae,%at,%s"
-git_log_raw = cmd(f"git log {main_branch} --format='{git_log_format}'")
+first_parent = "" if (args.all_parents and not args.only_prs) else "--first-parent"
+git_log_raw = cmd(f"git log {main_branch} {first_parent} --format='{git_log_format}'")
 
 
 def is_pr_commit(subject):
@@ -215,8 +221,8 @@ for i, c in enumerate(reversed(commits)):
         continue
     subj = ",".join(cs[4:])
 
-    # Skip merge commits if not counting PRs
-    if not args.only_prs and subj.startswith("Merge "):
+    # Skip merge commits unless counting PRs or using --first-parent
+    if not args.only_prs and not first_parent and subj.startswith("Merge "):
         continue
 
     # Skip revert commits
@@ -238,7 +244,6 @@ for i, c in enumerate(reversed(commits)):
         if pr_match:
             pr_number = pr_match.group(1)
             if pr_number in processed_pr_commits:
-                # Skip this PR commit since we've already counted it
                 continue
             processed_pr_commits[pr_number] = True
 
@@ -313,15 +318,6 @@ def print_active_rate():
             + name
             + str(user_active_tim[kname])
         )
-
-
-print("\n\n== kauth map ==")
-for k, v in name_matcher.kauths.items():
-    print("%50s" % k, "   ", "%50s" % v)
-
-# print("\n\n== kauth map ==")
-# for k,v in all_stat.cnt.items():
-#    print("%50s" % k, "   ", "%50s" % v)
 
 
 if args.overall:
