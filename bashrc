@@ -948,17 +948,13 @@ act() {
     local dir=$(pwd)
     while [ "$dir" != "/" ]; do
         # echo "act checking $dir"
-        if [ -d "$dir/.env" ]; then
-            echo "Found venv in $dir/.env"
-            source "$dir/.env/bin/activate"
-            return 0
-        fi
-
-        if [ -d "$dir/.venv" ]; then
-            echo "Found venv in $dir/.venv"
-            source "$dir/.venv/bin/activate"
-            return 0
-        fi
+        for venv_dir in .env .venv venv env; do
+            if [ -f "$dir/$venv_dir/bin/activate" ]; then
+                echo "Found venv in $dir/$venv_dir"
+                source "$dir/$venv_dir/bin/activate"
+                return 0
+            fi
+        done
 
         if [ -d "$dir/bazel-venvs" ]; then
             echo "Found bazel-venvs in $dir/bazel-venvs"
