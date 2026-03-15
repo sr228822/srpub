@@ -136,11 +136,14 @@ echo ""
 echo "--- Conda env: samdev ---"
 if command -v conda &>/dev/null; then
     if conda env list | grep -q "^samdev "; then
-        echo "samdev env already exists, skipping."
+        if confirm "Update samdev conda env?"; then
+            echo "Updating samdev env from environment.yml..."
+            conda env update -f "$SRPUB_DIR/environment.yml" --prune --solver libmamba
+        fi
     else
         if confirm "Create samdev conda env?"; then
             echo "Creating samdev env from environment.yml..."
-            conda env create -f "$SRPUB_DIR/environment.yml"
+            conda env create -f "$SRPUB_DIR/environment.yml" --solver libmamba
         fi
     fi
 else

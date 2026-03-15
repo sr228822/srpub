@@ -5,6 +5,7 @@ channels:
 dependencies:
   - awscli
   - boto3
+  - sqlite
   - click
   - pip
   - pytz
