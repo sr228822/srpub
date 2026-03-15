@@ -1,0 +1,3 @@
+- activate the samdev conda env before running commands: `conda activate samdev`
+- run `make lint` to check code
+- run `make fix` to auto-fix lint issues
