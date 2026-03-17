@@ -1,60 +1,17 @@
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DJ-Oli Noise Machine</title>
-  <link rel="icon" href="/files/favicon.ico">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 30px;
-      margin: 20px;
-    }
-    .button {
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      font-size: 50px;
-      cursor: pointer;
-      border-radius: 8px;
-      width: 100%;
-    }
-    .button:active { opacity: 0.7; }
-    .green { background-color: #4CAF50; }
-    .cyan { background-color: #03dffc; }
-    .gray { background-color: #BBBBBB; }
-    table { width: 100%; }
-    td { padding: 4px; }
-  </style>
-</head>
-
-<body>
-<h1>DJ Olicat's Noise Machine</h1>
-
-<br>
-<span id="status"></span>
-
-<table>
-  <tr>
-    <td><button class="button green" onclick="callAPI('/vol/off')">Off</button></td>
-    <td><button class="button green" onclick="callAPI('/vol/less')">Down</button></td>
-    <td><button class="button green" onclick="callAPI('/vol/more')">Up</button></td>
-    <td><button class="button green" onclick="callAPI('/vol/max')">Max</button></td>
-  </tr>
-  <tr>
-    <td><button class="button cyan" onclick="callAPI('/vol/rampoff')">Ramp-Off</button></td>
-    <td><button class="button cyan" onclick="callAPI('/vol/rampdown')">Ramp-Down</button></td>
-    <td><button class="button cyan" onclick="callAPI('/vol/rampup')">Ramp-Up</button></td>
-    <td><button class="button cyan" onclick="callAPI('/vol/rampmax')">Ramp-Max</button></td>
-  </tr>
-  <tr></tr>
-  <tr>
-    <td><button class="button gray" onclick="callAPI('/vol/unset')">Unset Boost</button></td>
-    <td><button class="button gray" onclick="callAPI('/reset')">Reset</button></td>
-    <td><button class="button gray" onclick="callAPI('/shush')">Shush</button></td>
-  </tr>
-</table>
-
-<span id="api_resp"></span>
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 50px;
+  margin: 8px 4px;
+  cursor: pointer;
+}
+</style>
 
 <script>
 function callAPI(route) {
@@ -84,5 +41,64 @@ function pollStatus() {
 
 pollStatus();
 var intervalId = setInterval(pollStatus, 10000);
+
 </script>
+
+<head>
+  <title>DJ-Oli Noise Machine</title>
+  <link rel="icon" href="/files/favicon.ico">
+</head>
+
+<body style="font-size:30px">
+<h1> DJ Olicat's Noise Machine </h1>
+
+<br>
+<span id="status"></span>
+</br>
+
+<table style="width:100%">
+  <tr>
+   <td>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/off')">Off</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/less')">Down</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/more')">Up</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%" onclick="callAPI('/vol/max')">Max</button>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampoff')">Ramp-Off</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampdown')">Ramp-Down</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampup')">Ramp-Up</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #03dffc;" onclick="callAPI('/vol/rampmax')">Ramp-Max</button>
+   </td>
+  </tr>
+  <tr>
+  </tr>
+  <tr>
+   <td>
+    <button class="button" style="width:100%; background-color: #BBBBBB;" onclick="callAPI('/vol/unset')">Unset Boost</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #BBBBBB;" onclick="callAPI('/reset')">Reset</button>
+   </td>
+   <td>
+    <button class="button" style="width:100%; background-color: #BBBBBB;" onclick="callAPI('/shush')">Shush</button>
+   </td>
+  </tr>
+</table>
+
+<span id="api_resp"></span>
 </body>
