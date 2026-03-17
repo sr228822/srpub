@@ -97,8 +97,13 @@ BASH_LOGS_DIR="${BASH_LOGS_DIR:-$HOME/.logs}"
 mkdir -p "$BASH_LOGS_DIR"
 
 # Redact potential secrets in commands - keeps first 4 chars of value, replaces rest with ***
+# Set SRPUB_NO_REDACT=1 to disable (e.g. if your sed doesn't support the 'i' flag)
 redact_secrets() {
   local cmd="$1"
+  if [ "${SRPUB_NO_REDACT:-0}" = "1" ]; then
+    echo "$cmd"
+    return
+  fi
   echo "$cmd" | sed -E \
     -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|OAUTH|AUTH_|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
     -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
