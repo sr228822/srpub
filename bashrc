@@ -108,7 +108,7 @@ redact_secrets() {
     -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|OAUTH|AUTH_|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
     -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
     -e 's/([Bb]earer )([A-Za-z0-9._-]{4})[A-Za-z0-9._-]{8,}/\1\2****REDACTED****/g' \
-    -e 's/(=[^[:space:]]{4})[0-9a-fA-F]{28,}/\1****REDACTED*****/g'
+    -e 's/(=[0-9a-fA-F]{4})[0-9a-fA-F]{28,}([[:space:]]|$)/\1****REDACTED*****\2/g'
 }
 
 prompt_command () {
@@ -141,7 +141,7 @@ prompt_command () {
 
     # Warn if we redacted something
     if [[ "$was_redacted" == "1" ]]; then
-      printf '\033[93m[secret redacted from history log]\033[0m\n' >&2
+      printf '\033[93m[possible secret redacted from history log]\033[0m\n' >&2
     fi
 
     echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $PCLOGNAME
@@ -256,10 +256,10 @@ color_code_files() {
 }
 
 shere() {
-    grep --color=always -iI --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro} * 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iI --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} * 2>/dev/null -e "$1" ${@:2}
 }
 search() {
-    grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro} . 2>/dev/null -e "$1" ${@:2}
+    grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} . 2>/dev/null -e "$1" ${@:2}
 }
 sc() {
     search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro} | color_code_files
