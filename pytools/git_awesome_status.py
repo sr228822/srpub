@@ -222,7 +222,7 @@ def fb_alternate() -> str:
                 return match.group(1)
     if "origin" in branches_raw:
         return "origin"
-    return "master"
+    return None
 
 
 def get_branch_age(branch: str):
@@ -394,31 +394,26 @@ def main():
             current_branch = branchline.split()[1]
             fb = fb_alternate()
 
-    if fb is None:
-        raise Exception("Failed to detect forward-branch")
-
     # Detect the main branch for later use
     origin_head = cmd("git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null").strip()
-    origin_main = (
-        origin_head.replace("refs/remotes/", "") if origin_head else "origin/main"
-    )
+    if origin_head:
+        origin_main = origin_head.replace("refs/remotes/", "")
+    elif fb and fb.startswith("origin/"):
+        origin_main = "origin/main"
+    else:
+        origin_main = current_branch
 
     if args.main:
         fb = origin_main
 
-    # Try to determine alignment with origin using efficient git commands
-    if not fb:
-        # Not a remote-tracking branch
-        tot = fetch_commits_for_branch(target_ref, 6)
-        for c in tot[:6]:
-            show_sha(c.sha)
-        sys.exit(1)
-
     # Use merge-base to efficiently find common ancestor
-    merge_base = cmd(f"git merge-base {target_ref} {fb}").strip()
+    if fb:
+        merge_base = cmd(f"git merge-base {target_ref} {fb}").strip()
+    else:
+        merge_base = None
 
     # Early exit if merge-base fails (e.g., no common history)
-    if not merge_base or "fatal" in merge_base.lower():
+    if fb and (not merge_base or "fatal" in merge_base.lower()):
         print(red_str("Unable to find common ancestor with remote"))
         tot = fetch_commits_for_branch(target_ref, 6)
         for c in tot[:6]:
@@ -569,6 +564,14 @@ def main():
         for u in untracked:
             print(red_str(u))
     print("")
+
+    if fb is None:
+        # No remote tracking — just show recent commits
+        print(grey_str("    ·········· no remote ············"))
+        tot = fetch_commits_for_branch(target_ref, 6)
+        for c in tot[:6]:
+            show_sha(c.sha)
+        return
 
     done = 0
     cp_but_merged = 0
