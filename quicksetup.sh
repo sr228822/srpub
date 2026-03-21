@@ -56,6 +56,8 @@ if [ "$OS" = "Darwin" ]; then
         echo "Updating and upgrading brew..."
         brew update
         brew upgrade
+        brew autoremove
+        brew cleanup
         for pkg in "${PACKAGES[@]}"; do
             if brew list "$pkg" &>/dev/null; then
                 echo "$pkg already installed, skipping."
@@ -88,6 +90,12 @@ echo ""
 echo "--- Docker ---"
 if command -v docker &>/dev/null; then
     echo "Docker already installed."
+    if docker info &>/dev/null; then
+        echo "Pruning dangling images and stopped containers..."
+        docker system prune -f
+    else
+        echo "Docker daemon not running, skipping prune."
+    fi
 else
     if confirm "Install Docker?"; then
         echo "Installing Docker..."
@@ -106,7 +114,10 @@ fi
 echo ""
 echo "--- Miniconda ---"
 if command -v conda &>/dev/null; then
-    echo "Conda already installed, skipping."
+    echo "Conda already installed."
+    if confirm "Update conda?"; then
+        conda update -n base -c defaults conda -y
+    fi
 else
     if confirm "Install Miniconda?"; then
         echo "Installing Miniconda..."
@@ -146,6 +157,8 @@ if command -v conda &>/dev/null; then
             conda env create -f "$SRPUB_DIR/environment.yml" --solver libmamba
         fi
     fi
+    echo "Cleaning conda cache..."
+    conda clean --all -y
 else
     echo "Conda not installed, skipping samdev env."
 fi
@@ -205,7 +218,10 @@ if [ "$OS" = "Darwin" ]; then
     echo ""
     echo "--- Claude Code ---"
     if command -v claude &>/dev/null; then
-        echo "Claude Code already installed."
+        if confirm "Update Claude Code?"; then
+            echo "Updating Claude Code..."
+            npm install -g @anthropic-ai/claude-code
+        fi
     else
         if confirm "Install Claude Code?"; then
             echo "Installing Claude Code..."
