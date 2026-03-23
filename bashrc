@@ -1181,6 +1181,11 @@ rebasemain() {
 s3cat() {
     aws s3 cp $1 /tmp/t.txt >/dev/null && cat /tmp/t.txt
 }
+s3play() {
+    local ext="${1##*.}"
+    local tmp="/tmp/s3play.${ext}"
+    aws s3 cp "$1" "$tmp" >/dev/null && afplay "$tmp"
+}
 
 myec2() {
     echo "Checking instance $MY_EC2_INSTANCE_ID status..."
