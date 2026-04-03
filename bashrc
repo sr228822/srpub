@@ -255,10 +255,10 @@ color_code_files() {
     fi
 }
 
-shere() {
+oshere() {
     grep --color=always -iI --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} * 2>/dev/null -e "$1" ${@:2}
 }
-search() {
+osearch() {
     grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} . 2>/dev/null -e "$1" ${@:2}
 }
 CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
@@ -268,29 +268,27 @@ _grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./
 _rg_code_globs=()
 for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
 
-sc() {
-    search "$1" ${@:2} $(_grep_code_includes) | color_code_files
+osc() {
+    osearch "$1" ${@:2} $(_grep_code_includes) | color_code_files
 }
-sch() {
-    shere "$1" ${@:2} $(_grep_code_includes) | color_code_files
+osch() {
+    oshere "$1" ${@:2} $(_grep_code_includes) | color_code_files
 }
-scw() {
-    sc "\<$1\>" ${@:2}
+oscw() {
+    osc "\<$1\>" ${@:2}
 }
-scnear() {
-    sc $@ -A 2 -B 2
+oscnear() {
+    osc $@ -A 2 -B 2
 }
 
 alias search_case='grep -Ir * -e'
-search_struct () {
-    search "} $1;"
-    search "$1" | antigrep "//" | grep struct
+osearch_struct () {
+    osearch "} $1;"
+    osearch "$1" | antigrep "//" | grep struct
 }
-search_func () {
-    search $1 | antigrep "=" ";" "//" "if" "||" "@" "\.py" | grep -i $1
+osearch_func () {
+    osearch $1 | antigrep "=" ";" "//" "if" "||" "@" "\.py" | grep -i $1
 }
-
-alias search_source='grep --exclude=\*svn\* --exclude="*.h" --exclude="g_*" --exclude="*.pl" -iIr * -e'
 
 # ripgrep versions of search functions (rg prefix)
 rgsearch() {
@@ -311,9 +309,19 @@ rgscw() {
 rgscnear() {
     rgsc -C 2 "$@"
 }
+rgsearch_and() {
+    rg --color=always --no-heading -i "$1.*$2|$2.*$1" "${@:3}" | sed 's|^|./|'
+}
+# default aliases: use ripgrep if available, else fall back to grep
+if command -v rg &>/dev/null; then
+    alias search=rgsearch shere=rghere sc=rgsc sch=rgsch scw=rgscw scnear=rgscnear search_and=rgsearch_and
+else
+    alias search=osearch shere=oshere sc=osc sch=osch scw=oscw scnear=oscnear search_and=osearch_and
+fi
+
 alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"
 
-search_and() {
+osearch_and() {
     grep -E -iIr * -e "$1.*$2|$2.*$1"
 }
 antigrep() {
