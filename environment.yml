@@ -15,4 +15,5 @@ dependencies:
   - python==3.12.*
   - termcolor
   - packaging
+  - pillow
   - ruff
