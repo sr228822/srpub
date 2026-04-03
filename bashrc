@@ -261,11 +261,18 @@ shere() {
 search() {
     grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} . 2>/dev/null -e "$1" ${@:2}
 }
+CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
+
+_grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./' | tr '\n' ' '; }
+
+_rg_code_globs=()
+for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
+
 sc() {
-    search "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro} | color_code_files
+    search "$1" ${@:2} $(_grep_code_includes) | color_code_files
 }
 sch() {
-    shere "$1" ${@:2} --include="*."{py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro} | color_code_files
+    shere "$1" ${@:2} $(_grep_code_includes) | color_code_files
 }
 scw() {
     sc "\<$1\>" ${@:2}
@@ -284,6 +291,26 @@ search_func () {
 }
 
 alias search_source='grep --exclude=\*svn\* --exclude="*.h" --exclude="g_*" --exclude="*.pl" -iIr * -e'
+
+# ripgrep versions of search functions (rg prefix)
+rgsearch() {
+    rg --color=always --no-heading -i "$1" "${@:2}" | sed 's|^|./|'
+}
+rghere() {
+    rg --color=always --no-heading -i --max-depth 1 "$1" "${@:2}" | sed 's|^|./|'
+}
+rgsc() {
+    rg --color=always --no-heading -i "${_rg_code_globs[@]}" "$1" "${@:2}" | sed 's|^|./|'
+}
+rgsch() {
+    rg --color=always --no-heading -i --max-depth 1 "${_rg_code_globs[@]}" "$1" "${@:2}" | sed 's|^|./|'
+}
+rgscw() {
+    rgsc -w "$1" "${@:2}"
+}
+rgscnear() {
+    rgsc -C 2 "$@"
+}
 alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"
 
 search_and() {

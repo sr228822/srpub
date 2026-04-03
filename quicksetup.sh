@@ -42,7 +42,7 @@ echo "=== Quick Setup (srpub: $SRPUB_DIR) ==="
 # 1. Install packages
 echo ""
 echo "--- Packages ---"
-PACKAGES=(tmux wget jq htop tree)
+PACKAGES=(tmux wget jq htop tree ripgrep)
 if [ "$OS" = "Darwin" ]; then
     if command -v brew &>/dev/null; then
         echo "Homebrew already installed."
