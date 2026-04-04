@@ -992,6 +992,9 @@ act() {
             if [ -f "$dir/$venv_dir/bin/activate" ]; then
                 echo "Found venv in $dir/$venv_dir"
                 source "$dir/$venv_dir/bin/activate"
+                local project_name=$(basename "$dir")
+                export VIRTUAL_ENV_PROMPT="($project_name) "
+                PS1="($project_name) ${PS1#\(\(*\) \) }"
                 return 0
             fi
         done
