@@ -262,9 +262,12 @@ color_code_files() {
 CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
 _grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./' | tr '\n' ' '; }
 _rg_code_globs=()
-_old_ifs="$IFS"; IFS=','
-for _ext in $CODE_EXTS; do _rg_code_globs+=(-g "*.$_ext"); done
-IFS="$_old_ifs"
+if [ -n "$ZSH_VERSION" ]; then
+    for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
+else
+    IFS=',' read -r -a _arr <<< "$CODE_EXTS"
+    for _ext in "${_arr[@]}"; do _rg_code_globs+=(-g "*.$_ext"); done
+fi
 
 # grep-based (o-prefix)
 oshere() {
