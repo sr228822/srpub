@@ -377,17 +377,21 @@ _fd_cmd=""
 if command -v fd &>/dev/null; then _fd_cmd=fd
 elif command -v fdfind &>/dev/null; then _fd_cmd=fdfind; fi
 
+_fd_highlight() {
+    # bold+underline the match without resetting surrounding colors
+    sed -E "s/($1)/$(printf '\033[1;4m')\1$(printf '\033[22;24m')/gi"
+}
 fdloc() {
-    $_fd_cmd -i --hidden --exclude .git "$1" "${@:2}"
+    $_fd_cmd --color=always -i --hidden --exclude .git "$1" "${@:2}" | _fd_highlight "$1"
 }
 fdshallowloc() {
-    $_fd_cmd -i --hidden --exclude .git --max-depth 3 "$1" "${@:2}"
+    $_fd_cmd --color=always -i --hidden --exclude .git --max-depth 3 "$1" "${@:2}" | _fd_highlight "$1"
 }
 fddeeploc() {
-    $_fd_cmd -i --hidden --exclude .git --max-depth 6 "$1" "${@:2}"
+    $_fd_cmd --color=always -i --hidden --exclude .git --max-depth 6 "$1" "${@:2}" | _fd_highlight "$1"
 }
 aloc() {
-    $_fd_cmd -i --hidden --no-ignore --exclude .git "$1" "${@:2}"
+    $_fd_cmd --color=always -i --hidden --no-ignore --exclude .git "$1" "${@:2}" | _fd_highlight "$1"
 }
 
 # auto-switch: use fd if available, else find
