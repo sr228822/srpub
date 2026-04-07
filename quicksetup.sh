@@ -44,6 +44,11 @@ echo ""
 echo "--- Packages ---"
 PACKAGES=(tmux wget jq htop tree ripgrep)
 if [ "$OS" = "Darwin" ]; then
+    PACKAGES+=(fd)
+else
+    PACKAGES+=(fd-find)
+fi
+if [ "$OS" = "Darwin" ]; then
     if command -v brew &>/dev/null; then
         echo "Homebrew already installed."
     else

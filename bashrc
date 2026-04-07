@@ -316,6 +316,7 @@ rgsearch_and() {
 if command -v rg &>/dev/null; then
     alias search=rgsearch shere=rghere sc=rgsc sch=rgsch scw=rgscw scnear=rgscnear search_and=rgsearch_and
 else
+    echo "warning: ripgrep not installed, search/sc using grep (slower). Install: brew install ripgrep / apt install ripgrep" >&2
     alias search=osearch shere=oshere sc=osc sch=osch scw=oscw scnear=oscnear search_and=osearch_and
 fi
 
@@ -369,15 +370,38 @@ function dufa {
 alias notests='antigrep "/tests/" "/test/" "/script/" "build/lib.linux" "_test.go" "/mocks/" ".gen" "env_docs" "./go-build/" "/_build/" "/.tmp/" '
 alias nobuildcache='antigrep "\.pyc" "\./vendor/"  "\./go-build/\.go/" "./node_modules/" '
 
-loc() {
+oloc() {
     find . -iname "*$1*" 2>/dev/null | nobuildcache | highlight $1
 }
-shallowloc() {
+oshallowloc() {
     find . -iname "*$1*" -maxdepth 3 2>/dev/null | nobuildcache | highlight $1
 }
-deeploc() {
+odeeploc() {
     find . -iname "*$1*" -maxdepth 6 2>/dev/null | nobuildcache | highlight $1
 }
+
+# fd versions of loc functions
+_fd_cmd=""
+if command -v fd &>/dev/null; then _fd_cmd=fd
+elif command -v fdfind &>/dev/null; then _fd_cmd=fdfind; fi
+
+fdloc() {
+    $_fd_cmd -i --hidden --exclude .git "$1" "${@:2}"
+}
+fdshallowloc() {
+    $_fd_cmd -i --hidden --exclude .git --max-depth 3 "$1" "${@:2}"
+}
+fddeeploc() {
+    $_fd_cmd -i --hidden --exclude .git --max-depth 6 "$1" "${@:2}"
+}
+
+# default aliases: use fd if available, else fall back to find
+if [ -n "$_fd_cmd" ]; then
+    alias loc=fdloc shallowloc=fdshallowloc deeploc=fddeeploc
+else
+    echo "warning: fd not installed, loc/shallowloc/deeploc using find (slower). Install: brew install fd / apt install fd-find" >&2
+    alias loc=oloc shallowloc=oshallowloc deeploc=odeeploc
+fi
 
 # Use brew/apt installed watch - its better
 # watch () {
