@@ -255,19 +255,22 @@ color_code_files() {
     fi
 }
 
+# =============================================================================
+# Search (content search: grep / ripgrep)
+# =============================================================================
+
+CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
+_grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./' | tr '\n' ' '; }
+_rg_code_globs=()
+for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
+
+# grep-based (o-prefix)
 oshere() {
     grep --color=always -iI --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} * 2>/dev/null -e "$1" ${@:2}
 }
 osearch() {
     grep --color=always -iIr --exclude-dir={node_modules,build,.meteor,.mypy_cache,.env,bazel-venvs,.venv,.astro,frontend_dist} . 2>/dev/null -e "$1" ${@:2}
 }
-CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
-
-_grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./' | tr '\n' ' '; }
-
-_rg_code_globs=()
-for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
-
 osc() {
     osearch "$1" ${@:2} $(_grep_code_includes) | color_code_files
 }
@@ -280,7 +283,9 @@ oscw() {
 oscnear() {
     osc $@ -A 2 -B 2
 }
-
+osearch_and() {
+    grep -E -iIr * -e "$1.*$2|$2.*$1"
+}
 alias search_case='grep -Ir * -e'
 osearch_struct () {
     osearch "} $1;"
@@ -290,7 +295,7 @@ osearch_func () {
     osearch $1 | antigrep "=" ";" "//" "if" "||" "@" "\.py" | grep -i $1
 }
 
-# ripgrep versions of search functions (rg prefix)
+# ripgrep-based (rg-prefix)
 rgsearch() {
     rg --color=always --no-heading -i "$1" "${@:2}" | sed 's|^|./|'
 }
@@ -312,7 +317,8 @@ rgscnear() {
 rgsearch_and() {
     rg --color=always --no-heading -i "$1.*$2|$2.*$1" "${@:3}" | sed 's|^|./|'
 }
-# default aliases: use ripgrep if available, else fall back to grep
+
+# auto-switch: use ripgrep if available, else grep
 if command -v rg &>/dev/null; then
     alias search=rgsearch shere=rghere sc=rgsc sch=rgsch scw=rgscw scnear=rgscnear search_and=rgsearch_and
 else
@@ -320,56 +326,42 @@ else
     alias search=osearch shere=oshere sc=osc sch=osch scw=oscw scnear=oscnear search_and=osearch_and
 fi
 
-alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"
+# =============================================================================
+# Grep helpers
+# =============================================================================
 
-osearch_and() {
-    grep -E -iIr * -e "$1.*$2|$2.*$1"
-}
+alias grep_ips="grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"
 antigrep() {
     local IFS="|"; grep -i -E -v -e "$*";
 }
 grep_or() {
     local IFS="|"; grep -i -E -e "$*";
 }
-#join () {
-#    local IFS="$1"; shift; echo "$*";
-#}
-
 grep_and() {
     if [ $# -eq 0 ]; then
         cat
         return
     fi
-
-    # Chain grep calls for each pattern
     local result
     result=$(grep -i -e "$1")
     shift
-
     while [ $# -gt 0 ]; do
         result=$(echo "$result" | grep -i -e "$1")
         shift
     done
-
     echo "$result"
 }
-
 search_or() {
     grep -E -iIr * -e "$1|$2"
-
 }
-
-function duf {
-    du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
-}
-function dufa {
-    # ls -A includes dot-folders
-    duf `ls -A`
-}
-
 alias notests='antigrep "/tests/" "/test/" "/script/" "build/lib.linux" "_test.go" "/mocks/" ".gen" "env_docs" "./go-build/" "/_build/" "/.tmp/" '
 alias nobuildcache='antigrep "\.pyc" "\./vendor/"  "\./go-build/\.go/" "./node_modules/" '
 
+# =============================================================================
+# Locate (file search: find / fd)
+# =============================================================================
+
+# find-based (o-prefix)
 oloc() {
     find . -iname "*$1*" 2>/dev/null | nobuildcache | highlight $1
 }
@@ -380,7 +372,7 @@ odeeploc() {
     find . -iname "*$1*" -maxdepth 6 2>/dev/null | nobuildcache | highlight $1
 }
 
-# fd versions of loc functions
+# fd-based
 _fd_cmd=""
 if command -v fd &>/dev/null; then _fd_cmd=fd
 elif command -v fdfind &>/dev/null; then _fd_cmd=fdfind; fi
@@ -394,14 +386,27 @@ fdshallowloc() {
 fddeeploc() {
     $_fd_cmd -i --hidden --exclude .git --max-depth 6 "$1" "${@:2}"
 }
+aloc() {
+    $_fd_cmd -i --hidden --no-ignore --exclude .git "$1" "${@:2}"
+}
 
-# default aliases: use fd if available, else fall back to find
+# auto-switch: use fd if available, else find
 if [ -n "$_fd_cmd" ]; then
     alias loc=fdloc shallowloc=fdshallowloc deeploc=fddeeploc
 else
     echo "warning: fd not installed, loc/shallowloc/deeploc using find (slower). Install: brew install fd / apt install fd-find" >&2
     alias loc=oloc shallowloc=oshallowloc deeploc=odeeploc
 fi
+
+# =============================================================================
+
+function duf {
+    du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
+}
+function dufa {
+    # ls -A includes dot-folders
+    duf `ls -A`
+}
 
 # Use brew/apt installed watch - its better
 # watch () {
