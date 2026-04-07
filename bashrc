@@ -249,7 +249,7 @@ teelogs() {
 
 color_code_files() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        GREP_COLOR=95 grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh|tf|css|jsx):"
+        GREP_COLOR=95 GREP_COLORS='mt=95' grep --color=always -E ".*(py|js|yaml|go|thrift|proto|cql|cc|cs|hh|hpp|vue|ts|tsx|ipynb|html|sh|tf|css|jsx):"
     else
         cat # pass-through for Linux
     fi
@@ -262,7 +262,9 @@ color_code_files() {
 CODE_EXTS="py,js,yaml,go,thrift,proto,cql,cc,cs,hh,hpp,vue,ts,tsx,ipynb,html,sh,tf,css,jsx,astro"
 _grep_code_includes() { echo "$CODE_EXTS" | tr ',' '\n' | sed 's/^/--include=*./' | tr '\n' ' '; }
 _rg_code_globs=()
-for _ext in ${(s:,:)CODE_EXTS}; do _rg_code_globs+=(-g "*.$_ext"); done
+_old_ifs="$IFS"; IFS=','
+for _ext in $CODE_EXTS; do _rg_code_globs+=(-g "*.$_ext"); done
+IFS="$_old_ifs"
 
 # grep-based (o-prefix)
 oshere() {
@@ -458,10 +460,10 @@ locvim () {
 alias lvim='locvim'
 alias kvim='vim -S ~/.kernelvimrc'
 highlight () {
-    GREP_COLOR=34 grep -i --line-buffered --color=always -E "${1}|$"
+    GREP_COLOR=34 GREP_COLORS='mt=34' grep -i --line-buffered --color=always -E "${1}|$"
 }
 highlightline () {
-    GREP_COLOR=34 grep -i --line-buffered --color -E ".*${1}.*|$"
+    GREP_COLOR=34 GREP_COLORS='mt=34' grep -i --line-buffered --color -E ".*${1}.*|$"
 }
 highlightred () {
     grep -i --line-buffered --color=always -E "${1}|$"
@@ -470,16 +472,16 @@ highlightlinered () {
     grep -i --line-buffered --color=always -E ".*${1}.*|$"
 }
 highlightyellow () {
-    GREP_COLOR=93 grep -i --line-buffered --color=always -E "${1}|$"
+    GREP_COLOR=93 GREP_COLORS='mt=93' grep -i --line-buffered --color=always -E "${1}|$"
 }
 highlightgreen () {
-    GREP_COLOR='1;32' grep -i --line-buffered --color=always -E "${1}|$"
+    GREP_COLOR='1;32' GREP_COLORS='mt=1;32' grep -i --line-buffered --color=always -E "${1}|$"
 }
 highlightgray () {
-    GREP_COLOR='90' grep -i --line-buffered --color=always -E "${1}|$"
+    GREP_COLOR=90 GREP_COLORS='mt=90' grep -i --line-buffered --color=always -E "${1}|$"
 }
 firstwordyellow() {
-    GREP_COLOR=93  grep --color=always -E '.*:'
+    GREP_COLORS='mt=93'  grep --color=always -E '.*:'
 }
 alias color='$SRPUB_DIR/pytools/colorstrings.py'
 alias green='$SRPUB_DIR/pytools/colorstrings.py green'
