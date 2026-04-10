@@ -1081,6 +1081,70 @@ deact() {
   fi
 }
 
+_resolve_host() {
+    # Resolve a single hostname->IP or IP->hostname
+    local query="$1"
+    if echo "$query" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+        # IP -> hostname
+        if command -v avahi-resolve &>/dev/null; then
+            avahi-resolve -a "$query" 2>/dev/null | awk '{print $2}' && return
+        fi
+        if command -v dig &>/dev/null; then
+            local name
+            name=$(dig +short +time=2 +tries=1 -x "$query" 2>/dev/null | sed 's/\.$//')
+            [ -n "$name" ] && echo "$name" && return
+        fi
+        echo "<unknown>"
+    else
+        # hostname -> IP (append .local if needed for mDNS)
+        local host="$query"
+        [[ "$host" != *.* ]] && host="${host}.local"
+        if command -v avahi-resolve &>/dev/null; then
+            avahi-resolve -n "$host" 2>/dev/null | awk '{print $2}' && return
+        fi
+        if command -v dns-sd &>/dev/null; then
+            local result
+            result=$(dns-sd -G v4 "$host" 2>/dev/null & local pid=$!; sleep 2; kill $pid 2>/dev/null; wait $pid 2>/dev/null)
+            local ip
+            ip=$(echo "$result" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | grep -v '^0\.' | tail -1)
+            [ -n "$ip" ] && echo "$ip" && return
+        fi
+        # fallback: ping
+        ping -c1 -W2 "$host" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1
+    fi
+}
+
+scan_local_network() {
+    # With an arg: resolve a single host
+    if [ -n "$1" ]; then
+        _resolve_host "$1"
+        return
+    fi
+
+    # No args: scan the full network
+    if command -v arp-scan &>/dev/null; then
+        local iface=""
+        [[ "$OSTYPE" == "darwin"* ]] && iface="--interface=en0"
+        local scan
+        scan=$(sudo arp-scan $iface --localnet 2>/dev/null | grep -E '^[0-9]+\.')
+        [ -z "$scan" ] && echo "No hosts found" >&2 && return 1
+
+        if command -v avahi-resolve &>/dev/null; then
+            echo "$scan" | while read -r ip mac vendor; do
+                local name
+                name=$(avahi-resolve -a "$ip" 2>/dev/null | awk '{print $2}')
+                printf "%-18s %-24s %s  %s\n" "$ip" "${name:--}" "$mac" "$vendor"
+            done
+        else
+            echo "$scan"
+        fi
+    else
+        echo "arp-scan not found. Install: brew install arp-scan / apt install arp-scan" >&2
+        echo "Showing cached ARP entries:" >&2
+        arp -a 2>/dev/null | grep -v incomplete
+    fi
+}
+
 #######################################################
 # Source control ambiguation
 #######################################################
