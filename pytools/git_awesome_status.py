@@ -573,6 +573,7 @@ def main():
             show_sha(c.sha)
         return
 
+    shown_shas = set()
     done = 0
     cp_but_merged = 0
 
@@ -585,6 +586,7 @@ def main():
         # Unpushed commits above the fb separator
         for c in made_unpushed:
             done += 1
+            shown_shas.add(c.sha)
             show_sha(c.sha)
 
         # fb separator, then pushed commits
@@ -592,10 +594,12 @@ def main():
 
         for c in made_pushed:
             done += 1
+            shown_shas.add(c.sha)
             show_sha(c.sha)
         for c in made_merged:
             done += 1
             cp_but_merged += 1
+            shown_shas.add(c.sha)
             show_sha_magenta(c.sha)
 
         # Commits on main not yet rebased into fb
@@ -621,16 +625,19 @@ def main():
                 )
                 for sha in main_shas:
                     if sha:
+                        shown_shas.add(sha)
                         show_sha_grey(sha)
                         done += 1
     else:
         # Tracking main: my commits -> main separator -> behind main -> common
         for c in made:
             done += 1
+            shown_shas.add(c.sha)
             show_sha(c.sha)
         for c in made_merged:
             done += 1
             cp_but_merged += 1
+            shown_shas.add(c.sha)
             show_sha_magenta(c.sha)
 
         if fb == "master":
@@ -645,6 +652,7 @@ def main():
             done += 2
         else:
             for c in missing:
+                shown_shas.add(c.sha)
                 show_sha_grey(c.sha)
                 done += 1
 
@@ -659,7 +667,12 @@ def main():
 
     # Print last merged commit by me if not already shown
     if not any(alias in originz for alias in name_aliases):
-        show_my_most_recent(origin_main if fb != origin_main else fb)
+        my_branch = origin_main if fb != origin_main else fb
+        my_sha = cmd(
+            f"git --no-pager log --author=Russell --format=%H -1 {my_branch}"
+        ).strip()
+        if my_sha and my_sha not in shown_shas:
+            show_my_most_recent(my_branch)
 
 
 if __name__ == "__main__":
