@@ -108,7 +108,7 @@ redact_secrets() {
     -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|OAUTH|AUTH_|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
     -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
     -e 's/([Bb]earer )([A-Za-z0-9._-]{4})[A-Za-z0-9._-]{8,}/\1\2****REDACTED****/g' \
-    -e 's/(=[0-9a-fA-F]{4})[0-9a-fA-F]{28,}([[:space:]]|$)/\1****REDACTED*****\2/g'
+    -e 's/([A-Za-z_]=[0-9a-fA-F]{4})[0-9a-fA-F]{28,}([[:space:]]|$)/\1****REDACTED*****\2/g'
 }
 
 prompt_command () {
