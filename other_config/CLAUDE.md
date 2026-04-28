@@ -5,3 +5,5 @@
 - in python, avoid local/defered imports unless they're strictly necessary or asked for
 
 - when adding tests, try to be judicious about how many we add.  Adding too many tests can lead to excssive change-detection
+
+- I prefer to have my feature branches track main (or the repositories equivalent of main, eg develop), not the origin feature branch.  This was rebases by default rebase on main.

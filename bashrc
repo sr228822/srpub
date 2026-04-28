@@ -1303,10 +1303,16 @@ mine() {
 
 }
 
-rebasemain() {
+grm() {
     typ=$(is_git)
     if [[ $typ = $GIT_ENUM ]]; then
-        git fetch && git rebase origin/main
+        local origin_main=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/||')
+        if [[ -z "$origin_main" ]]; then
+            echo "origin/HEAD not set. Run: git remote set-head origin --auto"
+            return 1
+        fi
+        echo "Rebasing against $origin_main..."
+        git fetch && git rebase "$origin_main"
     elif [[ $typ = $HG_ENUM ]]; then
         hgrebasewarm
     else
