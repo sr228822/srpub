@@ -95,25 +95,22 @@ def format_obj(obj, prefix=""):
 def list_s3(bucket_name: str, prefix: str, recursive=False, full_path=False):
     """List s3 objects in path."""
     strip = "" if full_path else prefix
+    paginator = s3.get_paginator("list_objects_v2")
     if recursive:
-        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-        if "Contents" not in response:
-            return []
-        return [format_obj(obj, strip) for obj in response["Contents"]]
-    else:
-        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
         result = []
+        for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                result.append(format_obj(obj, strip))
+        return result
+    else:
+        result = []
+        for page in paginator.paginate(
+            Bucket=bucket_name, Prefix=prefix, Delimiter="/"
+        ):
+            for p in page.get("CommonPrefixes", []):
+                result.append(f"{'':>28s}{p['Prefix'].removeprefix(strip)}")
 
-        if "CommonPrefixes" in response:
-            result.extend(
-                [
-                    f"{'':>28s}{p['Prefix'].removeprefix(strip)}"
-                    for p in response["CommonPrefixes"]
-                ]
-            )
-
-        if "Contents" in response:
-            for obj in response["Contents"]:
+            for obj in page.get("Contents", []):
                 key = obj["Key"]
                 if (
                     not prefix
