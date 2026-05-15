@@ -2,17 +2,17 @@
 
 import sys
 import time
-from srutils import parse_duration, argpop
+
+from srutils import argpop, parse_duration
+from timezone import parse_and_convert
 
 if __name__ == "__main__":
     millis = argpop(sys.argv, "--millis") or argpop(sys.argv, "millis")
 
-    if len(sys.argv) > 1:
-        ago = int(parse_duration(sys.argv[1]))
-    else:
-        ago = 0
+    has_duration = len(sys.argv) > 1
+    ago = int(parse_duration(sys.argv[1])) if has_duration else 0
 
     t = int(time.time()) - ago
     if millis:
         t *= 1000
-    print(t)
+    parse_and_convert(str(t), show_relative=has_duration, quiet=not has_duration)

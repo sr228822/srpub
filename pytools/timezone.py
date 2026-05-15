@@ -1,12 +1,31 @@
 #!/usr/bin/env python3
 import sys
+import warnings
 from datetime import datetime
 
 import pytz
 from dateutil import parser
+from dateutil.parser import UnknownTimezoneWarning
+
+warnings.simplefilter("error", UnknownTimezoneWarning)
+
+# Common US/UTC timezone abbreviations not recognized by dateutil by default.
+# Values are fixed UTC offsets in seconds.
+TZINFOS = {
+    "EST": -5 * 3600,
+    "EDT": -4 * 3600,
+    "CST": -6 * 3600,
+    "CDT": -5 * 3600,
+    "MST": -7 * 3600,
+    "MDT": -6 * 3600,
+    "PST": -8 * 3600,
+    "PDT": -7 * 3600,
+    "UTC": 0,
+    "GMT": 0,
+}
 
 
-def try_epoch(datetime_str):
+def try_epoch(datetime_str, quiet=False):
     """Try to interpret as epoch seconds or milliseconds."""
     try:
         val = int(datetime_str)
@@ -18,20 +37,22 @@ def try_epoch(datetime_str):
     # epoch ms if value is too large for seconds (after year 2100 in seconds)
     if val > 4_102_444_800:
         val = val / 1000.0
-        print("Interpreting as epoch milliseconds")
+        if not quiet:
+            print("Interpreting as epoch milliseconds")
     else:
-        print("Interpreting as epoch seconds")
+        if not quiet:
+            print("Interpreting as epoch seconds")
     return datetime.fromtimestamp(val, tz=pytz.UTC)
 
 
-def parse_and_convert(datetime_str):
+def parse_and_convert(datetime_str, show_relative=True, quiet=False):
     # Try to parse the datetime string
     try:
         # Try epoch first for pure numeric input
-        dt = try_epoch(datetime_str)
+        dt = try_epoch(datetime_str, quiet=quiet)
         if dt is None:
             # Parse the datetime - dateutil.parser handles many formats
-            dt = parser.parse(datetime_str)
+            dt = parser.parse(datetime_str, tzinfos=TZINFOS)
 
             # If no timezone info, assume UTC
             if dt.tzinfo is None:
@@ -57,6 +78,18 @@ def parse_and_convert(datetime_str):
         print(f"Epoch (s):   {epoch_s}")
         print(f"Epoch (ms):  {epoch_ms}")
 
+        if show_relative:
+            delta = int(utc_dt.timestamp() - datetime.now(pytz.UTC).timestamp())
+            suffix = "from now" if delta >= 0 else "ago"
+            secs = abs(delta)
+            d, rem = divmod(secs, 86400)
+            h, rem = divmod(rem, 3600)
+            m, s = divmod(rem, 60)
+            parts = [f"{d}d", f"{h}h", f"{m}m", f"{s}s"]
+            while len(parts) > 1 and parts[0].startswith("0"):
+                parts.pop(0)
+            print(f"Relative:    {secs}s ({''.join(parts)}) {suffix}")
+
     except Exception as e:
         print(f"Error parsing datetime: {e}")
         sys.exit(1)
@@ -64,6 +97,11 @@ def parse_and_convert(datetime_str):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        parse_and_convert(str(int(datetime.now(pytz.UTC).timestamp())))
+        print("Current Time")
+        parse_and_convert(
+            str(int(datetime.now(pytz.UTC).timestamp())),
+            show_relative=False,
+            quiet=True,
+        )
     else:
-        parse_and_convert(sys.argv[1])
+        parse_and_convert(" ".join(sys.argv[1:]))

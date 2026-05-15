@@ -6,4 +6,6 @@
 
 - when adding tests, try to be judicious about how many we add.  Adding too many tests can lead to excssive change-detection
 
-- I prefer to have my feature branches track main (or the repositories equivalent of main, eg develop), not the origin feature branch.  We should also rebase against main by default, and as needed push using  --force-with-lease 
+- Feature branches MUST have their upstream set to the repo's trunk, not to their own remote counterpart.  In Chromatic that means `origin/develop`; in most other repos `origin/main`.  Concretely, when creating or first pushing a feature branch use `git push origin HEAD && git branch --set-upstream-to=origin/develop` (or `origin/main`) — do NOT use plain `git push -u origin HEAD`, which sets upstream to `origin/<feature-branch>` and is wrong.  If you happen to notice an existing branch already tracking its own remote, mention it but don't auto-fix — that's a separate decision for me to make.  Rebase against the trunk by default, and push with `--force-with-lease` when a rebase has rewritten history.
+
+- I run multiple Claude sessions across tmux windows against the same working tree, so the current branch can change between my prompts without you knowing.  At the start of each substantive task (anything that will edit files, commit, push, or create a PR), run `git branch --show-current` and compare against the branch you saw last time in this session.  If it changed, stop and confirm with me before doing anything — don't assume the new branch is intentional for this task.
