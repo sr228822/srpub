@@ -46,6 +46,11 @@ parser.add_argument(
     action="store_true",
     help="Include commits from all parents (default is --first-parent)",
 )
+parser.add_argument(
+    "--loc",
+    action="store_true",
+    help="Count lines of code changed instead of commits/PRs",
+)
 args = parser.parse_args()
 
 
@@ -96,8 +101,8 @@ class GitStat:
         self.cnt = {}
         self.tim = TimeRange(9999999999, 0)
 
-    def add(self, kname, dt):
-        self.cnt[kname] = self.cnt.get(kname, 0) + 1
+    def add(self, kname, dt, weight=1):
+        self.cnt[kname] = self.cnt.get(kname, 0) + weight
         self.tim.add(dt)
 
 
@@ -124,14 +129,17 @@ name_matcher = GitNameMatcher()
 def print_cnt_dict(title, stat, limit=args.num):
     sorted_x = sorted(stat.cnt.items(), key=operator.itemgetter(1), reverse=True)
     did_me = False
-    # total_time = stat.tim.seconds()
     total_cnt = sum(stat.cnt.values())
-    description = "PRs" if args.only_prs else "commits"
+    description = "LOC" if args.loc else ("PRs" if args.only_prs else "commits")
+    max_cnt = max(stat.cnt.values()) if stat.cnt else 0
+    cw = max(5, len(f"{int(max_cnt)}"))
+    max_rate = max_cnt / max(1, stat.tim.weeks())
+    rw = max(5, len(f"{int(max_rate)}") + 2)
     print(
         f"\n\n=== {title} === \t ({stat.tim.human_dur()}) ({total_cnt} total {description};  {len(stat.cnt.keys())} unique authors)"
     )
-    print(f"{'':3}   {'cnt':>5} {'%':>4}  {'rate':>5} name")
-    print(f"{'':3}   {'---':>5} {'---':>4}  {'----':>5} ----")
+    print(f"{'':3}   {'cnt':>{cw}} {'%':>4}  {'rate':>{rw}} name")
+    print(f"{'':3}   {'---':>{cw}} {'---':>4}  {'----':>{rw}} ----")
     for i, x in enumerate(sorted_x):
         kname = x[0]
         is_me = looks_similar(kname, args.user)
@@ -139,7 +147,7 @@ def print_cnt_dict(title, stat, limit=args.num):
         if is_me:
             name = blue_str(name)
         cnt = x[1]
-        rate = float(cnt) / stat.tim.weeks()  # convert to weekly rate
+        rate = float(cnt) / stat.tim.weeks()
         if i == limit:
             if did_me:
                 break
@@ -151,10 +159,10 @@ def print_cnt_dict(title, stat, limit=args.num):
         print(
             f"{int(i + 1):3}"
             + ". "
-            + f"{int(cnt):>5}  "
+            + f"{int(cnt):>{cw}}  "
             + f"{int(perc):>3}%"
             + "  "
-            + f"{rate:>5.1f} "
+            + f"{rate:>{rw}.1f} "
             + name
         )
         if is_me:
@@ -191,6 +199,22 @@ def is_pr_commit(subject):
 
     return False
 
+
+loc_map = {}
+if args.loc:
+    loc_raw = cmd(f"git log {main_branch} {first_parent} --format='%H' --shortstat")
+    current_sha = None
+    for line in loc_raw.split("\n"):
+        line = line.strip()
+        if len(line) == 40 and all(c in "0123456789abcdef" for c in line):
+            current_sha = line
+        elif current_sha and ("insertion" in line or "deletion" in line):
+            ins = re.search(r"(\d+) insertion", line)
+            dels = re.search(r"(\d+) deletion", line)
+            loc_map[current_sha] = (int(ins.group(1)) if ins else 0) + (
+                int(dels.group(1)) if dels else 0
+            )
+            current_sha = None
 
 dt_now = int(time.time())
 seen_me = False
@@ -259,13 +283,14 @@ for i, c in enumerate(reversed(commits)):
     kname = name_matcher.get_name(name)
 
     # Add this commit to stat-counters it matches
-    all_stat.add(kname, dt)
+    weight = loc_map.get(sha, 1) if args.loc else 1
+    all_stat.add(kname, dt, weight)
     if seen_me:
-        since_me_stat.add(kname, dt)
+        since_me_stat.add(kname, dt, weight)
     if (dt_now - dt) < thresh_dur_s:
-        thresh_dur_stat.add(kname, dt)
+        thresh_dur_stat.add(kname, dt, weight)
     if i > len(commits) - thresh_cnt:
-        thresh_cnt_stat.add(kname, dt)
+        thresh_cnt_stat.add(kname, dt, weight)
 
     # Track each users "active contribution range"
     if kname not in user_active_tim:
@@ -283,9 +308,13 @@ sorted_x = sorted(rate_while_active.items(), key=operator.itemgetter(1), reverse
 
 
 def print_active_rate():
+    max_cnt = max(all_stat.cnt.values()) if all_stat.cnt else 0
+    cw = max(5, len(f"{int(max_cnt)}"))
+    max_rate = max((v for v in rate_while_active.values()), default=0)
+    rw = max(4, len(f"{int(max_rate)}") + 2)
     print("\n\n=== Rate while active === \t")
-    print(f"{'':3}  {'cnt ':5} weeks rate  name")
-    print(f"{'':3}  {'--- ':5} ----- ----  ----")
+    print(f"{'':3}  {'cnt':>{cw}} weeks {'rate':>{rw}}  name")
+    print(f"{'':3}  {'---':>{cw}} ----- {'----':>{rw}}  ----")
     limit = args.num
     did_me = False
     for i, x in enumerate(sorted_x):
@@ -311,9 +340,9 @@ def print_active_rate():
         print(
             f"{int(i + 1):3}"
             + ". "
-            + f"{int(cnt):5}"
+            + f"{int(cnt):>{cw}}"
             + f" {int(weeks):5} "
-            + fmt_float(val, width=4)
+            + fmt_float(val, width=rw)
             + "  "
             + name
             + str(user_active_tim[kname])
