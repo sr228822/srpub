@@ -6,8 +6,20 @@ stale directories, large files, and known-reclaimable targets (trash, caches,
 docker, brew, ...) with a total. Nothing is deleted unless you pass --clean,
 and even then each category is confirmed individually.
 
+    diskfree                  # report only
+    diskfree --clean          # report, then per-category y/n cleanup
+    diskfree --all-users      # one-line summary per /Users|/home homedir
+    sudo diskfree.py <home>   # full sizes for another user's homedir
+    diskfree --refresh        # bust the scan cache (default TTL 12h)
+
 Scans (du/find over the root) are slow, so results are cached to disk via
-DiskCache with a TTL; use --refresh to force a rescan.
+DiskCache with a TTL (measured ~12s uncached on a full $HOME, <0.1s cached);
+use --refresh to force a rescan. Dotfiles/dot-dirs are included in all scans
+(du/find don't skip hidden). node_modules deletion is left to you.
+
+Deliberately a deterministic script rather than a Claude skill: the work is
+cache-friendly and identical on mac/ubuntu; a skill wrapper could add
+"is this safe to delete?" judgment on top later.
 """
 
 import argparse
