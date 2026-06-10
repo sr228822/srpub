@@ -29,6 +29,33 @@ confirm() {
     esac
 }
 
+# Remember when slow "update/upgrade" ops were last run, so we can show e.g.
+# "(last done 2 months ago)" and let you skip churn you don't need.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/quicksetup"
+mkdir -p "$STATE_DIR"
+
+_ago() {  # $1=quantity $2=unit(singular) -> "1 week ago" / "2 weeks ago"
+    if [ "$1" -eq 1 ]; then echo "$1 $2 ago"; else echo "$1 ${2}s ago"; fi
+}
+last_done() {
+    local f="$STATE_DIR/$1.last" then now diff
+    [ -f "$f" ] || { echo "never"; return; }
+    then=$(cat "$f" 2>/dev/null)
+    [ -z "$then" ] && { echo "never"; return; }
+    now=$(date +%s)
+    diff=$(( now - then ))
+    if   [ "$diff" -lt 3600 ];    then _ago "$(( diff / 60 ))" min
+    elif [ "$diff" -lt 86400 ];   then _ago "$(( diff / 3600 ))" hour
+    elif [ "$diff" -lt 604800 ];  then _ago "$(( diff / 86400 ))" day
+    elif [ "$diff" -lt 2592000 ]; then _ago "$(( diff / 604800 ))" week
+    else _ago "$(( diff / 2592000 ))" month; fi
+}
+
+mark_done() { date +%s > "$STATE_DIR/$1.last"; }
+
+# confirm, annotated with when this op last ran. $1=op-key, $2=prompt
+confirm_op() { confirm "$2 (last done $(last_done "$1"))"; }
+
 OS="$(uname)"
 if [ "$OS" != "Darwin" ] && [ "$OS" != "Linux" ]; then
     echo "Error: This script supports macOS and Linux only."
@@ -58,11 +85,16 @@ if [ "$OS" = "Darwin" ]; then
         fi
     fi
     if command -v brew &>/dev/null; then
-        echo "Updating and upgrading brew..."
+        # Refresh the formula index (needed so installs resolve correctly);
+        # this doesn't change anything already installed.
         brew update
-        brew upgrade
-        brew autoremove
-        brew cleanup
+        # Upgrading installed packages is the churn-y part -> make it opt-in.
+        if confirm_op brew-upgrade "Upgrade installed brew packages?"; then
+            brew upgrade
+            brew autoremove
+            brew cleanup
+            mark_done brew-upgrade
+        fi
         for pkg in "${PACKAGES[@]}"; do
             if brew list "$pkg" &>/dev/null; then
                 echo "$pkg already installed, skipping."
@@ -75,9 +107,13 @@ if [ "$OS" = "Darwin" ]; then
         done
     fi
 else
-    echo "Updating and upgrading apt packages..."
+    # Refresh the package index (needed for installs; doesn't upgrade
+    # anything). The actual upgrade of installed packages is opt-in.
     sudo apt-get update -qq
-    sudo apt-get upgrade -y -qq
+    if confirm_op apt-upgrade "Upgrade installed apt packages?"; then
+        sudo apt-get upgrade -y -qq
+        mark_done apt-upgrade
+    fi
     for pkg in "${PACKAGES[@]}"; do
         if dpkg -s "$pkg" &>/dev/null; then
             echo "$pkg already installed, skipping."
@@ -120,8 +156,9 @@ echo ""
 echo "--- Miniconda ---"
 if command -v conda &>/dev/null; then
     echo "Conda already installed."
-    if confirm "Update conda?"; then
+    if confirm_op conda-base "Update conda base?"; then
         conda update -n base -c defaults conda -y
+        mark_done conda-base
     fi
 else
     if confirm "Install Miniconda?"; then
@@ -152,9 +189,10 @@ echo ""
 echo "--- Conda env: samdev ---"
 if command -v conda &>/dev/null; then
     if conda env list | grep -q "^samdev "; then
-        if confirm "Update samdev conda env?"; then
+        if confirm_op conda-env "Update samdev conda env?"; then
             echo "Updating samdev env from environment.yml..."
             conda env update -f "$SRPUB_DIR/environment.yml" --prune --solver libmamba
+            mark_done conda-env
         fi
     else
         if confirm "Create samdev conda env?"; then
@@ -223,9 +261,10 @@ if [ "$OS" = "Darwin" ]; then
     echo ""
     echo "--- Claude Code ---"
     if command -v claude &>/dev/null; then
-        if confirm "Update Claude Code?"; then
+        if confirm_op claude-update "Update Claude Code?"; then
             echo "Updating Claude Code..."
             claude update
+            mark_done claude-update
         fi
     else
         if confirm "Install Claude Code?"; then
