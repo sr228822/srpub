@@ -179,15 +179,24 @@ def parse_size_str(s):
     return int(float(m.group(1)) * mult[m.group(2)])
 
 
-def docker_status():
-    """(state, kb) where state is absent|down|up.
+def docker_image_kb():
+    """Allocated size of docker's backing store: the VM disk image on mac
+    (a sparse high-water-mark file that prune does NOT shrink) or
+    /var/lib/docker on linux (0 if unreadable without root)."""
+    img = HOME / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+    if img.exists():
+        return img.stat().st_blocks * 512 // 1024
+    return du_kb("/var/lib/docker")
 
-    up:   kb = what `docker system df` says is reclaimable (prunable)
-    down: kb = size of the docker disk image / data dir, so the space still
-          shows up in the report even though we can't prune it right now
+
+def docker_status():
+    """(state, prunable_kb, image_kb) where state is absent|down|up.
+
+    Not cached: daemon state and prunable space change too often, and the
+    check is fast (<1s) in every state.
     """
     if not shutil.which("docker"):
-        return ["absent", 0]
+        return "absent", 0, 0
     try:
         res = subprocess.run(
             ["docker", "system", "df", "--format", "{{.Reclaimable}}"],
@@ -196,15 +205,12 @@ def docker_status():
             timeout=20,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return ["down", 0]
-    if res.returncode == 0:
-        lines = [ln for ln in res.stdout.split("\n") if ln]
-        return ["up", sum(parse_size_str(ln.split("(")[0]) for ln in lines)]
-    # Daemon not running: measure the VM disk image (mac) or data dir (linux)
-    img = HOME / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
-    if img.exists():
-        return ["down", img.stat().st_blocks * 512 // 1024]
-    return ["down", du_kb("/var/lib/docker")]
+        return "down", 0, docker_image_kb()
+    if res.returncode != 0:
+        return "down", 0, docker_image_kb()
+    lines = [ln for ln in res.stdout.split("\n") if ln]
+    prunable = sum(parse_size_str(ln.split("(")[0]) for ln in lines)
+    return "up", prunable, docker_image_kb()
 
 
 def brew_reclaimable_kb():
@@ -312,25 +318,23 @@ def build_targets(cache, refresh):
             )
         )
 
-    dstate, dkb = cached(cache, "target:docker", docker_status, refresh, ttl=3600)
-    if dstate == "up" and dkb:
+    dstate, dprune, dimg = docker_status()
+    if dstate == "up" and dprune:
         targets.append(
             Target(
                 "docker (dangling images/containers)",
-                dkb,
+                dprune,
                 lambda: cmd("docker system prune -f", noisy=True),
-                cache_key="target:docker",
             )
         )
-    elif dstate == "down" and dkb:
-        targets.append(
-            Target(
-                "docker disk image",
-                dkb,
-                None,
-                note="daemon not running: start docker to measure/prune",
-            )
-        )
+    if dimg > 1024**2:  # surface the backing store whenever it exceeds 1GB
+        if dstate == "up" and not dprune:
+            note = "engine is empty; prune can't shrink this high-water-mark file - use Docker Desktop's purge/reset to reclaim"
+        elif dstate == "up":
+            note = "high-water-mark file; prune frees space inside it but only Docker Desktop purge/reset shrinks it"
+        else:
+            note = "daemon not running: start docker to measure/prune"
+        targets.append(Target("docker disk image", dimg, None, note=note))
 
     bkb = cached(cache, "target:brew", brew_reclaimable_kb, refresh)
     if bkb:
