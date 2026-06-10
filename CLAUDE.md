@@ -21,3 +21,12 @@
   `redact_secrets`). Useful for "what tools get used most" analysis.
 - Tests are flat `test_*.py` pytest files next to the code (no central runner /
   `make test`); run a specific one with the env's `pytest`.
+
+# Conventions
+- Tools should be cross-compatible with macOS and Ubuntu whenever possible. When
+  something is genuinely platform-specific (a CLI that only exists on one, a
+  GNU-vs-BSD flag difference, `apt` vs `brew`), detect it and fail gracefully —
+  warn on stderr and fall back, don't hard-error. Mirror the existing patterns:
+  the `rg`/`fd`/`fzf` "use if installed, else fall back with an install hint"
+  blocks in `bashrc`, and the `$OS`/`Darwin`-vs-`Linux` branches in
+  `quicksetup.sh`.
