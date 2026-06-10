@@ -64,8 +64,10 @@ def parse_and_convert(datetime_str, show_relative=True, quiet=False):
         # works on any host instead of being pinned to one region.
         local_dt = dt.astimezone()
 
-        # Convert to UTC
+        # Convert to UTC and to US/Eastern (shown as an extra reference when the
+        # local machine isn't already on Eastern time).
         utc_dt = dt.astimezone(pytz.UTC)
+        eastern_dt = dt.astimezone(pytz.timezone("US/Eastern"))
 
         # Format outputs
         print("")
@@ -73,6 +75,15 @@ def parse_and_convert(datetime_str, show_relative=True, quiet=False):
         epoch_ms = int(utc_dt.timestamp() * 1000)
         print(f"Local (24h): {local_dt.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         print(f"Local (12h): {local_dt.strftime('%Y-%m-%d %I:%M:%S %p %Z')}")
+        # Skip only when the machine actually is on Eastern time. Match both
+        # offset and abbreviation so a zone that merely shares Eastern's offset
+        # right now (e.g. AST == EDT in summer) still gets the reference line.
+        local_is_eastern = (
+            local_dt.utcoffset() == eastern_dt.utcoffset()
+            and local_dt.tzname() == eastern_dt.tzname()
+        )
+        if not local_is_eastern:
+            print(f"US/Eastern:  {eastern_dt.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         print(f"UTC:         {utc_dt.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         print(f"Epoch (s):   {epoch_s}")
         print(f"Epoch (ms):  {epoch_ms}")
@@ -87,7 +98,7 @@ def parse_and_convert(datetime_str, show_relative=True, quiet=False):
             parts = [f"{d}d", f"{h}h", f"{m}m", f"{s}s"]
             while len(parts) > 1 and parts[0].startswith("0"):
                 parts.pop(0)
-            print(f"Relative:    {secs}s ({''.join(parts)}) {suffix}")
+            print(f"Relative:    {secs}s ({' '.join(parts)}) {suffix}")
 
     except Exception as e:
         print(f"Error parsing datetime: {e}")
