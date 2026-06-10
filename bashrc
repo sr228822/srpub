@@ -172,6 +172,9 @@ hist() {
 # Analytics dashboard over the ~/.logs history (top commands, by-hour, aliases)
 alias logstats='$SRPUB_DIR/pytools/logstats.py'
 
+# Disk usage analysis + reclaimable-space report (read-only; --clean to free)
+alias diskfree='$SRPUB_DIR/pytools/diskfree.py'
+
 # big normal history
 export HISTSIZE=9000
 export HISTFILESIZE=$HISTSIZE

@@ -1,9 +1,26 @@
-Last open item — #4 diskfree.py — my take on script vs skill:
+# diskfree.py
 
-Build it as a script first; a skill is at most a thin layer on top later. Reasoning: the bulk of this is deterministic and benefits from caching (a du scan is slow — exactly what your DiskCache is for), needs to run identically on mac+ubuntu, and fits the pytools idiom. A Claude skill can't cache and re-derives context every run; its only edge is judgment ("this 40GB folder looks like a stale build"), which a script can approximate with heuristics (size + age + known patterns). So: script does ~90% deterministically; optionally add a skill wrapper afterward that runs it and adds AI judgment on "is this safe to delete?"
+Disk usage analysis + reclaimable-space report. Read-only by default;
+`--clean` confirms each category individually before deleting anything.
 
-Proposed pytools/diskfree.py:
-- Report (default, read-only): cached du of configurable roots (default $HOME); top-N largest dirs/files; "stale & large" heuristic (big + old mtime).
-- Known reclaimable targets with live sizes: /tmp, trash, ~/Library/Caches (mac) / ~/.cache (linux), pip/conda/npm/yarn caches, __pycache__, node_modules, .DS_Store, docker system df, brew cleanup -n. Prints a reclaimable total.
-- --clean: dry-run by default; actually deletes only with a confirm prompt (reusing srutils.yes_or_no). Deletion is destructive, so it's gated and never the default.
-- Cross-platform per the convention (OS-specific cache paths, skip docker/brew gracefully if absent).
+```
+diskfree                  # report: overview, largest dirs, stale dirs,
+                          # large files, reclaimable targets + total
+diskfree --clean          # same report, then per-category y/n cleanup
+diskfree --all-users      # one-line summary per /Users|/home homedir
+sudo diskfree.py <home>   # full sizes for another user's homedir
+diskfree --refresh        # bust the scan cache (default TTL 12h)
+```
+
+Notes:
+- Scans (du/find) are cached via DiskCache, so the first run is slow
+  (~10-15s on a full $HOME) and subsequent runs are instant (<0.1s).
+- Dotfiles/dot-dirs are included (du/find don't skip hidden).
+- Reclaimable targets: trash, user caches (~/Library/Caches | ~/.cache),
+  npm cache, conda pkgs, __pycache__, docker prune, brew cleanup; /tmp is
+  report-only (cleared on reboot). node_modules deletion is left to you.
+- File sizes use allocated blocks (st_blocks), so sparse files like
+  Docker.raw report real usage, not apparent size.
+- Cross-platform mac/ubuntu; docker/brew/conda are skipped if absent.
+- Originally chosen as a script over a Claude skill: the work is
+  deterministic and cache-friendly; a skill wrapper can add judgment later.
