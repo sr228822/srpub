@@ -169,6 +169,8 @@ alias fullhistory="cat \"\${BASH_LOGS_DIR:-\$HOME/.logs}\"/* | grep '^20' | sort
 hist() {
     fullhistory | grep_and $@ | tail -n 30
 }
+# Analytics dashboard over the ~/.logs history (top commands, by-hour, aliases)
+alias logstats='$SRPUB_DIR/pytools/logstats.py'
 
 # big normal history
 export HISTSIZE=9000
