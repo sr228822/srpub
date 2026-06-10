@@ -59,11 +59,10 @@ def parse_and_convert(datetime_str, show_relative=True, quiet=False):
                 print("Assuming input is UTC")
                 dt = pytz.UTC.localize(dt)
 
-        # Get local timezone
-        local_tz = pytz.timezone("US/Eastern")  # Change this to your local timezone
-
-        # Convert to local time
-        local_dt = dt.astimezone(local_tz)
+        # Convert to the machine's local timezone. A no-arg astimezone() uses
+        # the system zone and is DST-correct for the given instant, so this
+        # works on any host instead of being pinned to one region.
+        local_dt = dt.astimezone()
 
         # Convert to UTC
         utc_dt = dt.astimezone(pytz.UTC)
