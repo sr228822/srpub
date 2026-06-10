@@ -225,12 +225,12 @@ if [ "$OS" = "Darwin" ]; then
     if command -v claude &>/dev/null; then
         if confirm "Update Claude Code?"; then
             echo "Updating Claude Code..."
-            npm install -g @anthropic-ai/claude-code
+            claude update
         fi
     else
         if confirm "Install Claude Code?"; then
             echo "Installing Claude Code..."
-            npm install -g @anthropic-ai/claude-code
+            curl -fsSL https://claude.ai/install.sh | bash
         fi
     fi
 fi
