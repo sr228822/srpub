@@ -457,10 +457,8 @@ def main():
     # Get commits in fb not in current branch (missing)
     if commits_behind > 0:
         if commits_behind <= 100:
-            missing_shas = cmd(f"git rev-list {target_ref}..{fb}").strip().split("\n")
-            missing = []
-            for sha in missing_shas:
-                missing.extend(fetch_commits_for_branch(sha, 1))
+            # One ranged git log instead of a subprocess per commit
+            missing = fetch_commits_for_branch(f"{target_ref}..{fb}", commits_behind)
         else:
             missing = []
     else:
