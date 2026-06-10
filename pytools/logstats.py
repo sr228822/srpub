@@ -6,8 +6,8 @@ Each logged line looks like:
     2026-06-10.09:42:35 [Mh10]  5061  gs
 
 i.e. "<date>.<time> [<session>]  <histnum>  <command>". This surfaces what that
-pile of data actually contains: most-used commands, when you work, and long
-commands you run often enough to be worth aliasing.
+pile of data actually contains: most-used commands and long commands you run
+often enough to be worth aliasing.
 """
 
 import argparse
@@ -17,7 +17,7 @@ import re
 from collections import Counter
 from datetime import datetime, timedelta
 
-from colorstrings import blue_str, bold_str, cyan_str, green_str, grey_str
+from colorstrings import blue_str, bold_str, green_str, grey_str
 
 LOGDIR = os.environ.get("BASH_LOGS_DIR", os.path.expanduser("~/.logs"))
 
@@ -107,15 +107,6 @@ def print_top(entries, limit, full=False):
         )
 
 
-def print_by_hour(entries):
-    by_hour = Counter(e.dt.hour for e in entries)
-    maxn = max(by_hour.values()) if by_hour else 0
-    print(bold_str("\nActivity by hour"))
-    for h in range(24):
-        n = by_hour.get(h, 0)
-        print(f"  {h:02d}  {cyan_str(_bar(n, maxn))} {grey_str(str(n))}")
-
-
 def print_alias_candidates(entries, limit):
     """Long-ish full command lines run often enough to be worth an alias."""
     counts = Counter(e.cmd for e in entries)
@@ -143,7 +134,6 @@ def main():
     p.add_argument("--since", type=str, help="only since this date (YYYY-MM-DD)")
     p.add_argument("--limit", type=int, default=15, help="rows per section")
     p.add_argument("--full", action="store_true", help="rank full lines, not programs")
-    p.add_argument("--hours", action="store_true", help="only the by-hour histogram")
     p.add_argument("--aliases", action="store_true", help="only alias candidates")
     p.add_argument(
         "--commands", action="store_true", help="only the top-commands table"
@@ -162,9 +152,6 @@ def main():
         return
 
     # Focused modes
-    if args.hours:
-        print_by_hour(entries)
-        return
     if args.aliases:
         print_alias_candidates(entries, args.limit)
         return
@@ -175,7 +162,6 @@ def main():
     # Default: a small dashboard
     print_header(entries)
     print_top(entries, args.limit, full=args.full)
-    print_by_hour(entries)
     print_alias_candidates(entries, args.limit)
     print()
 

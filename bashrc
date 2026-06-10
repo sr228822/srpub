@@ -421,6 +421,38 @@ else
 fi
 
 # =============================================================================
+# Interactive pickers (fzf) - opt-in. When fzf is installed, the substring
+# auto-match in gco/gbd/cdd/goto becomes an interactive fuzzy picker; without
+# fzf they keep their original "first match wins" behavior untouched.
+# =============================================================================
+_have_fzf() { command -v fzf >/dev/null 2>&1; }
+
+# Pick one line from stdin via fzf, seeding the query with $1.
+#   --select-1 auto-accepts a lone match (no prompt when unambiguous)
+#   --exit-0   returns nothing when there are no matches
+_fzf_pick() {
+    fzf --height=40% --reverse --select-1 --exit-0 --query="${1:-}"
+}
+
+# Fuzzy reverse-search over the ~/.logs command history. On zsh the chosen
+# command is pushed onto the edit buffer (print -z) so you can tweak before
+# running; elsewhere it's printed.
+fh() {
+    _have_fzf || { echo "fzf required for fh (brew install fzf)" >&2; return 1; }
+    local sel
+    sel=$(fullhistory \
+        | sed -E 's/^[0-9.]+ \[[^]]*\] +[0-9]* +//' \
+        | awk '!seen[$0]++' \
+        | _fzf_pick "$*")
+    [ -z "$sel" ] && return
+    if [ -n "$ZSH_VERSION" ]; then
+        print -z -- "$sel"
+    else
+        echo "$sel"
+    fi
+}
+
+# =============================================================================
 
 function duf {
     du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
