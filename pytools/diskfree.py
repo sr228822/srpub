@@ -179,14 +179,32 @@ def parse_size_str(s):
     return int(float(m.group(1)) * mult[m.group(2)])
 
 
-def docker_reclaimable_kb():
-    """KB docker says it can reclaim, or 0 if docker absent/not running."""
+def docker_status():
+    """(state, kb) where state is absent|down|up.
+
+    up:   kb = what `docker system df` says is reclaimable (prunable)
+    down: kb = size of the docker disk image / data dir, so the space still
+          shows up in the report even though we can't prune it right now
+    """
     if not shutil.which("docker"):
-        return 0
-    lines = run_lines(
-        ["docker", "system", "df", "--format", "{{.Reclaimable}}"], timeout=20
-    )
-    return sum(parse_size_str(ln.split("(")[0]) for ln in lines)
+        return ["absent", 0]
+    try:
+        res = subprocess.run(
+            ["docker", "system", "df", "--format", "{{.Reclaimable}}"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ["down", 0]
+    if res.returncode == 0:
+        lines = [ln for ln in res.stdout.split("\n") if ln]
+        return ["up", sum(parse_size_str(ln.split("(")[0]) for ln in lines)]
+    # Daemon not running: measure the VM disk image (mac) or data dir (linux)
+    img = HOME / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+    if img.exists():
+        return ["down", img.stat().st_blocks * 512 // 1024]
+    return ["down", du_kb("/var/lib/docker")]
 
 
 def brew_reclaimable_kb():
@@ -294,14 +312,23 @@ def build_targets(cache, refresh):
             )
         )
 
-    dkb = cached(cache, "target:docker", docker_reclaimable_kb, refresh, ttl=3600)
-    if dkb:
+    dstate, dkb = cached(cache, "target:docker", docker_status, refresh, ttl=3600)
+    if dstate == "up" and dkb:
         targets.append(
             Target(
                 "docker (dangling images/containers)",
                 dkb,
                 lambda: cmd("docker system prune -f", noisy=True),
                 cache_key="target:docker",
+            )
+        )
+    elif dstate == "down" and dkb:
+        targets.append(
+            Target(
+                "docker disk image",
+                dkb,
+                None,
+                note="daemon not running: start docker to measure/prune",
             )
         )
 
