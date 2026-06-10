@@ -219,7 +219,6 @@ if args.loc:
 dt_now = int(time.time())
 seen_me = False
 commits = git_log_raw.split("\n")
-print(len(commits))
 
 # Track PR commits to avoid counting them multiple times
 processed_pr_commits = {}
