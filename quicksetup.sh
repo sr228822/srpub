@@ -42,7 +42,7 @@ echo "=== Quick Setup (srpub: $SRPUB_DIR) ==="
 # 1. Install packages
 echo ""
 echo "--- Packages ---"
-PACKAGES=(tmux wget jq htop tree ripgrep)
+PACKAGES=(tmux wget jq htop tree ripgrep fzf)
 if [ "$OS" = "Darwin" ]; then
     PACKAGES+=(fd)
 else

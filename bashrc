@@ -421,17 +421,29 @@ else
 fi
 
 # =============================================================================
-# Interactive pickers (fzf) - opt-in. When fzf is installed, the substring
-# auto-match in gco/gbd/cdd/goto becomes an interactive fuzzy picker; without
-# fzf they keep their original "first match wins" behavior untouched.
+# Interactive pickers (fzf) - opt-in helper used by gco/gbd/cdd/goto.
+# Preserves the existing "try to match, act, else fail" behavior: the only
+# change is that an AMBIGUOUS substring (>1 match) opens an interactive fzf
+# picker instead of silently grabbing the first one. Unique match acts
+# immediately (no UI); no match returns nonzero so the caller falls through.
 # =============================================================================
 _have_fzf() { command -v fzf >/dev/null 2>&1; }
 
-# Pick one line from stdin via fzf, seeding the query with $1.
-#   --select-1 auto-accepts a lone match (no prompt when unambiguous)
-#   --exit-0   returns nothing when there are no matches
-_fzf_pick() {
-    fzf --height=40% --reverse --select-1 --exit-0 --query="${1:-}"
+# Resolve one candidate from stdin that matches query $1 (substring, like the
+# old grep). 0 matches -> return 1; exactly 1 -> echo it; >1 -> interactive fzf
+# if installed, else the old first-match behavior.
+_pick_match() {
+    local query="$1"
+    local matches
+    matches=$(grep -i -- "$query" 2>/dev/null)
+    [ -z "$matches" ] && return 1
+    if [ "$(printf '%s\n' "$matches" | grep -c .)" -eq 1 ]; then
+        printf '%s\n' "$matches"
+    elif _have_fzf; then
+        printf '%s\n' "$matches" | fzf --height=40% --reverse --query="$query"
+    else
+        printf '%s\n' "$matches" | head -n 1
+    fi
 }
 
 # Fuzzy reverse-search over the ~/.logs command history. On zsh the chosen
@@ -443,7 +455,7 @@ fh() {
     sel=$(fullhistory \
         | sed -E 's/^[0-9.]+ \[[^]]*\] +[0-9]* +//' \
         | awk '!seen[$0]++' \
-        | _fzf_pick "$*")
+        | fzf --height=40% --reverse --tac --query="$*")
     [ -z "$sel" ] && return
     if [ -n "$ZSH_VERSION" ]; then
         print -z -- "$sel"
@@ -488,15 +500,13 @@ thrice() {
 
 
 goto () {
-    find | grep -i $1
-    choice=`find | grep -i $1 | head -n 1`
-    len="${#choice}"
-    if [ $len -gt 0 ]; then
-        if [ -d $choice ]; then
-            cd $choice
+    local choice
+    choice=$(find . 2>/dev/null | _pick_match "$1")
+    if [ -n "$choice" ]; then
+        if [ -d "$choice" ]; then
+            cd "$choice"
         else
-            dir=`dirname $choice`
-            cd $dir
+            cd "$(dirname "$choice")"
         fi
     fi
 }
@@ -614,7 +624,7 @@ allbutlastword() {
 cdd() {
     cd $1
     if [ $? -eq 1 ]; then
-        substr=`ls -d */ | grep $1`
+        substr=$(ls -d */ 2>/dev/null | _pick_match "$1")
         if [ -n "$substr" ]; then
             echo "auto-matching directory $substr" | yellow
             cd $substr
@@ -835,7 +845,7 @@ squashn() {
 gco() {
     git checkout $@
     if [ $? -eq 1 ]; then
-        substr=`git branch | sed 's/^[+* ]*//' | grep $1 | xargs`
+        substr=$(git branch | sed 's/^[+* ]*//' | _pick_match "$1")
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
             git checkout $substr
@@ -895,7 +905,7 @@ gbd() {
     local branch="$1"
     git branch -D $@
     if [ $? -eq 1 ]; then
-        branch=$(git branch | grep -v "^\*" | sed 's/^[+ ]*//' | grep $1 | head -n 1 | xargs)
+        branch=$(git branch | grep -v "^\*" | sed 's/^[+ ]*//' | _pick_match "$1")
         if [ -n "$branch" ]; then
             echo "auto-matching branch $branch" | yellow
             git branch -D $branch
