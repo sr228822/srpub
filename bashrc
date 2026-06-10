@@ -95,8 +95,13 @@ fi
 # Use prompt command to log all bash to files in .logs
 BASH_LOGS_DIR="${BASH_LOGS_DIR:-$HOME/.logs}"
 mkdir -p "$BASH_LOGS_DIR"
+# These logs retain command lines indefinitely; keep them owner-only so a
+# missed redaction (see below) isn't world-readable in backups/screen-shares.
+chmod 700 "$BASH_LOGS_DIR" 2>/dev/null
 
 # Redact potential secrets in commands - keeps first 4 chars of value, replaces rest with ***
+# Best-effort only: novel secret shapes can still slip through, which is why the
+# log files themselves are locked down to mode 600 above/below.
 # Set SRPUB_NO_REDACT=1 to disable (e.g. if your sed doesn't support the 'i' flag)
 redact_secrets() {
   local cmd="$1"
@@ -108,6 +113,10 @@ redact_secrets() {
     -e 's/([A-Za-z_]*(_)?(PASSWORD|SECRET|TOKEN|API_KEY|APIKEY|OAUTH|AUTH_|CREDENTIAL|PRIVATE_KEY)[A-Za-z_]*=)([^[:space:]]{4})[^[:space:]]*/\1\4****REDACTED*****/gi' \
     -e 's/(AKIA[0-9A-Z]{4})[0-9A-Z]{12,}/\1****REDACTED*****/g' \
     -e 's/([Bb]earer )([A-Za-z0-9._-]{4})[A-Za-z0-9._-]{8,}/\1\2****REDACTED****/g' \
+    -e 's/([Bb]asic )([A-Za-z0-9+/]{4})[A-Za-z0-9+/=]{8,}/\1\2****REDACTED****/g' \
+    -e 's#([a-zA-Z][a-zA-Z0-9+.-]*://[^:/@[:space:]]+:)[^@[:space:]]+@#\1****REDACTED****@#g' \
+    -e 's/(curl .*(-u|--user)[ =][^:[:space:]]+:)[^[:space:]]+/\1****REDACTED****/g' \
+    -e 's/(mysql[a-z]* .*-p)[^[:space:]]+/\1****REDACTED****/g' \
     -e 's/([A-Za-z_]=[0-9a-fA-F]{4})[0-9a-fA-F]{28,}([[:space:]]|$)/\1****REDACTED*****\2/g'
 }
 
@@ -144,7 +153,9 @@ prompt_command () {
       printf '\033[93m[possible secret redacted from history log]\033[0m\n' >&2
     fi
 
-    echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> $PCLOGNAME
+    # Create new log files owner-only; harmless cheap chmod for existing ones.
+    ( umask 077; echo "$(date "+%Y-%m-%d.%H:%M:%S") [${SESSION_ID}] $safe_line" >> "$PCLOGNAME" )
+    chmod 600 "$PCLOGNAME" 2>/dev/null
   fi
 }
 if [[ "$shell" == *zsh* ]]; then
