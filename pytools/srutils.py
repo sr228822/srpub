@@ -257,9 +257,15 @@ class DiskCache:
 
         self._cache = {}
         if os.path.isfile(self.cachef):
-            with open(self.cachef, "r") as f:
-                dat = f.read()
-                self._cache = json.loads(dat)
+            try:
+                with open(self.cachef, "r") as f:
+                    self._cache = json.loads(f.read())
+            except (ValueError, OSError) as e:
+                # A truncated/corrupt cache (e.g. from an interrupted or
+                # concurrent write) must not crash the caller. Discard it;
+                # the next set() rewrites a clean file.
+                self.vprint(f"[DiskCache {cache_name}] ignoring bad cache: {e}")
+                self._cache = {}
 
     def vprint(self, txt):
         if self.verbose:
@@ -273,10 +279,17 @@ class DiskCache:
     def set(self, k, v):
         self.vprint(f"[DiskCache {self.cache_name}] get {k} val {v}")
         self._cache[k] = v
-        # TODO optimize writes using exit handler or something
-        with open(self.cachef, "w") as f:
-            self.vprint(f"writing {self.cache_name} to disk")
-            f.write(json.dumps(self._cache))
+        # Write atomically (tmp file + rename) so an interrupted or concurrent
+        # write can never leave a half-written, corrupt cache behind.
+        self.vprint(f"writing {self.cache_name} to disk")
+        tmpf = f"{self.cachef}.{os.getpid()}.tmp"
+        try:
+            with open(tmpf, "w") as f:
+                f.write(json.dumps(self._cache))
+            os.replace(tmpf, self.cachef)
+        finally:
+            if os.path.exists(tmpf):
+                os.remove(tmpf)
 
 
 #################################################################
