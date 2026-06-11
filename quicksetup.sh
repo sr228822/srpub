@@ -250,13 +250,52 @@ for pair in vimrc:.vimrc condarc:.condarc psqlrc:.psqlrc tmux.conf:.tmux.conf; d
     fi
 done
 
-# 7. Configure git hooks
+# 7. Claude config: symlink global CLAUDE.md and skills from the repo.
+# Symlinks (vs copies) mean a `git pull` updates every machine; per-skill
+# links let machine-local skills coexist in ~/.claude/skills.
+echo ""
+echo "--- Claude config ---"
+
+# install_link <src> <dest>: create/refresh symlink, never clobber real files
+install_link() {
+    local src="$1" dest="$2"
+    if [ -L "$dest" ]; then
+        if [ "$(readlink "$dest")" = "$src" ]; then
+            echo "$dest already linked."
+        else
+            rm "$dest" && ln -s "$src" "$dest"
+            echo "Re-linked $dest -> $src"
+        fi
+    elif [ -e "$dest" ]; then
+        echo "WARNING: $dest exists and is not a symlink; leaving it alone." >&2
+    else
+        ln -s "$src" "$dest"
+        echo "Linked $dest -> $src"
+    fi
+}
+
+mkdir -p "$HOME/.claude/skills"
+if [ -f "$SRPUB_DIR/claude/CLAUDE.md" ]; then
+    install_link "$SRPUB_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+fi
+found_skill=false
+for skill_dir in "$SRPUB_DIR"/claude/skills/*/; do
+    [ -d "$skill_dir" ] || continue
+    [ -f "$skill_dir/SKILL.md" ] || continue  # skills need a SKILL.md
+    found_skill=true
+    install_link "${skill_dir%/}" "$HOME/.claude/skills/$(basename "$skill_dir")"
+done
+if [ "$found_skill" = false ]; then
+    echo "No skills in repo yet (add claude/skills/<name>/SKILL.md)."
+fi
+
+# 8. Configure git hooks
 echo ""
 echo "--- Git hooks ---"
 git -C "$SRPUB_DIR" config core.hooksPath "$SRPUB_DIR/hooks"
 echo "Set core.hooksPath to $SRPUB_DIR/hooks"
 
-# 8. Install Claude Code (macOS only)
+# 9. Install Claude Code (macOS only)
 if [ "$OS" = "Darwin" ]; then
     echo ""
     echo "--- Claude Code ---"
