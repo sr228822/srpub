@@ -670,6 +670,7 @@ def main():
             f"git --no-pager log --author=Russell --format=%H -1 {my_branch}"
         ).strip()
         if my_sha and my_sha not in shown_shas:
+            print(grey_str("    ··················································"))
             show_my_most_recent(my_branch)
 
 
