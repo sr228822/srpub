@@ -171,6 +171,7 @@ hist() {
 }
 # Analytics dashboard over the ~/.logs history (top commands, by-hour, aliases)
 alias logstats='$SRPUB_DIR/pytools/logstats.py'
+alias logtail='$SRPUB_DIR/pytools/logtail.py'
 
 # Disk usage analysis + reclaimable-space report (read-only; --clean to free)
 alias diskfree='$SRPUB_DIR/pytools/diskfree.py'
