@@ -474,8 +474,10 @@ function duf {
     du -sk "$@" | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done
 }
 function dufa {
-    # ls -A includes dot-folders
-    duf `ls -A`
+    # collect into array so names with spaces don't word-split
+    local entries=()
+    while IFS= read -r f; do entries+=("$f"); done < <(ls -A1)
+    duf "${entries[@]}"
 }
 
 # Use brew/apt installed watch - its better
