@@ -972,6 +972,58 @@ git_cleanup() {
   git remote prune origin && git repack && git prune-packed && git reflog expire --expire=1.month.ago && git gc --aggressive
 }
 
+# Render a size in KiB as a human-readable string (matches duf's unit loop).
+_human_kib() {
+    local size=$1 unit
+    for unit in K M G T P E Z Y; do
+        if [ "$size" -lt 1024 ]; then echo "${size}${unit}"; return; fi
+        size=$((size / 1024))
+    done
+}
+
+# Reclaim disk space in a git repo (and its LFS cache), reporting how much
+# the .git dir shrank. Pass --aggressive/-a to expire ALL reflog entries now
+# (frees more, but throws away your undo/recovery history) and run an
+# aggressive gc; otherwise reflog entries older than 2 weeks are expired.
+gitgc() {
+    if [[ $(is_git) != "$GIT_ENUM" ]]; then
+        echo "gitgc: not inside a git work tree" >&2
+        return 1
+    fi
+
+    local aggressive=0
+    case "$1" in
+        -a|--aggressive) aggressive=1 ;;
+        "") ;;
+        *) echo "gitgc: unknown option '$1' (use -a/--aggressive)" >&2; return 1 ;;
+    esac
+
+    local gitdir
+    gitdir=$(git rev-parse --git-dir) || return 1
+    local before
+    before=$(du -sk "$gitdir" 2>/dev/null | cut -f1)
+
+    # Drop stale remote-tracking refs, then let unreachable objects expire.
+    git remote prune origin
+    if [[ $aggressive -eq 1 ]]; then
+        git reflog expire --expire=now --all
+        git gc --prune=now --aggressive
+    else
+        git reflog expire --expire=2.weeks.ago --all
+        git gc --prune=now
+    fi
+
+    # Trim the local LFS cache of files no longer referenced by recent commits.
+    if command -v git-lfs >/dev/null 2>&1 && [ -d "$gitdir/lfs" ]; then
+        git lfs prune
+    fi
+
+    local after saved
+    after=$(du -sk "$gitdir" 2>/dev/null | cut -f1)
+    saved=$((before - after))
+    echo "gitgc: ${gitdir} $(_human_kib "$before") -> $(_human_kib "$after") (saved $(_human_kib "$saved"))"
+}
+
 git-halfway() {
     local sha1=$1
     local sha2=$2
