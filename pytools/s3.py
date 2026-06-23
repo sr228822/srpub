@@ -5,6 +5,7 @@ import boto3
 import os
 import logging
 import argparse
+import subprocess
 from pathlib import Path
 from PIL import Image
 from botocore.exceptions import ClientError
@@ -126,8 +127,125 @@ def list_s3(bucket_name: str, prefix: str, recursive=False, full_path=False):
         return result
 
 
+def list_buckets():
+    """List all S3 buckets."""
+    response = s3.list_buckets()
+    buckets = response.get("Buckets", [])
+    if not buckets:
+        print("No buckets found.")
+        return
+    for b in buckets:
+        date = b["CreationDate"].strftime("%Y-%m-%d %H:%M")
+        print(f"{date}  {b['Name']}")
+
+
+def show_metadata(bucket_name: str, s3_key: str, head: dict, local_path: str):
+    """Show file metadata; runs ffprobe on local cached file."""
+    size = head["ContentLength"]
+    date = head["LastModified"].strftime("%Y-%m-%d %H:%M")
+    content_type = head.get("ContentType", "unknown")
+    print(f"  path:         s3://{bucket_name}/{s3_key}")
+    print(f"  size:         {human_size(size)}")
+    print(f"  modified:     {date}")
+    print(f"  content-type: {content_type}")
+
+    if subprocess.run(["which", "ffprobe"], capture_output=True).returncode != 0:
+        return
+
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-print_format",
+            "flat",
+            "-show_format",
+            "-show_streams",
+            local_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return
+
+    # Print a clean subset of the ffprobe flat output
+    keep = {"format.duration", "format.bit_rate", "format.size"}
+    for line in result.stdout.splitlines():
+        key_part = line.split("=")[0]
+        if (
+            any(
+                x in key_part
+                for x in (
+                    "codec_name",
+                    "codec_type",
+                    "sample_rate",
+                    "channels",
+                    "width",
+                    "height",
+                    "r_frame_rate",
+                    "bit_rate",
+                    "duration",
+                )
+            )
+            or key_part in keep
+        ):
+            val = line.split("=", 1)[1].strip('"') if "=" in line else ""
+            print(f"  {key_part:<35} {val}")
+
+
+def play_media(local_path: str, is_video: bool):
+    """Play audio or video file, cross-platform."""
+    path = str(local_path)
+    if sys.platform == "darwin":
+        if is_video:
+            cmd(f"open {path}", noisy=True)
+        else:
+            cmd(f"afplay {path}", noisy=True)
+    else:
+        # Linux: try mpv, ffplay, vlc in order
+        for player in ("mpv", "ffplay", "vlc"):
+            if subprocess.run(["which", player], capture_output=True).returncode == 0:
+                cmd(f"{player} {path}", noisy=True)
+                return
+        log.error(
+            "No media player found (tried mpv, ffplay, vlc). Install one or use --metadata."
+        )
+
+
+def show_size(bucket_name: str, key: str, recursive: bool):
+    """Print size of a file or folder."""
+    from s3_size import get_size_recursive
+
+    if not key or key.endswith("/"):
+        prefix = key
+        print(f"Calculating size of s3://{bucket_name}/{prefix}...", file=sys.stderr)
+        total_gb, count = get_size_recursive(bucket_name, prefix)
+        print(f"\nTotal objects: {count}")
+        print(f"Total size:    {total_gb * 1024:.2f} MB  ({total_gb:.3f} GB)")
+    else:
+        try:
+            head = s3.head_object(Bucket=bucket_name, Key=key)
+            size = head["ContentLength"]
+            date = head["LastModified"].strftime("%Y-%m-%d %H:%M")
+            print(f"{date}  {human_size(size):>10s}  s3://{bucket_name}/{key}")
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                # Try as folder
+                prefix = key + "/"
+                print(
+                    f"Calculating size of s3://{bucket_name}/{prefix}...",
+                    file=sys.stderr,
+                )
+                total_gb, count = get_size_recursive(bucket_name, prefix)
+                print(f"\nTotal objects: {count}")
+                print(f"Total size:    {total_gb * 1024:.2f} MB  ({total_gb:.3f} GB)")
+            else:
+                raise
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Show an s3 object")
+    parser = argparse.ArgumentParser(description="Browse and inspect S3 objects")
     parser.add_argument("path", nargs="?", help="S3 path: s3://b/k, /b/k, or b/k")
     parser.add_argument("--bucket", "-b", help="S3 bucket name")
     parser.add_argument("--key", "-k", help="S3 key")
@@ -141,15 +259,37 @@ def main():
     parser.add_argument(
         "--full-path", action="store_true", help="show full keys in listings"
     )
+    parser.add_argument(
+        "--metadata",
+        "-m",
+        action="store_true",
+        help="show media metadata via ffprobe (no download)",
+    )
+    parser.add_argument(
+        "--play", "-p", action="store_true", help="play audio/video file"
+    )
+    parser.add_argument(
+        "--size", "-s", action="store_true", help="show size (recursive for folders)"
+    )
     args = parser.parse_args()
+
+    # No args → list buckets
+    if not args.bucket and not args.path:
+        list_buckets()
+        return
 
     if args.bucket:
         bucket, key = args.bucket, args.key or ""
-    elif args.path:
-        bucket, key = parse_s3_path(args.path)
     else:
-        parser.error("provide a path or --bucket")
+        bucket, key = parse_s3_path(args.path)
+
     log.debug(f"{bucket=} {key=}")
+
+    # --size: just report size and exit
+    if args.size:
+        show_size(bucket, key, args.recursive)
+        return
+
     fp = args.full_path
     if not key or key.endswith("/"):
         log.info(f"\ns3://{bucket}/{key}:")
@@ -181,19 +321,31 @@ def main():
         ".orc",
     }
     IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp"}
-    AUDIO_EXTS = {".mp3", ".wav", ".aac", ".m4a", ".flac", ".ogg", ".aiff"}
+    AUDIO_EXTS = {".mp3", ".wav", ".aac", ".m4a", ".flac", ".ogg", ".aiff", ".opus"}
+    VIDEO_EXTS = {
+        ".mp4",
+        ".mkv",
+        ".mov",
+        ".avi",
+        ".webm",
+        ".m4v",
+        ".wmv",
+        ".flv",
+        ".ts",
+    }
     MAX_SIZE = 50 * 1024 * 1024
 
     is_binary = any(key.endswith(ext) for ext in BINARY_EXTS)
     is_image = any(key.endswith(ext) for ext in IMAGE_EXTS)
     is_audio = any(key.endswith(ext) for ext in AUDIO_EXTS)
+    is_video = any(key.endswith(ext) for ext in VIDEO_EXTS)
+    is_media = is_audio or is_video
 
-    # Check size before downloading
+    # Check size/existence before downloading
     try:
         head = s3.head_object(Bucket=bucket, Key=key)
     except ClientError as e:
         if e.response["Error"]["Code"] == "404":
-            # Maybe it's a folder without trailing /
             items = list_s3(bucket, key + "/", recursive=args.recursive, full_path=fp)
             if items:
                 log.info(f"\ns3://{bucket}/{key}/:")
@@ -203,10 +355,11 @@ def main():
             log.error(f"Not found: s3://{bucket}/{key}")
             return
         raise
+
     size = head["ContentLength"]
     date = head["LastModified"].strftime("%Y-%m-%d %H:%M")
 
-    if not args.force and (size > MAX_SIZE or is_binary):
+    if not args.force and (size > MAX_SIZE or is_binary) and not is_media:
         log.info(f"{date}  {human_size(size):>10s}  s3://{bucket}/{key}")
         if size > MAX_SIZE:
             log.info(
@@ -222,9 +375,13 @@ def main():
         print(f"Opening image: {local_path}", file=sys.stderr)
         img = Image.open(local_path)
         img.show()
-    elif is_audio:
-        print(f"Playing audio: {local_path}", file=sys.stderr)
-        cmd(f"afplay {local_path}", noisy=True)
+    elif is_media:
+        # Default: metadata. --play to play.
+        if args.play:
+            print(f"Playing: {local_path}", file=sys.stderr)
+            play_media(local_path, is_video)
+        else:
+            show_metadata(bucket, key, head, local_path)
     else:
         cmd(f"cat {local_path}", noisy=True)
 
