@@ -76,19 +76,29 @@ def clean_up_decorate(lines: str) -> str:
 def check_config():
     """
     Check if global git config is set for user email, user name, etc.
-    If not, prompt the user to set it.
+    Only prompt to set defaults if this looks like Sam's machine; otherwise just warn.
     """
-    # Skip config check on Linux
-    if sys.platform.lower().startswith("linux"):
-        return
+    import os
+
+    is_sam = any(
+        alias in (os.environ.get("USER", "") + os.environ.get("HOME", ""))
+        for alias in name_aliases + ["sr228822", "samrussell", "samuel"]
+    )
 
     print("1st run checking git config:")
     for key, value in git_config_defaults.items():
         current_val = cmd(f"git config --global --get {key}")
         print(f"\tgit config {key} : {current_val}")
         if not current_val:
-            if yes_or_no(f"git config --global {key} not set! Set it to {value} now?"):
-                cmd(f"git config --global {key} {value}")
+            if is_sam:
+                if yes_or_no(
+                    f"git config --global {key} not set! Set it to {value} now?"
+                ):
+                    cmd(f"git config --global {key} {value}")
+            else:
+                print(
+                    f"\tWarning: git config {key} not set (skipping auto-set on non-Sam machine)"
+                )
 
 
 def git_op_colored(command: str) -> str:
