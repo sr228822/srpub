@@ -1,5 +1,9 @@
 # Personal preferences
 
+## PR Naming
+
+when naming PRs, avoid the style of using parens to label the type of change like feat() docs() etc.
+
 ## Documenting test results / command output
 
 When writing up test results or command output — e.g. a PR's "How Has This Been
