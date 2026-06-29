@@ -871,6 +871,18 @@ git_pre_push() {
     echo "override me pre-push"
 }
 
+with_ssh_remote() {
+    local old ssh rc
+    old=$(git remote get-url origin) || return 1
+    # rewrite https://github.com/OWNER/REPO(.git) -> git@github.com:OWNER/REPO.git
+    ssh=$(sed -E 's#^https://github[.]com/([^/]+)/([^/]+?)([.]git)?$#git@github.com:\1/\2.git#' <<<"$old")
+    git remote set-url origin "$ssh" || return 1
+    "$@"
+    rc=$?
+    git remote set-url origin "$old"
+    return $rc
+}
+
 gitpush() {
     b=$(git branch --show-current)
     if [[ "$b" == "master" || "$b" == "main" ]];
