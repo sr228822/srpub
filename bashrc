@@ -1572,29 +1572,40 @@ ct() {
     local from_branch=""
     local resume_sid=""
 
-    # Parse args (index loop so we can skip value tokens after --from/--resume)
-    local args=("$@")
-    local skip_next=false
-    for (( i=0; i<${#args[@]}; i++ )); do
-        local arg="${args[$i]}"
-        if $skip_next; then skip_next=false; continue; fi
+    # Parse args; use positional-param slice so --from/--resume can consume the next token.
+    # ${@:i:1} is 1-based and works in both bash and zsh (unlike C-style array indexing).
+    local i=1
+    while [[ $i -le $# ]]; do
+        local arg="${@:$i:1}"
         case "$arg" in
             --new) force_new=true ;;
             --from)
-                from_branch="${args[$((i+1))]}"
-                skip_next=true ;;
+                (( i++ ))
+                from_branch="${@:$i:1}" ;;
             --resume)
-                resume_sid="${args[$((i+1))]}"
-                skip_next=true ;;
+                (( i++ ))
+                resume_sid="${@:$i:1}" ;;
             --help|-h)
-                echo "Usage: ct [branch] [--new] [--from <source-branch>] [--resume <session-id>]"
-                echo "  Opens a tmux+claude session for the given branch (default: current)"
-                echo "  --new                  Force a fresh session, killing any existing one"
-                echo "  --from <branch>        Inherit session context from <branch> (e.g. after merge)"
-                echo "  --resume <session-id>  Resume a specific claude session ID"
+                echo "Usage: ct [branch] [--new] [--from <branch>] [--resume <session-id>]"
+                echo ""
+                echo "  Opens (or attaches to) a tmux+claude session for a git branch."
+                echo "  Defaults to the current branch if none specified."
+                echo ""
+                echo "Options:"
+                echo "  --new                  Kill any existing session and start fresh"
+                echo "  --from <branch>        Inherit claude context from <branch> (use after merging)"
+                echo "  --resume <session-id>  Resume a specific claude session by ID"
+                echo ""
+                echo "Examples:"
+                echo "  ct                                  # attach/open session for current branch"
+                echo "  ct sam/my-feature                   # switch to branch and open its session"
+                echo "  ct --new                            # start fresh, discarding existing session"
+                echo "  ct sam/new --from sam/old           # new branch, carry over old branch's context"
+                echo "  ct --resume abc-123-def             # wire a specific session ID to current branch"
                 return 0 ;;
             *) branch_arg="$arg" ;;
         esac
+        (( i++ ))
     done
 
     local branch="${branch_arg:-$(git branch --show-current)}"
