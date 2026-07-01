@@ -876,9 +876,11 @@ with_ssh_remote() {
     old=$(git remote get-url origin) || return 1
     # rewrite https://github.com/OWNER/REPO(.git) -> git@github.com:OWNER/REPO.git
     ssh=$(sed -E 's#^https://github[.]com/([^/]+)/([^/]+?)([.]git)?$#git@github.com:\1/\2.git#' <<<"$old")
+    echo "with_ssh_remote: origin $old -> $ssh" >&2
     git remote set-url origin "$ssh" || return 1
     "$@"
     rc=$?
+    echo "with_ssh_remote: restoring origin -> $old" >&2
     git remote set-url origin "$old"
     return $rc
 }
@@ -942,7 +944,7 @@ gbd() {
         local map_file="$HOME/.claude/branch_sessions"
         if [ -f "$map_file" ]; then
             local key="${repo}/${branch}"
-            sed -i '' "\|^${key} |d" "$map_file"
+            sed -i.bak "\|^${key} |d" "$map_file"
         fi
     fi
 }
@@ -1551,7 +1553,7 @@ claude_resume_or_new() {
         claude --resume "$claude_sid"
         if [ $? -ne 0 ]; then
             echo "Stale session, starting fresh..." | red
-            sed -i '' "\|^${key} |d" "$map_file"
+            sed -i.bak "\|^${key} |d" "$map_file"
             claude_sid=""
         fi
     fi
@@ -1567,15 +1569,29 @@ claude_resume_or_new() {
 ct() {
     local force_new=false
     local branch_arg=""
+    local from_branch=""
+    local resume_sid=""
 
-    # Parse args
-    for arg in "$@"; do
+    # Parse args (index loop so we can skip value tokens after --from/--resume)
+    local args=("$@")
+    local skip_next=false
+    for (( i=0; i<${#args[@]}; i++ )); do
+        local arg="${args[$i]}"
+        if $skip_next; then skip_next=false; continue; fi
         case "$arg" in
             --new) force_new=true ;;
+            --from)
+                from_branch="${args[$((i+1))]}"
+                skip_next=true ;;
+            --resume)
+                resume_sid="${args[$((i+1))]}"
+                skip_next=true ;;
             --help|-h)
-                echo "Usage: ct [branch] [--new]"
+                echo "Usage: ct [branch] [--new] [--from <source-branch>] [--resume <session-id>]"
                 echo "  Opens a tmux+claude session for the given branch (default: current)"
-                echo "  --new   Force a fresh session, killing any existing one"
+                echo "  --new                  Force a fresh session, killing any existing one"
+                echo "  --from <branch>        Inherit session context from <branch> (e.g. after merge)"
+                echo "  --resume <session-id>  Resume a specific claude session ID"
                 return 0 ;;
             *) branch_arg="$arg" ;;
         esac
@@ -1625,7 +1641,29 @@ ct() {
 
     # Clear old session mapping if --new
     if [ "$force_new" = true ] && [ -f "$map_file" ]; then
-        sed -i '' "\|^${key} |d" "$map_file"
+        sed -i.bak "\|^${key} |d" "$map_file"
+    fi
+
+    # --resume: wire a specific claude session ID to this branch
+    if [ -n "$resume_sid" ]; then
+        echo "Wiring claude session $resume_sid to ${key}" | yellow
+        sed -i.bak "\|^${key} |d" "$map_file"
+        echo "${key} ${resume_sid}" >> "$map_file"
+    fi
+
+    # --from: inherit session ID from another branch (e.g. after merging it)
+    if [ -n "$from_branch" ]; then
+        local from_key="${repo}/${from_branch}"
+        local from_sid=""
+        [ -f "$map_file" ] && from_sid=$(grep "^${from_key} " "$map_file" | head -n 1 | cut -d' ' -f2)
+        if [ -n "$from_sid" ]; then
+            echo "Inheriting claude session $from_sid from ${from_branch}" | yellow
+            # Remove any existing mapping for the new branch, then add inherited one
+            sed -i.bak "\|^${key} |d" "$map_file"
+            echo "${key} ${from_sid}" >> "$map_file"
+        else
+            echo "No session found for ${from_branch}, starting fresh" | yellow
+        fi
     fi
 
     sleep 0.5
