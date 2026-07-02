@@ -88,11 +88,14 @@ def flushprint(content):
         sys.stdout.write("\r" + fill_line(content, width))
         sys.stdout.flush()
     elif type(content) is list:
-        lines = [fill_line(line, width).rstrip() for line in content]
-        sys.stdout.write("\r\033[K")
-        sys.stdout.write("\n".join(lines[:-1]))
-        sys.stdout.write("\n" + lines[-1])
-        sys.stdout.write(f"\033[{len(lines) - 1}A")
+        # Use \033[K (erase-to-EOL) per line so clearing is correct even when
+        # lines contain ANSI codes (which inflate len() without adding visible width).
+        out = "\r"
+        for line in content[:-1]:
+            out += line + "\033[K\n"
+        out += content[-1] + "\033[K"
+        out += f"\033[{len(content) - 1}A\r"
+        sys.stdout.write(out)
         sys.stdout.flush()
     else:
         print(content)
