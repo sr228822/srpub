@@ -848,13 +848,42 @@ squashn() {
     git commit -a -n
 }
 
+_worktree_path_for_branch() {
+    # Print the worktree path for the given branch, or nothing if not in a worktree.
+    local branch="$1"
+    git worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/$branch" '
+        /^worktree / { path=$2 }
+        $0 == "branch " b { print path; exit }
+    '
+}
+
 gco() {
+    local branch="$1"
+    # If branch is checked out in a worktree, cd there instead of checking out.
+    if [ -n "$branch" ] && [[ "$branch" != -* ]]; then
+        local wt_path
+        wt_path=$(_worktree_path_for_branch "$branch")
+        if [ -n "$wt_path" ]; then
+            echo "branch '$branch' is in worktree, cd-ing to $wt_path" | yellow
+            cd "$wt_path"
+            return
+        fi
+    fi
     git checkout $@
     if [ $? -eq 1 ]; then
+        local substr
         substr=$(git branch | sed 's/^[+* ]*//' | _pick_match "$1")
         if [ -n "$substr" ]; then
             echo "auto-matching branch $substr" | yellow
-            git checkout $substr
+            # Check worktree for the matched branch too
+            local wt_path
+            wt_path=$(_worktree_path_for_branch "$substr")
+            if [ -n "$wt_path" ]; then
+                echo "branch '$substr' is in worktree, cd-ing to $wt_path" | yellow
+                cd "$wt_path"
+            else
+                git checkout $substr
+            fi
         fi
     fi
 }
@@ -923,13 +952,30 @@ gnb() {
 }
 gbd() {
     local branch="$1"
-    git branch -D $@
-    if [ $? -eq 1 ]; then
-        branch=$(git branch | grep -v "^\*" | sed 's/^[+ ]*//' | _pick_match "$1")
-        if [ -n "$branch" ]; then
-            echo "auto-matching branch $branch" | yellow
-            git branch -D $branch
+    # Resolve branch name (with fuzzy match if needed) before doing anything.
+    if ! git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null; then
+        local matched
+        matched=$(git branch | grep -v "^\*" | sed 's/^[+ ]*//' | _pick_match "$branch")
+        if [ -n "$matched" ]; then
+            echo "auto-matching branch $matched" | yellow
+            branch="$matched"
         fi
+    fi
+
+    # If branch has a worktree, remove it first.
+    if [ -n "$branch" ]; then
+        local wt_path
+        wt_path=$(_worktree_path_for_branch "$branch")
+        if [ -n "$wt_path" ]; then
+            echo "removing worktree at $wt_path for branch '$branch'" | yellow
+            git worktree remove --force "$wt_path"
+        fi
+    fi
+
+    git branch -D "$branch"
+    if [ $? -eq 1 ]; then
+        echo "failed to delete branch $branch" | red
+        return 1
     fi
 
     # Kill any tmux claude session for this branch
