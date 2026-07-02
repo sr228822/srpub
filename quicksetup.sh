@@ -289,6 +289,41 @@ if [ "$found_skill" = false ]; then
     echo "No skills in repo yet (add claude/skills/<name>/SKILL.md)."
 fi
 
+# Install Claude Code hooks into ~/.claude/settings.json
+settings="$HOME/.claude/settings.json"
+hook_pre="bash $SRPUB_DIR/claude/hooks/pre-tool-lock.sh"
+hook_stop="bash $SRPUB_DIR/claude/hooks/stop-release-lock.sh"
+python3 - "$settings" "$hook_pre" "$hook_stop" <<'PYEOF'
+import sys, json, os
+
+settings_path, hook_pre, hook_stop = sys.argv[1], sys.argv[2], sys.argv[3]
+data = {}
+if os.path.exists(settings_path):
+    with open(settings_path) as f:
+        data = json.load(f)
+
+hooks = data.setdefault("hooks", {})
+
+def ensure_hook(event, command, matcher=None):
+    entries = hooks.setdefault(event, [])
+    for e in entries:
+        for h in e.get("hooks", []):
+            if h.get("command") == command:
+                return  # already installed
+    entry = {"hooks": [{"type": "command", "command": command}]}
+    if matcher is not None:
+        entry["matcher"] = matcher
+    entries.append(entry)
+
+ensure_hook("PreToolUse", hook_pre, matcher="")
+ensure_hook("Stop", hook_stop)
+
+with open(settings_path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+print(f"Claude hooks installed in {settings_path}")
+PYEOF
+
 # 8. Configure git hooks
 echo ""
 echo "--- Git hooks ---"

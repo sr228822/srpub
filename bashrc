@@ -857,6 +857,22 @@ _worktree_path_for_branch() {
     '
 }
 
+primary() {
+    # cd to the primary checkout. With no args, check out the current branch there.
+    # With a branch arg, check out that branch on the primary checkout.
+    local branch="${1:-$(git branch --show-current)}"
+    local primary_path
+    primary_path=$(git worktree list --porcelain 2>/dev/null | awk '/^worktree / {print $2; exit}')
+    if [ -z "$primary_path" ]; then
+        echo "Not in a git repo" | red; return 1
+    fi
+    if [ -z "$branch" ]; then
+        cd "$primary_path"
+    else
+        cd "$primary_path" && git checkout "$branch"
+    fi
+}
+
 gco() {
     local branch="$1"
     # If branch is checked out in a worktree, cd there instead of checking out.
